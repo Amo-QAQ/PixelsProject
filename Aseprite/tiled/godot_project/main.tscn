@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://maps/map01.tscn" id="1_map"]
+[ext_resource type="Script" path="res://scripts/zoom_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="3_main"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://scripts/water_animator.gd" id="5_water"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("3_main")
+
+[node name="Map01" parent="." instance=ExtResource("1_map")]
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+position = Vector2(360, 360)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(400, 400)
+script = ExtResource("2_camera")
+
+[node name="WaterAnimator" type="Node" parent="."]
+script = ExtResource("5_water")
+tile_map_path = NodePath("../Map01/TileMap")
