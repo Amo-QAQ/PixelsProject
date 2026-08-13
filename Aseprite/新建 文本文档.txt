@@ -1,0 +1,1 @@
+aseprite.exe -b "D:\CodeProject\PixelsProject\Aseprite\ji.aseprite" --save-as "D:\CodeProject\PixelsProject\Aseprite\mod_end\Animals\Chick\part-{slice}.png"
