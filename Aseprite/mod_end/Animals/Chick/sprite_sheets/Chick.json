@@ -1,0 +1,95 @@
+{
+  "name": "Chick",
+  "frame_size": [
+    21,
+    20
+  ],
+  "direction": "horizontal",
+  "frame_count": 10,
+  "sheet_size": [
+    210,
+    20
+  ],
+  "frames": [
+    {
+      "frame": 1,
+      "filename": "frame_0001.png",
+      "x": 0,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 2,
+      "filename": "frame_0002.png",
+      "x": 21,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 3,
+      "filename": "frame_0003.png",
+      "x": 42,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 4,
+      "filename": "frame_0004.png",
+      "x": 63,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 5,
+      "filename": "frame_0005.png",
+      "x": 84,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 6,
+      "filename": "frame_0006.png",
+      "x": 105,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 7,
+      "filename": "frame_0007.png",
+      "x": 126,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 8,
+      "filename": "frame_0008.png",
+      "x": 147,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 9,
+      "filename": "frame_0009.png",
+      "x": 168,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    },
+    {
+      "frame": 10,
+      "filename": "frame_0010.png",
+      "x": 189,
+      "y": 0,
+      "width": 21,
+      "height": 20
+    }
+  ]
+}

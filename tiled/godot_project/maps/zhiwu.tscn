@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://bhr6dewp3ehhs"]
+
+[ext_resource type="PackedScene" path="res://scenes/objects/plants/crop_growth_01.tscn" id="1_crop_01"]
+[ext_resource type="PackedScene" path="res://scenes/objects/plants/crop_growth_02.tscn" id="2_crop_02"]
+[ext_resource type="PackedScene" path="res://scenes/objects/plants/crop_growth_03.tscn" id="3_crop_03"]
+[ext_resource type="PackedScene" path="res://scenes/objects/plants/crop_growth_04.tscn" id="4_crop_04"]
+[ext_resource type="PackedScene" path="res://scenes/objects/plants/crop_growth_05.tscn" id="5_crop_05"]
+
+[node name="Zhiwu" type="Node2D" unique_id=750262917]
+
+[node name="CropGrowth01" parent="." instance=ExtResource("1_crop_01")]
+position = Vector2(16, 40)
+
+[node name="CropGrowth02" parent="." instance=ExtResource("2_crop_02")]
+position = Vector2(48, 40)
+
+[node name="CropGrowth03" parent="." instance=ExtResource("3_crop_03")]
+position = Vector2(80, 40)
+
+[node name="CropGrowth04" parent="." instance=ExtResource("4_crop_04")]
+position = Vector2(112, 40)
+
+[node name="CropGrowth05" parent="." instance=ExtResource("5_crop_05")]
+position = Vector2(144, 40)

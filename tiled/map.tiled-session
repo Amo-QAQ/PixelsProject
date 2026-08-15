@@ -1,0 +1,134 @@
+{
+    "activeFile": "map01.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "D:/Desktop/tilemap/未命名.tmx": {
+            "scale": 0.5027083333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 129.2996270203067,
+                "y": -50.725238292581935
+            }
+        },
+        "Props.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 1
+        },
+        "crop.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 3,
+            "scaleInEditor": 1
+        },
+        "decorations_tilemap.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 1
+        },
+        "house_A.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 1
+        },
+        "house_B.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "juese.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 2
+        },
+        "map01.tmx": {
+            "scale": 2,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 400,
+                "y": 399.75
+            }
+        },
+        "map01.tmx#terrainA": {
+            "dynamicWrapping": false,
+            "scaleInEditor": 1
+        },
+        "terrainA.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 2
+        },
+        "terrainB.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 2,
+            "scaleInEditor": 4
+        },
+        "terrainC.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 2
+        },
+        "tree.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 3
+        },
+        "water-ani.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 5.5
+        },
+        "water-ani02-Sheet.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 8
+        },
+        "water-ani02.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "角色_F.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 5.5
+        }
+    },
+    "frame.defaultDuration": 20,
+    "last.exportedFilePath": "C:/Users/Administrator/Documents/新建游戏项目",
+    "last.imagePath": "D:/BaiduSyncdisk/Draw project/Aseprite/mod_end/Player",
+    "map.height": 50,
+    "map.lastUsedExportFilter": "Godot 4 Scene files (*.tscn)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 50,
+    "openFiles": [
+        "map01.tmx",
+        "terrainA.tsx",
+        "terrainB.tsx",
+        "terrainC.tsx",
+        "water-ani.tsx",
+        "decorations_tilemap.tsx",
+        "Props.tsx",
+        "house_A.tsx",
+        "house_B.tsx",
+        "tree.tsx",
+        "crop.tsx",
+        "角色_F.tsx"
+    ],
+    "project": "map.tiled-project",
+    "recentFiles": [
+        "角色_F.tsx",
+        "crop.tsx",
+        "tree.tsx",
+        "house_B.tsx",
+        "house_A.tsx",
+        "Props.tsx",
+        "decorations_tilemap.tsx",
+        "water-ani.tsx",
+        "terrainC.tsx",
+        "terrainB.tsx",
+        "terrainA.tsx",
+        "map01.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 23,
+        "width": 23
+    },
+    "tileset.type": 0
+}
