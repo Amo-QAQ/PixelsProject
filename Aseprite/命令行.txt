@@ -1,0 +1,1 @@
+"D:\Program\Steam\steamapps\common\Aseprite\Aseprite.exe" -b "D:\CodeProject\PixelsProject\Aseprite\ji.aseprite" --split-tags --split-slices --save-as "D:\CodeProject\PixelsProject\Aseprite\mod_end\Animals\Chick\daochu\{tag}_{slice}_{frame}.png"
