@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>精灵图批量拆分工具</title>
+<style>
+:root{--bg:#fff;--bg2:#f8f9fa;--bg3:#eff1f3;--text:#1a1a2e;--text2:#555;--text3:#999;--border:#ddd;--border2:#bbb;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--radius:10px;--rs:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);padding:14px;line-height:1.4;}
+h1{font-size:20px;font-weight:700;margin-bottom:2px;}
+.sub{color:var(--text2);font-size:13px;margin-bottom:16px;}
+.card{background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);padding:12px 16px;margin-bottom:12px;}
+.card h2{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.row>div{display:flex;flex-direction:column;gap:3px;}
+.row label{font-size:11px;color:var(--text2);font-weight:600;}
+.row input[type=number]{width:64px;padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+input[type=text]{padding:5px 8px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+button{padding:6px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--bg);font-size:12px;cursor:pointer;transition:all .15s;font-weight:500;}
+button:hover{background:var(--bg2);border-color:var(--text2);}
+button.pri{background:var(--blue);color:#fff;border-color:var(--blue);}
+button.pri:hover{background:#1d4ed8;}
+button.ok{background:var(--green);color:#fff;border-color:var(--green);}
+button.dan{color:var(--red);border-color:#fecaca;}
+button.dan:hover{background:#fef2f2;}
+button.sm{padding:4px 9px;font-size:11px;}
+.drop-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:28px;text-align:center;color:var(--text2);cursor:pointer;transition:all .2s;background:var(--bg2);}
+.drop-zone:hover,.drop-zone.act{border-color:var(--blue);background:#eff6ff;}
+.file-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:8px 10px;background:var(--bg3);border-radius:var(--rs);min-height:40px;align-items:center;}
+.file-tab{padding:6px 16px;border:2px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--bg);white-space:nowrap;font-weight:500;transition:all .15s;}
+.file-tab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(37,99,235,.3);}
+.file-tab:hover:not(.on){border-color:var(--blue);color:var(--blue);transform:translateY(-1px);}
+.file-tab .cnt{margin-left:4px;font-size:11px;opacity:.7;}
+.preview-area{position:relative;overflow:auto;max-height:550px;background:var(--bg3);border-radius:var(--rs);user-select:none;min-height:150px;border:1px solid var(--border);}
+.preview-area canvas{display:block;image-rendering:pixelated;transform-origin:top left;}
+.sel-box{position:absolute;pointer-events:none;display:none;border:2px solid var(--blue);background:rgba(37,99,235,.12);z-index:10;}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;}
+.toolbar label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-weight:500;}
+.sel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
+.sel-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:8px;position:relative;transition:border-color .15s;}
+.sel-card:hover{border-color:var(--blue);box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.sel-card .thumb{width:100%;height:90px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:4px;margin-bottom:6px;overflow:hidden;border:1px solid var(--border);}
+.sel-card .thumb img{max-width:80px;max-height:80px;image-rendering:pixelated;}
+.sel-card .name-input{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;font-weight:600;color:var(--blue);}
+.sel-card .name-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.15);}
+.sel-card .meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:3px;}
+.sel-card .del-btn{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(255,255,255,.95);color:var(--red);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+.sel-card .del-btn:hover{background:var(--red);color:#fff;}
+.sel-card[draggable=true]{cursor:grab;}
+.sel-card[draggable=true]:active{cursor:grabbing;}
+.sel-card.dragging{opacity:.4;transform:scale(.95);}
+.sel-card.drag-over{border:2px dashed var(--blue);background:#eff6ff;transform:translateY(2px);}
+.group-header{grid-column:1/-1;font-size:13px;font-weight:700;color:var(--text);padding:8px 4px 4px;border-bottom:2px solid var(--border);margin-top:6px;display:flex;align-items:center;gap:8px;}
+.group-header .letter-badge{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;background:var(--blue);color:#fff;border-radius:50%;font-size:12px;font-weight:700;}
+#outputPath{flex:1;min-width:200px;font-family:monospace;font-size:12px;color:var(--text2);background:var(--bg3);padding:6px 10px;border-radius:var(--rs);border:1px solid var(--border);}
+#progressBar{width:100%;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;display:none;margin-top:10px;}
+#progressBar .fill{height:100%;background:linear-gradient(90deg,var(--green),#22c55e);transition:width .2s;}
+#logArea{font-family:monospace;font-size:11px;color:var(--text2);max-height:120px;overflow-y:auto;background:var(--bg3);padding:8px;border-radius:var(--rs);margin-top:8px;display:none;}
+.log-ok{color:var(--green)}.log-err{color:var(--red)}.log-info{color:var(--blue)}
+.batch-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<h1>🎨 精灵图批量拆分工具</h1>
+<p class="sub">批量导入 · 自动拆分 · 手动框选合并 · 按原文件名分组命名(berry_01/berry_02…) · 指定目录导出</p>
+
+<div class="card">
+  <h2>1. 导入图片 <span style="font-weight:400;font-size:12px;color:var(--text2);">支持多选 / 拖拽</span></h2>
+  <div class="drop-zone" id="dropZone">
+    <p style="margin-bottom:4px;font-size:14px;">📂 拖拽多张图片到这里，或 <b style="color:var(--blue)">点击选择文件</b></p>
+    <p style="font-size:12px;">支持 PNG / GIF / BMP，可一次导入多张</p>
+    <input type="file" id="fileInput" accept="image/png,image/gif,image/bmp" multiple style="display:none;">
+  </div>
+  <div class="file-tabs" id="fileTabs"></div>
+</div>
+
+<div class="card" id="settingsCard" style="display:none;">
+  <h2>2. 网格设置</h2>
+  <div class="row">
+    <div><label>格子宽</label><input type="number" id="cellW" value="16" min="1"></div>
+    <div><label>格子高</label><input type="number" id="cellH" value="16" min="1"></div>
+    <div><label>列数</label><input type="number" id="cols" placeholder="自动检测"></div>
+    <div><label>行数</label><input type="number" id="rows" placeholder="自动检测"></div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;">
+      <button class="sm" onclick="setP(16,16)">16×16 瓦片</button>
+      <button class="sm" onclick="setP(48,96)">48×96 角色</button>
+      <button class="sm" onclick="setP(21,20)">21×20 鸡</button>
+      <button class="sm" onclick="setP(32,32)">32×32</button>
+      <button class="sm pri" onclick="applyAll()">应用到全部图片</button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="previewCard" style="display:none;">
+  <h2>
+    <span>3. 预览与框选 — <b id="currentImgName" style="color:var(--blue);font-size:15px;"></b></span>
+    <span class="toolbar">
+      <label><input type="checkbox" id="showGrid" checked> 网格线</label>
+      <label><input type="checkbox" id="skipEmpty" checked> 标空(红/绿)</label>
+      <label><input type="checkbox" id="showLabels"> 显示坐标</label>
+      <span style="color:var(--text2);font-size:12px;margin-left:8px;">缩放:</span>
+      <button class="sm" onclick="setZoom(1)">1x</button>
+      <button class="sm" onclick="setZoom(2)" style="background:var(--blue);color:#fff;border-color:var(--blue);">2x</button>
+      <button class="sm" onclick="setZoom(3)">3x</button>
+      <button class="sm" onclick="setZoom(4)">4x</button>
+      <button class="sm pri" onclick="autoSplitCur()">拆分当前图</button>
+      <button class="sm pri" onclick="autoSplitAll()">🚀 拆分全部</button>
+      <button class="sm dan" onclick="clearCur()">清空当前</button>
+    </span>
+  </h2>
+  <div class="preview-area" id="previewWrap">
+    <canvas id="canvas"></canvas>
+    <div class="sel-box" id="overlay"></div>
+  </div>
+  <p id="selInfo" style="font-size:13px;color:var(--text2);margin-top:8px;font-weight:500;"></p>
+</div>
+
+<div class="card" id="listCard" style="display:none;">
+  <h2>
+    <span>4. 已选区域 — 按原文件名分组命名（berry_01/berry_02…）可编辑名称</span>
+    <span id="totalCount" style="font-size:13px;color:var(--blue);font-weight:600;"></span>
+  </h2>
+  <div class="batch-actions">
+    <button class="sm" onclick="renameBatch()">📝 批量加前缀</button>
+    <button class="sm dan" onclick="clearAll()">🗑️ 清空全部</button>
+  </div>
+  <div class="sel-grid" id="selectedList">
+    <span style="color:var(--text3);grid-column:1/-1;padding:20px;text-align:center;font-size:14px;">👆 导入图片后点击「拆分全部」或手动在预览区拖动框选</span>
+  </div>
+</div>
+
+<div class="card" id="exportCard" style="display:none;">
+  <h2>5. 导出到指定目录</h2>
+  <div class="row" style="margin-bottom:12px;">
+    <button class="pri" onclick="pickDir()">📁 选择输出文件夹</button>
+    <input type="text" id="outputPath" readonly placeholder="未选择（将使用浏览器默认下载）">
+  </div>
+  <div class="row">
+    <button class="ok" onclick="exportAll()" style="padding:10px 24px;font-size:14px;">✅ 一键导出到指定目录</button>
+    <button onclick="downloadZip()">📦 下载 ZIP 包</button>
+  </div>
+  <p style="font-size:11px;color:var(--text3);margin-top:6px;">* 选择文件夹需要 Chrome / Edge 浏览器。Firefox 请使用「下载 ZIP」</p>
+  <div id="progressBar"><div class="fill" id="progressFill"></div></div>
+  <div id="logArea"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===== 工具函数 ===== */
+  function $(id){ return document.getElementById(id); }
+
+  /* ===== 从文件名提取前缀（去掉扩展名） ===== */
+  function getFileBase(name) {
+    if (!name) { return "sprite"; }
+    return name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_\-]/g, "_");
+  }
+
+  /* ===== 状态变量 ===== */
+  var imgs = [];
+  var ci = 0;
+  var cW = 16;
+  var cH = 16;
+  var sGrid = true;
+  var sEmpty = true;
+  var sLabel = false;
+  var zoom = 2; /* 预览缩放倍数：1=原始, 2=2倍, 3=3倍 */
+  var dirHandle = null;
+  var dragging = false;
+  var dSX = 0, dSY = 0, dCX = 0, dCY = 0;
+  var ctx = null;
+
+  var canvas = $("canvas");
+  var pWrap = $("previewWrap");
+  var overlay = $("overlay");
+
+  /* ===== 文件导入 ===== */
+  function initFileImport() {
+    var dropZone = $("dropZone");
+    var fileInput = $("fileInput");
+
+    dropZone.addEventListener("click", function(e) {
+      e.preventDefault();
+      fileInput.click();
+    });
+
+    dropZone.addEventListener("dragover", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add("act");
+    });
+
+    dropZone.addEventListener("dragleave", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove("act");
+    });
+
+    dropZone.addEventListener("drop", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove("act");
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+
+    fileInput.addEventListener("change", function(e) {
+      if (this.files && this.files.length > 0) {
+        handleFiles(this.files);
+        this.value = "";
+      }
+    });
+  }
+
+  function handleFiles(files) {
+    var remaining = Array.prototype.slice.call(files);
+    processNextFile(remaining);
+  }
+
+  function processNextFile(list) {
+    if (list.length === 0) {
+      renderTabs();
+      if (imgs.length > 0) {
+        switchImg(0);
+      }
+      return;
+    }
+
+    var f = list.shift();
+
+    if (!f.type.startsWith("image/")) {
+      processNextFile(list);
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function() {
+      var img = new Image();
+      img.onload = function() {
+        var hc = document.createElement("canvas");
+        hc.width = img.width;
+        hc.height = img.height;
+        var hctx = hc.getContext("2d", { willReadFrequently: true });
+        hctx.drawImage(img, 0, 0);
+
+        imgs.push({
+          img: img,
+          name: f.name,
+          hCanvas: hc,
+          hCtx: hctx,
+          cols: 0,
+          rows: 0,
+          areas: [],
+          letter: ""
+        });
+
+        processNextFile(list);
+      };
+      img.onerror = function() {
+        console.warn("[SpriteSplitter] 加载失败:", f.name);
+        processNextFile(list);
+      };
+      img.src = reader.result;
+    };
+    reader.onerror = function() {
+      console.warn("[SpriteSplitter] 读取失败:", f.name);
+      processNextFile(list);
+    };
+    reader.readAsDataURL(f);
+  }
+
+  /* ===== 渲染文件标签 ===== */
+  function renderTabs() {
+    var el = $("fileTabs");
+    el.innerHTML = "";
+
+    for (var i = 0; i < imgs.length; i++) {
+      (function(ii) {
+        var im = imgs[ii];
+        if (!im.letter) { im.letter = getFileBase(im.name); }
+
+        var b = document.createElement("button");
+        b.className = "file-tab" + (ii === ci ? " on" : "");
+        b.innerHTML = "<span>" + im.letter + "</span>" +
+                      '<span class="cnt">(' + im.areas.length + ")</span>";
+
+        b.onclick = function() { switchImg(ii); };
+
+        el.appendChild(b);
+      })(i);
+    }
+  }
+
+  /* ===== 切换图片 ===== */
+  function switchImg(idx) {
+    ci = idx;
+    var im = imgs[idx];
+    if (!im) { return; }
+
+    canvas.width = im.img.width;
+    canvas.height = im.img.height;
+
+    ctx = canvas.getContext("2d");
+
+    if (!im.letter) { im.letter = getFileBase(im.name); }
+
+    $("settingsCard").style.display = "block";
+    $("previewCard").style.display = "block";
+    $("listCard").style.display = "block";
+    $("exportCard").style.display = "block";
+
+    if (im.cols === 0) { detectGrid(im); }
+
+    $("cellW").value = cW;
+    $("cellH").value = cH;
+    $("cols").value = im.cols;
+    $("rows").value = im.rows;
+    $("currentImgName").textContent = im.name;
+
+    renderTabs();
+    drawPreview();
+    updateInfo();
+    renderList();
+  }
+
+  /* ===== 网格设置 ===== */
+  function setP(w, h) {
+    cW = w;
+    cH = h;
+    $("cellW").value = w;
+    $("cellH").value = h;
+    applyCur();
+  }
+
+  function detectGrid(im) {
+    im.cols = Math.floor(im.img.width / cW);
+    im.rows = Math.floor(im.img.height / cH);
+  }
+
+  function applyCur() {
+    if (!imgs[ci]) { return; }
+    detectGrid(imgs[ci]);
+    $("cols").value = imgs[ci].cols;
+    $("rows").value = imgs[ci].rows;
+    drawPreview();
+  }
+
+  function applyAll() {
+    for (var i = 0; i < imgs.length; i++) {
+      imgs[i].letter = getFileBase(imgs[i].name);
+      detectGrid(imgs[i]);
+    }
+    applyCur();
+    log("已将 " + cW + "x" + cH + " 应用到全部 " + imgs.length + " 张", "info");
+    renderList();
+  }
+
+  $("cellW").onchange = function() {
+    cW = Math.max(1, parseInt(this.value) || 16);
+    applyCur();
+  };
+  $("cellH").onchange = function() {
+    cH = Math.max(1, parseInt(this.value) || 16);
+    applyCur();
+  };
+  $("cols").onchange = function() {
+    if (imgs[ci]) { imgs[ci].cols = parseInt(this.value) || 0; drawPreview(); }
+  };
+  $("rows").onchange = function() {
+    if (imgs[ci]) { imgs[ci].rows = parseInt(this.value) || 0; drawPreview(); }
+  };
+  $("showGrid").onchange = function() { sGrid = this.checked; drawPreview(); };
+  $("skipEmpty").onchange = function() { sEmpty = this.checked; drawPreview(); };
+  $("showLabels").onchange = function() { sLabel = this.checked; drawPreview(); };
+
+  /* ===== 空白检测 ===== */
+  function isEmptyCell(im, c, r) {
+    if (!im.hCtx || c < 0 || r < 0 || c >= im.cols || r >= im.rows) { return true; }
+    var x = c * cW;
+    var y = r * cH;
+    var w = Math.min(cW, im.hCanvas.width - x);
+    var h = Math.min(cH, im.hCanvas.height - y);
+
+    if (w <= 0 || h <= 0) { return true; }
+
+    try {
+      var d = im.hCtx.getImageData(x, y, w, h).data;
+      for (var i = 3; i < d.length; i += 4) {
+        if (d[i] > 10) { return false; }
+      }
+    } catch (e) {
+      return true;
+    }
+    return true;
+  }
+
+  /* ===== 缩放控制 ===== */
+  function setZoom(z) {
+    zoom = z;
+    /* 更新按钮状态 */
+    var btns = document.querySelectorAll('.toolbar button');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].textContent === z + 'x') {
+        btns[i].style.background = 'var(--blue)';
+        btns[i].style.color = '#fff';
+        btns[i].style.borderColor = 'var(--blue)';
+      } else if (btns[i].textContent === '1x' || btns[i].textContent === '2x' || btns[i].textContent === '3x' || btns[i].textContent === '4x') {
+        btns[i].style.background = '';
+        btns[i].style.color = '';
+        btns[i].style.borderColor = '';
+      }
+    }
+    drawPreview();
+  }
+
+  /* ===== 绘制预览 ===== */
+  function drawPreview() {
+    var im = imgs[ci];
+    if (!im || !ctx) { return; }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(im.img, 0, 0);
+
+    if (im.cols > 0 && im.rows > 0 && sGrid) {
+      ctx.strokeStyle = "rgba(0,0,0,0.12)";
+      ctx.lineWidth = 0.8;
+      for (var c = 0; c <= im.cols; c++) {
+        ctx.beginPath();
+        ctx.moveTo(c * cW, 0);
+        ctx.lineTo(c * cW, canvas.height);
+        ctx.stroke();
+      }
+      for (var r = 0; r <= im.rows; r++) {
+        ctx.beginPath();
+        ctx.moveTo(0, r * cH);
+        ctx.lineTo(canvas.width, r * cH);
+        ctx.stroke();
+      }
+    }
+
+    if (im.cols > 0 && im.rows > 0) {
+      for (var r = 0; r < im.rows; r++) {
+        for (var c = 0; c < im.cols; c++) {
+          var empty = isEmptyCell(im, c, r);
+          var sel = isCellSelected(im, c, r);
+
+          if (sEmpty) {
+            if (!empty) {
+              ctx.fillStyle = "rgba(22,163,74,0.18)";
+              ctx.fillRect(c * cW + 1, r * cH + 1, cW - 2, cH - 2);
+            } else {
+              ctx.fillStyle = "rgba(220,38,38,0.1)";
+              ctx.fillRect(c * cW + 1, r * cH + 1, cW - 2, cH - 2);
+            }
+          }
+
+          if (sel) {
+            ctx.strokeStyle = "#2563eb";
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(c * cW + 0.5, r * cH + 0.5, cW - 1, cH - 1);
+          }
+
+          if (sLabel) {
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.font = "bold 11px monospace";
+            ctx.fillText(c + "," + r, c * cW + 3, r * cH + 12);
+          }
+        }
+      }
+    }
+
+    /* 应用缩放 */
+    canvas.style.transform = "scale(" + zoom + ")";
+    canvas.style.width = (canvas.width * zoom) + "px";
+    canvas.style.height = (canvas.height * zoom) + "px";
+  }
+
+  function isCellSelected(im, c, r) {
+    for (var i = 0; i < im.areas.length; i++) {
+      var a = im.areas[i];
+      if (c >= a.c1 && c <= a.c2 && r >= a.r1 && r <= a.r2) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /* ===== 鼠标事件：拖拽框选 + 单击选中 ===== */
+  pWrap.addEventListener("mousedown", function(e) {
+    if (e.target !== canvas) { return; }
+
+    var rect = canvas.getBoundingClientRect();
+    var sx = canvas.width / rect.width;
+    var sy = canvas.height / rect.height;
+    var x = (e.clientX - rect.left) * sx;
+    var y = (e.clientY - rect.top) * sy;
+
+    dragging = true;
+    dSX = x;
+    dSY = y;
+    dCX = x;
+    dCY = y;
+
+    overlay.style.display = "block";
+    updateOverlay(rect);
+    e.preventDefault();
+  });
+
+  pWrap.addEventListener("mousemove", function(e) {
+    if (!dragging) { return; }
+
+    var rect = canvas.getBoundingClientRect();
+    var sx = canvas.width / rect.width;
+    var sy = canvas.height / rect.height;
+
+    dCX = Math.max(0, Math.min(canvas.width, (e.clientX - rect.left) * sx));
+    dCY = Math.max(0, Math.min(canvas.height, (e.clientY - rect.top) * sy));
+
+    updateOverlay(rect);
+    e.preventDefault();
+  });
+
+  document.addEventListener("mouseup", function() {
+    if (!dragging) { return; }
+    dragging = false;
+    overlay.style.display = "none";
+
+    var im = imgs[ci];
+    if (!im) { return; }
+
+    var c1 = Math.floor(Math.min(dSX, dCX) / cW);
+    var r1 = Math.floor(Math.min(dSY, dCY) / cH);
+    var c2 = Math.min(im.cols - 1, Math.floor(Math.max(dSX, dCX) / cW));
+    var r2 = Math.min(im.rows - 1, Math.floor(Math.max(dSY, dCY) / cH));
+
+    if (c1 >= 0 && r1 >= 0 && c2 >= c1 && r2 >= r1) {
+      var found = -1;
+      for (var i = 0; i < im.areas.length; i++) {
+        var a = im.areas[i];
+        if (a.c1 === c1 && a.c2 === c2 && a.r1 === r1 && a.r2 === r2) {
+          found = i;
+          break;
+        }
+      }
+
+      if (found >= 0) {
+        im.areas.splice(found, 1);
+      } else {
+        im.areas.push({c1: c1, c2: c2, r1: r1, r2: r2, name: ""});
+      }
+
+      drawPreview();
+      updateInfo();
+      renderList();
+      renderTabs();
+    }
+  });
+
+  function updateOverlay(rect) {
+    var sx = rect.width / canvas.width;
+    var sy = rect.height / canvas.height;
+
+    overlay.style.left = Math.min(dSX, dCX) * sx + "px";
+    overlay.style.top = Math.min(dSY, dCY) * sy + "px";
+    overlay.style.width = Math.abs(dCX - dSX) * sx + "px";
+    overlay.style.height = Math.abs(dCY - dSY) * sy + "px";
+  }
+
+  /* 单击选中/取消单个格子 */
+  pWrap.addEventListener("click", function(e) {
+    if (e.target !== canvas) { return; }
+    if (Math.abs(dCX - dSX) > 3 || Math.abs(dCY - dSY) > 3) { return; }
+
+    var rect = canvas.getBoundingClientRect();
+    var sx = canvas.width / rect.width;
+    var sy = canvas.height / rect.height;
+    var x = (e.clientX - rect.left) * sx;
+    var y = (e.clientY - rect.top) * sy;
+
+    var c = Math.floor(x / cW);
+    var r = Math.floor(y / cH);
+    var im = imgs[ci];
+
+    if (!im) { return; }
+    if (c < 0 || r < 0 || c >= im.cols || r >= im.rows) { return; }
+
+    var found = -1;
+    for (var i = 0; i < im.areas.length; i++) {
+      var a = im.areas[i];
+      if (a.c1 === c && a.c2 === c && a.r1 === r && a.r2 === r) {
+        found = i;
+        break;
+      }
+    }
+
+    if (found >= 0) {
+      im.areas.splice(found, 1);
+    } else {
+      if (!im.letter) { im.letter = getFileBase(im.name); }
+      var newIdx = im.areas.length + 1;
+      var numStr = newIdx < 10 ? "0" + newIdx : "" + newIdx;
+      im.areas.push({c1: c1, c2: c2, r1: r1, r2: r2, name: im.letter + "_" + numStr});
+    }
+
+    drawPreview();
+    updateInfo();
+    renderList();
+    renderTabs();
+  });
+
+  /* ===== 自动拆分 ===== */
+  function autoSplitCur() {
+    var im = imgs[ci];
+    if (!im) { return; }
+
+    im.areas = [];
+    if (!im.letter) { im.letter = getFileBase(im.name); }
+    var idx = 0;
+
+    for (var r = 0; r < im.rows; r++) {
+      for (var c = 0; c < im.cols; c++) {
+        if (!isEmptyCell(im, c, r)) {
+          idx++;
+          var numStr = idx < 10 ? "0" + idx : "" + idx;
+          im.areas.push({c1: c, c2: c, r1: r, r2: r, name: im.letter + "_" + numStr});
+        }
+      }
+    }
+
+    drawPreview();
+    updateInfo();
+    renderList();
+    renderTabs();
+    log("[" + im.name + "] 拆分完成：" + im.areas.length + " 个非空格", "ok");
+  }
+
+  function autoSplitAll() {
+    var total = 0;
+
+    for (var ii = 0; ii < imgs.length; ii++) {
+      var im = imgs[ii];
+
+      if (im.cols === 0) { detectGrid(im); }
+
+      im.areas = [];
+      im.letter = getFileBase(im.name);
+      var idx = 0;
+
+      for (var r = 0; r < im.rows; r++) {
+        for (var c = 0; c < im.cols; c++) {
+          if (!isEmptyCell(im, c, r)) {
+            idx++;
+            total++;
+            var numStr = idx < 10 ? "0" + idx : "" + idx;
+            im.areas.push({c1: c, c2: c, r1: r, r2: r, name: im.letter + "_" + numStr});
+          }
+        }
+      }
+    }
+
+    drawPreview();
+    updateInfo();
+    renderList();
+    renderTabs();
+
+    var prefixes = "";
+    for (var k = 0; k < imgs.length; k++) {
+      prefixes += (k > 0 ? ", " : "") + getFileBase(imgs[k].name);
+    }
+    log("全部拆分完成！" + imgs.length + " 张图 -> 共 " + total + " 个（前缀：" + prefixes + "）", "ok");
+  }
+
+  function clearCur() {
+    if (imgs[ci]) {
+      imgs[ci].areas = [];
+      drawPreview();
+      updateInfo();
+      renderList();
+      renderTabs();
+    }
+  }
+
+  function clearAll() {
+    if (!confirm("确定清空所有图片的已选区域吗？")) { return; }
+
+    for (var i = 0; i < imgs.length; i++) {
+      imgs[i].areas = [];
+    }
+
+    drawPreview();
+    updateInfo();
+    renderList();
+    renderTabs();
+  }
+
+  /* ===== 已选列表渲染 ===== */
+  function updateInfo() {
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    var cur = imgs[ci] ? imgs[ci].areas.length : 0;
+    var curName = imgs[ci] ? imgs[ci].name : "";
+
+    $("selInfo").innerHTML = "<b>当前图 [" + curName + "]</b>：" + cur + " 个已选 &nbsp;|&nbsp; <b>全部</b>：" + total + " 个";
+    $("totalCount").textContent = "共 " + total + " 个";
+  }
+
+  /* ===== 重新编号（拖拽/删除后调用） ===== */
+  function renumberAreas(im) {
+    if (!im || !im.areas) { return; }
+    for (var j = 0; j < im.areas.length; j++) {
+      var a = im.areas[j];
+      /* 只重编号用户没手动改过名的（名字包含原前缀_数字格式的） */
+      var numStr = String(j + 1);
+      if (numStr.length < 2) { numStr = "0" + numStr; }
+      var expectedName = im.letter + "_" + numStr;
+      if (!a.name || a.name.indexOf(im.letter + "_") === 0) {
+        a.name = expectedName;
+      }
+    }
+  }
+
+  function renderList() {
+    var container = $("selectedList");
+
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    if (total === 0) {
+      container.innerHTML = '<span style="color:var(--text3);grid-column:1/-1;padding:20px;text-align:center;font-size:14px;">' +
+                           '👆 导入图片后点击「拆分全部」或手动在预览区拖动框选</span>';
+      return;
+    }
+
+    container.innerHTML = "";
+
+    for (var ii = 0; ii < imgs.length; ii++) {
+      (function(i) {
+        var im = imgs[i];
+
+        if (im.areas.length === 0) { return; }
+
+        // 分组标题
+        var hdr = document.createElement("div");
+        hdr.className = "group-header";
+        hdr.innerHTML = '<span class="letter-badge">' + im.letter + '</span>' +
+                        ' <span>' + im.name + '</span>' +
+                        ' <span style="font-weight:400;color:var(--text3);font-size:12px;">— ' + im.areas.length + ' 个</span>';
+        container.appendChild(hdr);
+
+        // 该图的每个选中区域
+        for (var ai = 0; ai < im.areas.length; ai++) {
+          (function(a, areaIdx) {
+            var w = (a.c2 - a.c1 + 1) * cW;
+            var h = (a.r2 - a.r1 + 1) * cH;
+
+            var tc = document.createElement("canvas");
+            tc.width = w;
+            tc.height = h;
+            tc.getContext("2d").drawImage(im.img, a.c1 * cW, a.r1 * cH, w, h, 0, 0, w, h);
+
+            var numStr = String(areaIdx + 1);
+            if (numStr.length < 2) { numStr = "0" + numStr; }
+
+            var defaultName = a.name || (im.letter + "_" + numStr);
+
+            var card = document.createElement("div");
+            card.className = "sel-card";
+            card.draggable = true;
+            card.dataset.ii = i;
+            card.dataset.ai = areaIdx;
+            card.innerHTML =
+              '<button class="del-btn" title="移除此区域">&times;</button>' +
+              '<div class="thumb"><img src="' + tc.toDataURL() + '" alt="预览"></div>' +
+              '<input class="name-input" type="text" value="' + defaultName + '" data-ii="' + i + '" data-ai="' + areaIdx + '" title="点击编辑文件名（右键直接删除）">' +
+              '<div class="meta"><span>' + w + 'x' + h + 'px</span><span>' + im.letter + "_" + numStr + '</span></div>';
+
+            /* × 按钮删除 */
+            card.querySelector(".del-btn").onclick = function(e) {
+              e.stopPropagation();
+              im.areas.splice(areaIdx, 1);
+              renumberAreas(im);
+              drawPreview();
+              updateInfo();
+              renderList();
+              renderTabs();
+            };
+
+            /* 右键直接删除 */
+            card.oncontextmenu = function(e) {
+              e.preventDefault();
+              im.areas.splice(areaIdx, 1);
+              renumberAreas(im);
+              drawPreview();
+              updateInfo();
+              renderList();
+              renderTabs();
+            };
+
+            /* 名称编辑 */
+            card.querySelector(".name-input").onchange = function() {
+              imgs[parseInt(this.dataset.ii)].areas[parseInt(this.dataset.ai)].name = this.value;
+            };
+            card.querySelector(".name-input").onkeydown = function(e) {
+              if (e.key === "Enter") { this.blur(); }
+            };
+
+            /* ===== 拖拽排序 ===== */
+            card.ondragstart = function(e) {
+              e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setData("text/plain", i + "," + areaIdx);
+              card.classList.add("dragging");
+            };
+            card.ondragend = function() {
+              card.classList.remove("dragging");
+            };
+            card.ondragover = function(e) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              if (!card.classList.contains("drag-over")) {
+                card.classList.add("drag-over");
+              }
+            };
+            card.ondragleave = function() {
+              card.classList.remove("drag-over");
+            };
+            card.ondrop = function(e) {
+              e.preventDefault();
+              card.classList.remove("drag-over");
+              var data = e.dataTransfer.getData("text/plain").split(",");
+              var fromIi = parseInt(data[0]);
+              var fromAi = parseInt(data[1]);
+              if (fromIi !== i) { return; } /* 不允许跨图拖拽 */
+
+              var areas = im.areas;
+              var moved = areas.splice(fromAi, 1)[0];
+              var toAi = areaIdx;
+              if (fromAi < toAi) { toAi--; } /* 删除后索引偏移 */
+              areas.splice(toAi, 0, moved);
+
+              renumberAreas(im);
+              drawPreview();
+              renderList();
+            };
+
+            container.appendChild(card);
+          })(im.areas[ai], ai);
+        }
+      })(ii);
+    }
+  }
+
+  function renameBatch() {
+    var p = prompt("输入要添加的前缀（留空取消）：", "");
+    if (p === null) { return; }
+
+    var cnt = 0;
+
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+      for (var j = 0; j < im.areas.length; j++) {
+        var a = im.areas[j];
+        var numStr = String(j + 1);
+        if (numStr.length < 2) { numStr = "0" + numStr; }
+
+        if (!a.name) {
+          a.name = p + "_" + im.letter + "_" + numStr;
+          cnt++;
+        } else if (a.name.indexOf(p) !== 0) {
+          a.name = p + "_" + a.name;
+          cnt++;
+        }
+      }
+    }
+
+    renderList();
+    log('批量前缀 "' + p + '"：影响 ' + cnt + ' 个文件', "info");
+  }
+
+  /* ===== 导出功能 ===== */
+  async function pickDir() {
+    try {
+      if (!window.showDirectoryPicker) {
+        alert("你的浏览器不支持选择文件夹\n\n请使用 Chrome 或 Edge 浏览器，\n或者使用「下载 ZIP」功能代替。");
+        return;
+      }
+
+      dirHandle = await window.showDirectoryPicker();
+      $("outputPath").value = dirHandle.name;
+      log("输出目录：" + dirHandle.name, "ok");
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        log("选择失败: " + e.message, "err");
+      }
+    }
+  }
+
+  async function exportAll() {
+    if (!dirHandle) {
+      alert("请先选择输出文件夹");
+      return;
+    }
+
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    if (total === 0) {
+      alert("没有已选区域，请先拆分或手动选择");
+      return;
+    }
+
+    $("progressBar").style.display = "block";
+    $("logArea").style.display = "block";
+    $("logArea").innerHTML = "";
+
+    var fill = $("progressFill");
+    var done = 0;
+    var okCount = 0;
+    var errCount = 0;
+
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+
+      for (var j = 0; j < im.areas.length; j++) {
+        var a = im.areas[j];
+
+        try {
+          var w = (a.c2 - a.c1 + 1) * cW;
+          var h = (a.r2 - a.r1 + 1) * cH;
+
+          var tc = document.createElement("canvas");
+          tc.width = w;
+          tc.height = h;
+          var tctx = tc.getContext("2d");
+          tctx.drawImage(im.img, a.c1 * cW, a.r1 * cH, w, h, 0, 0, w, h);
+
+          var blob = await new Promise(function(resolve) {
+            tc.toBlob(resolve, "image/png");
+          });
+
+          var fname = (a.name || im.letter + "_01") + ".png";
+          var safeFname = await getSafeName(dirHandle, fname);
+
+          var fh = await dirHandle.getFileHandle(safeFname, {create: true});
+          var wri = await fh.createWritable();
+          await wri.write(blob);
+          await wri.close();
+
+          log(safeFname + " (" + w + "x" + h + ")", "ok");
+          okCount++;
+        } catch (e) {
+          log("[" + im.name + "] 导出失败: " + e.message, "err");
+          errCount++;
+        }
+
+        done++;
+        fill.style.width = Math.round(done / total * 100) + "%";
+      }
+    }
+
+    log("\n完成！成功 " + okCount + " 个，失败 " + errCount + " 个 -> " + dirHandle.name, "info");
+  }
+
+  async function getSafeName(dir, name) {
+    if (!name) { name = "unnamed.png"; }
+
+    var base = name.replace(/\.png$/i, "");
+    var ext = name.endsWith(".png") ? ".png" : ".png";
+
+    var cand = name;
+    var idx = 1;
+
+    while (true) {
+      try {
+        await dir.getFileHandle(cand);
+        cand = base + "_" + idx + ext;
+        idx++;
+      } catch (e) {
+        if (e.name === "NotFoundError") {
+          return cand;
+        }
+        throw e;
+      }
+    }
+  }
+
+  async function downloadZip() {
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    if (total === 0) {
+      alert("没有已选区域");
+      return;
+    }
+
+    var JSZipModule = await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js");
+    var JSZip = JSZipModule.default;
+    var zip = new JSZip();
+    var cnt = 0;
+
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+
+      for (var j = 0; j < im.areas.length; j++) {
+        var a = im.areas[j];
+        var w = (a.c2 - a.c1 + 1) * cW;
+        var h = (a.r2 - a.r1 + 1) * cH;
+
+        var tc = document.createElement("canvas");
+        tc.width = w;
+        tc.height = h;
+        tc.getContext("2d").drawImage(im.img, a.c1 * cW, a.r1 * cH, w, h, 0, 0, w, h);
+
+        var dataUrl = tc.toDataURL("image/png");
+        var base64Data = dataUrl.split(",")[1];
+
+        zip.file((a.name || "sprite") + ".png", base64Data, {base64: true});
+        cnt++;
+      }
+    }
+
+    var blob = await zip.generateAsync({type: "blob"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "sprites_splitted.zip";
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    log("ZIP 下载：共 " + cnt + " 个文件", "ok");
+  }
+
+  /* ===== 日志 ===== */
+  function log(msg, type) {
+    if (!type) { type = "info"; }
+
+    var la = $("logArea");
+    la.style.display = "block";
+
+    var d = document.createElement("div");
+    d.className = "log-" + type;
+    d.textContent = msg;
+    la.appendChild(d);
+    la.scrollTop = la.scrollHeight;
+  }
+
+  /* ===== 暴露给 inline onclick 使用的函数 ===== */
+  window.setP = setP;
+  window.setZoom = setZoom;
+  window.applyAll = applyAll;
+  window.autoSplitCur = autoSplitCur;
+  window.autoSplitAll = autoSplitAll;
+  window.clearCur = clearCur;
+  window.clearAll = clearAll;
+  window.renameBatch = renameBatch;
+  window.pickDir = pickDir;
+  window.exportAll = exportAll;
+  window.downloadZip = downloadZip;
+
+  /* ===== 初始化 ===== */
+  initFileImport();
+  console.log("[SpriteSplitter] 初始化完成");
+
+})();
+</script>
+</body>
+</html>

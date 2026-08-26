@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Tiled Map01"
-run/main_scene="uid://igecltlmbbdg"
+run/main_scene="res://maps/map01.tscn"
 config/features=PackedStringArray("4.7")
 
 [display]
@@ -22,6 +22,10 @@ window/size/window_width_override=800
 window/size/window_height_override=800
 window/stretch/mode="canvas_items"
 window/stretch/scale_mode="integer"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/YATI/plugin.cfg")
 
 [rendering]
 
