@@ -32,11 +32,11 @@ button.sm{padding:4px 9px;font-size:11px;}
 .file-tab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(37,99,235,.3);}
 .file-tab:hover:not(.on){border-color:var(--blue);color:var(--blue);transform:translateY(-1px);}
 .file-tab .cnt{margin-left:4px;font-size:11px;opacity:.7;}
-.preview-area{position:relative;overflow:auto;max-height:550px;background:var(--bg3);border-radius:var(--rs);user-select:none;min-height:150px;border:1px solid var(--border);}
+.preview-area{position:relative;overflow:visible;background:var(--bg3);border-radius:var(--rs);user-select:none;min-height:150px;border:1px solid var(--border);}
 .preview-area canvas{display:block;image-rendering:pixelated;transform-origin:top left;}
 .sel-box{position:absolute;pointer-events:none;display:none;border:2px solid var(--blue);background:rgba(37,99,235,.12);z-index:10;}
 .coord-overlay{position:absolute;top:0;left:0;pointer-events:none;transform-origin:top left;z-index:5;display:none;}
-.coord-overlay .coord-cell{position:absolute;font-size:11px;font-family:sans-serif;color:rgba(0,0,0,.85);background:rgba(255,255,255,.72);border-radius:2px;pointer-events:none;white-space:nowrap;padding:0 3px;line-height:16px;transform:translate(-50%,-50%);}
+.coord-overlay .coord-cell{position:absolute;font-size:10px;font-family:monospace;color:rgba(0,0,0,.75);background:rgba(255,255,255,.8);border-radius:3px;pointer-events:none;white-space:nowrap;padding:1px 4px;line-height:14px;transform:translate(-50%,-50%);}
 .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;}
 .toolbar label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-weight:500;}
 .sel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
@@ -83,126 +83,148 @@ button.sm{padding:4px 9px;font-size:11px;}
 .naming-sep{color:var(--text3);font-size:14px;font-weight:bold;user-select:none;}
 .naming-static{color:var(--text2);font-size:12px;padding:0 4px;}
 .naming-preview{font-size:11px;color:var(--text3);margin-top:6px;padding-left:70px;}
+.grid-settings{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.grid-inputs{display:flex;gap:10px;align-items:flex-end;}
+.grid-inputs>div{display:flex;flex-direction:column;gap:3px;}
+.grid-inputs label{font-size:11px;color:var(--text2);font-weight:600;}
+.grid-inputs input[type=number]{width:64px;padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+.grid-size-hint{font-size:11px;color:var(--text3);white-space:nowrap;font-family:monospace;margin-left:auto;}
+.preset-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap;flex-basis:100%;margin-top:8px;}
+.preset-label{font-size:11px;color:var(--text2);font-weight:600;margin-right:2px;}
+.preset-btn{padding:3px 8px;font-size:11px;border-radius:10px;transition:all .15s;white-space:nowrap;}
+.preset-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+.img-tabs-bar{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:10px;align-items:center;}
+.img-tabs-bar .img-tab{padding:3px 10px;border:1px solid var(--border);border-radius:14px;font-size:12px;cursor:pointer;background:var(--bg);white-space:nowrap;font-weight:500;transition:all .15s;}
+.img-tabs-bar .img-tab.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.img-tabs-bar .img-tab:hover:not(.on){border-color:var(--blue);color:var(--blue);}
+.img-tabs-bar .img-tab .cnt{margin-left:3px;font-size:10px;opacity:.75;}
 </style>
 </head>
 <body>
 
-<h1>🎨 精灵图批量拆分工具</h1>
-<p class="sub">批量导入 · 自动拆分 · 手动框选合并 · 按原文件名分组命名(berry_01/berry_02…) · 指定目录导出</p>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+  <div>
+    <h1 data-i18n="title">🎨 精灵图批量拆分工具</h1>
+    <p class="sub" data-i18n="subtitle">批量导入 · 自动拆分 · 手动框选合并 · 按原文件名分组命名(berry_01/berry_02…) · 指定目录导出</p>
+  </div>
+  <button class="sm" id="langToggle" onclick="toggleLang()" style="margin-top:4px;white-space:nowrap;font-weight:600;">EN</button>
+</div>
 
 <div class="card">
-  <h2>1. 导入图片 <span style="font-weight:400;font-size:12px;color:var(--text2);">支持多选 / 拖拽</span></h2>
+  <h2><span data-i18n="importTitle">1. 导入图片</span> <span style="font-weight:400;font-size:12px;color:var(--text2);" data-i18n="importHint">支持多选 / 拖拽</span></h2>
   <div class="drop-zone" id="dropZone">
-    <p style="margin-bottom:4px;font-size:14px;">📂 拖拽多张图片到这里，或 <b style="color:var(--blue)">点击选择文件</b></p>
-    <p style="font-size:12px;">支持 PNG / GIF / BMP，可一次导入多张</p>
+    <p style="margin-bottom:4px;font-size:14px;" data-i18n="dropText">📂 拖拽多张图片到这里，或 <b style="color:var(--blue)">点击选择文件</b></p>
+    <p style="font-size:12px;" data-i18n="dropSub">支持 PNG / GIF / BMP，可一次导入多张</p>
     <input type="file" id="fileInput" accept="image/png,image/gif,image/bmp" multiple style="display:none;">
   </div>
   <div class="file-tabs" id="fileTabs"></div>
 </div>
 
 <div class="card" id="settingsCard" style="display:none;">
-  <h2>2. 网格设置</h2>
-  <div class="row">
-    <div><label>格子宽</label><input type="number" id="cellW" value="16" min="1"></div>
-    <div><label>格子高</label><input type="number" id="cellH" value="16" min="1"></div>
-    <div><label>列数</label><input type="number" id="cols" placeholder="自动检测"></div>
-    <div><label>行数</label><input type="number" id="rows" placeholder="自动检测"></div>
-    <div style="display:flex;gap:5px;flex-wrap:wrap;">
-      <button class="sm" onclick="setP(8,8)">8×8</button>
-      <button class="sm" onclick="setP(16,16)">16×16</button>
-      <button class="sm" onclick="setP(24,24)">24×24</button>
-      <button class="sm" onclick="setP(32,32)">32×32</button>
-      <button class="sm" onclick="setP(48,48)">48×48</button>
-      <button class="sm" onclick="setP(64,64)">64×64</button>
-      <button class="sm pri" onclick="applyAll()">应用到全部图片</button>
+  <h2 data-i18n="gridTitle">2. 网格设置</h2>
+  <div class="grid-settings">
+    <div class="grid-inputs">
+      <div><label data-i18n="cellW">格子宽</label><input type="number" id="cellW" value="16" min="1"></div>
+      <div><label data-i18n="cellH">格子高</label><input type="number" id="cellH" value="16" min="1"></div>
+      <div><label data-i18n="cols">列数</label><input type="number" id="cols" placeholder="自动"></div>
+      <div><label data-i18n="rows">行数</label><input type="number" id="rows" placeholder="自动"></div>
+      <span class="grid-size-hint" id="sizeHint">图片: — × —</span>
+    </div>
+    <div class="preset-row">
+      <span class="preset-label" data-i18n="preset">预设:</span>
+      <button class="sm preset-btn" onclick="setP(8,8)">8×8</button>
+      <button class="sm preset-btn" onclick="setP(16,16)">16×16</button>
+      <button class="sm preset-btn" onclick="setP(24,24)">24×24</button>
+      <button class="sm preset-btn" onclick="setP(32,32)">32×32</button>
+      <button class="sm preset-btn" onclick="setP(48,48)">48×48</button>
+      <button class="sm preset-btn" onclick="setP(64,64)">64×64</button>
     </div>
   </div>
 </div>
 
 <div class="card" id="previewCard" style="display:none;">
   <h2>
-    <span>3. 预览与框选 — <b id="currentImgName" style="color:var(--blue);font-size:15px;"></b></span>
+    <span data-i18n="previewTitle">3. 预览与框选</span>
+    <div id="imgTabsBar" class="img-tabs-bar"></div>
     <span class="toolbar">
-      <label><input type="checkbox" id="showGrid" checked> 网格线</label>
-      <label><input type="checkbox" id="skipEmpty" checked> 标空(红/绿)</label>
-      <label><input type="checkbox" id="showLabels"> 显示坐标</label>
-      <span style="color:var(--text2);font-size:12px;margin-left:8px;">显示缩放:</span>
+      <label><input type="checkbox" id="skipEmpty" checked> <span data-i18n="markEmpty">标空(红/绿)</span></label>
+      <span style="color:var(--text2);font-size:12px;margin-left:8px;" data-i18n="zoom">显示缩放:</span>
       <button class="sm" onclick="setZoom(1)">1x</button>
       <button class="sm" onclick="setZoom(2)" style="background:var(--blue);color:#fff;border-color:var(--blue);">2x</button>
-      <button class="sm pri" onclick="autoSplitCur()">拆分当前图</button>
-      <button class="sm pri" onclick="autoSplitAll()">🚀 拆分全部</button>
-      <button class="sm dan" onclick="clearCur()">清空当前</button>
-      <button class="sm dan" onclick="clearAll()">清空全部</button>
+      <button class="sm pri" onclick="autoSplitCur()" data-i18n="splitCur">拆分当前图</button>
+      <button class="sm pri" onclick="autoSplitAll()" data-i18n="splitAll">🚀 拆分全部</button>
+      <button class="sm dan" onclick="clearCur()" data-i18n="clearCur">清空当前</button>
+      <button class="sm dan" onclick="clearAll()" data-i18n="clearAll">清空全部</button>
     </span>
   </h2>
   <div class="preview-area" id="previewWrap">
     <canvas id="canvas"></canvas>
-    <div class="coord-overlay" id="coordOverlay"></div>
     <div class="sel-box" id="overlay"></div>
   </div>
   <p id="selInfo" style="font-size:13px;color:var(--text2);margin-top:8px;font-weight:500;"></p>
-  <p style="font-size:11px;color:var(--text3);margin-top:2px;">💡 拖动框选可选中/合并/取消区域；单击已选格子可高亮对应卡片；空格子不会被选中</p>
+  <p style="font-size:11px;color:var(--text3);margin-top:2px;" data-i18n="selHint">💡 拖动框选可选中/合并/取消区域；单击已选格子可高亮对应卡片；空格子不会被选中</p>
 </div>
 
 <div class="card" id="listCard" style="display:none;">
   <h2>
-    <span>4. 已选区域 — 自定义命名（可批量/单独编辑）</span>
+    <span data-i18n="listTitle">4. 已选区域 — 自定义命名（可批量/单独编辑）</span>
     <span id="totalCount" style="font-size:13px;color:var(--blue);font-weight:600;"></span>
   </h2>
 
   <!-- 全局命名规则 -->
   <div class="naming-panel">
     <div class="naming-row">
-      <label>命名格式：</label>
+      <label data-i18n="nameFormat">命名格式：</label>
       <div class="naming-format">
-        <input type="text" id="globalPrefix" placeholder="前缀(可选)" value="">
+        <input type="text" id="globalPrefix" data-i18n-ph="prefixPh" placeholder="前缀(可选)" value="">
         <span class="naming-sep">_</span>
         <select id="nameSource" title="中间名称来源">
-          <option value="filename">原文件名</option>
-          <option value="custom">自定义</option>
+          <option value="filename" data-i18n="srcFilename">原文件名</option>
+          <option value="custom" data-i18n="srcCustom">自定义</option>
         </select>
-        <input type="text" id="globalCustomName" placeholder="自定义名称" style="display:none;width:100px;">
+        <input type="text" id="globalCustomName" data-i18n-ph="customPh" placeholder="自定义名称" style="display:none;width:100px;">
         <span class="naming-sep">_</span>
-        <input type="text" id="globalSuffix" placeholder="后缀(可选)" value="">
+        <input type="text" id="globalSuffix" data-i18n-ph="suffixPh" placeholder="后缀(可选)" value="">
         <span class="naming-sep">_</span>
-        <span class="naming-static">序号</span>
+        <span class="naming-static" data-i18n="seq">序号</span>
+        <button class="sm" onclick="resetGlobalNaming()" title="重置命名格式为默认（前缀/名称来源/后缀），保留手动修改的名称" style="padding:2px 7px;font-size:11px;margin-left:4px;" data-i18n="reset">↺ 重置</button>
+        <button class="sm" onclick="resetAllManual()" title="清除所有手动修改的名称，恢复自动命名" style="padding:2px 7px;font-size:11px;margin-left:4px;" data-i18n="resetManual">↺ 重置手改</button>
       </div>
-      <button class="sm" onclick="resetGlobalNaming()" title="清空全局命名输入，恢复默认">↺ 重置</button>
     </div>
     <div class="naming-preview" id="namingPreview">预览：berry_01.png / berry_02.png ...</div>
   </div>
 
   <div class="batch-actions">
-    <button class="sm" onclick="toggleFindReplace()">🔄 查找替换</button>
+    <button class="sm" onclick="toggleFindReplace()" data-i18n="findReplace">🔄 查找替换</button>
   </div>
   <div id="findReplacePanel" class="naming-panel" style="display:none;margin-top:0;">
     <div class="naming-row">
-      <label>查找内容：</label>
-      <input type="text" id="findStr" placeholder="输入要替换的文字" style="flex:1;min-width:120px;">
-      <label>替换为：</label>
-      <input type="text" id="replaceStr" placeholder="输入新文字" style="flex:1;min-width:120px;">
-      <button class="sm pri" onclick="doFindReplace()">执行替换</button>
-      <button class="sm" onclick="toggleFindReplace()">收起</button>
+      <label data-i18n="findLabel">查找内容：</label>
+      <input type="text" id="findStr" data-i18n-ph="findPh" placeholder="输入要替换的文字" style="flex:1;min-width:120px;">
+      <label data-i18n="replaceLabel">替换为：</label>
+      <input type="text" id="replaceStr" data-i18n-ph="replacePh" placeholder="输入新文字" style="flex:1;min-width:120px;">
+      <button class="sm pri" onclick="doFindReplace()" data-i18n="doReplace">执行替换</button>
+      <button class="sm" onclick="toggleFindReplace()" data-i18n="collapse">收起</button>
     </div>
-    <div class="naming-preview">对所有卡片的文件名做文字替换，例如把 berry 换成 fruit</div>
+    <div class="naming-preview" data-i18n="replaceHint">对所有卡片的文件名做文字替换，例如把 berry 换成 fruit</div>
   </div>
-  <p style="font-size:11px;color:var(--text3);margin:0 0 8px 2px;">💡 点卡片名称可单独编辑，右键橙色输入框清除手动标记；拖拽卡片可调整排序；点击卡片可在预览区定位</p>
+  <p style="font-size:11px;color:var(--text3);margin:0 0 8px 2px;" data-i18n="listHint">💡 点卡片名称可单独编辑，右键橙色输入框清除手动标记；拖拽卡片可调整排序；点击卡片可在预览区定位</p>
   <div class="sel-grid" id="selectedList">
-    <span style="color:var(--text3);grid-column:1/-1;padding:20px;text-align:center;font-size:14px;">👆 导入图片后点击「拆分全部」或手动在预览区拖动框选</span>
+    <span style="color:var(--text3);grid-column:1/-1;padding:20px;text-align:center;font-size:14px;" data-i18n="emptyList">👆 导入图片后点击「拆分全部」或手动在预览区拖动框选</span>
   </div>
 </div>
 
 <div class="card" id="exportCard" style="display:none;">
-  <h2>5. 导出到指定目录</h2>
+  <h2 data-i18n="exportTitle">5. 导出到指定目录</h2>
   <div class="row" style="margin-bottom:12px;">
-    <button class="pri" onclick="pickDir()">📁 选择输出文件夹</button>
-    <input type="text" id="outputPath" readonly placeholder="未选择（将使用浏览器默认下载）">
+    <button class="pri" onclick="pickDir()" data-i18n="pickDir">📁 选择输出文件夹</button>
+    <input type="text" id="outputPath" readonly data-i18n-ph="outputPh" placeholder="未选择（将使用浏览器默认下载）">
   </div>
   <div class="row">
-    <button class="ok" onclick="exportAll()" style="padding:10px 24px;font-size:14px;">✅ 一键导出到指定目录</button>
-    <button onclick="downloadZip()">📦 下载 ZIP 包</button>
+    <button class="ok" onclick="exportAll()" style="padding:10px 24px;font-size:14px;" data-i18n="exportBtn">✅ 一键导出到指定目录</button>
+    <button onclick="downloadZip()" data-i18n="zipBtn">📦 下载 ZIP 包</button>
   </div>
-  <p style="font-size:11px;color:var(--text3);margin-top:6px;">* 选择文件夹需要 Chrome / Edge 浏览器。Firefox 请使用「下载 ZIP」</p>
+  <p style="font-size:11px;color:var(--text3);margin-top:6px;" data-i18n="exportHint">* 选择文件夹需要 Chrome / Edge 浏览器。Firefox 请使用「下载 ZIP」</p>
   <div id="progressBar"><div class="fill" id="progressFill"></div></div>
   <div id="logArea"></div>
 </div>
@@ -213,6 +235,167 @@ button.sm{padding:4px 9px;font-size:11px;}
 
   /* ===== 工具函数 ===== */
   function $(id){ return document.getElementById(id); }
+
+  /* ===== i18n 中英文切换 ===== */
+  var curLang = "zh";
+  var I18N = {
+    zh: {
+      title: "🎨 精灵图批量拆分工具",
+      subtitle: "批量导入 · 自动拆分 · 手动框选合并 · 按原文件名分组命名(berry_01/berry_02…) · 指定目录导出",
+      importTitle: "1. 导入图片",
+      importHint: "支持多选 / 拖拽",
+      dropText: "📂 拖拽多张图片到这里，或 <b style=\"color:var(--blue)\">点击选择文件</b>",
+      dropSub: "支持 PNG / GIF / BMP，可一次导入多张",
+      gridTitle: "2. 网格设置",
+      cellW: "格子宽", cellH: "格子高", cols: "列数", rows: "行数",
+      preset: "预设:",
+      previewTitle: "3. 预览与框选",
+      markEmpty: "标空(红/绿)",
+      zoom: "显示缩放:",
+      splitCur: "拆分当前图", splitAll: "🚀 拆分全部",
+      clearCur: "清空当前", clearAll: "清空全部",
+      selHint: "💡 拖动框选可选中/合并/取消区域；单击已选格子可高亮对应卡片；空格子不会被选中",
+      listTitle: "4. 已选区域 — 自定义命名（可批量/单独编辑）",
+      nameFormat: "命名格式：",
+      prefixPh: "前缀(可选)", suffixPh: "后缀(可选)",
+      srcFilename: "原文件名", srcCustom: "自定义", customPh: "自定义名称",
+      seq: "序号",
+      reset: "↺ 重置", resetManual: "↺ 重置手改",
+      findReplace: "🔄 查找替换",
+      findLabel: "查找内容：", replaceLabel: "替换为：",
+      findPh: "输入要替换的文字", replacePh: "输入新文字",
+      doReplace: "执行替换", collapse: "收起",
+      replaceHint: "对所有卡片的文件名做文字替换，例如把 berry 换成 fruit",
+      listHint: "💡 点卡片名称可单独编辑，右键橙色输入框清除手动标记；拖拽卡片可调整排序；点击卡片可在预览区定位",
+      emptyList: "👆 导入图片后点击「拆分全部」或手动在预览区拖动框选",
+      exportTitle: "5. 导出到指定目录",
+      pickDir: "📁 选择输出文件夹",
+      outputPh: "未选择（将使用浏览器默认下载）",
+      exportBtn: "✅ 一键导出到指定目录",
+      zipBtn: "📦 下载 ZIP 包",
+      exportHint: "* 选择文件夹需要 Chrome / Edge 浏览器。Firefox 请使用「下载 ZIP」",
+      langBtn: "EN",
+      /* 动态文本 */
+      curImg: "当前图", total: "全部", selected: "个已选", unit: "个",
+      totalPrefix: "共 ", totalSuffix: " 个",
+      sizeHint: "图片: ",
+      namingPreviewEmpty: "预览：导入图片并拆分后显示",
+      namingPreviewPrefix: "预览：",
+      namingMore: " ... 共 ", namingTotal: " 个",
+      logApplyAll: "已将 ", logApplyAll2: " 应用到全部 ", logApplyAll3: " 张",
+      logSplitCur: "] 拆分完成：", logSplitCur2: " 个非空格",
+      logSplitAll1: "全部拆分完成！", logSplitAll2: " 张图 -> 共 ", logSplitAll3: " 个（前缀：",
+      logNaming: "命名规则已应用到全部 ", logNaming2: " 个区域",
+      logResetGlobal: "全局命名格式已重置（手动修改的名称保留）",
+      logResetAllManual: "已清除全部手动修改的名称，恢复自动命名",
+      logResetImg: "[", logResetImg2: "] 已清除手动修改的名称",
+      logFind: "查找替换 \"", logFind2: "\" → \"", logFind3: "\"：影响 ", logFind4: " 个",
+      logPickDir: "输出目录：",
+      logExportDone: "\n完成！成功 ", logExportDone2: " 个，失败 ", logExportDone3: " 个 -> ",
+      logZip: "ZIP 下载：共 ", logZip2: " 个文件",
+      alertNoDir: "请先选择输出文件夹",
+      alertNoArea: "没有已选区域，请先拆分或手动选择",
+      alertNoArea2: "没有已选区域",
+      alertClearAll: "确定清空所有图片的已选区域吗？",
+      alertNoBrowser: "你的浏览器不支持选择文件夹\n\n请使用 Chrome 或 Edge 浏览器，\n或者使用「下载 ZIP」功能代替。",
+      alertFindEmpty: "请输入要查找的内容",
+      locatePrefix: "📍 定位到 [", locateMid: "] 区域 ", locateName: "，文件名：",
+    },
+    en: {
+      title: "🎨 Sprite Sheet Batch Splitter",
+      subtitle: "Batch Import · Auto Split · Manual Select & Merge · Group Naming by Original Filename(berry_01/berry_02…) · Export to Custom Folder",
+      importTitle: "1. Import Images",
+      importHint: "Multi-select / Drag & Drop",
+      dropText: "📂 Drag multiple images here, or <b style=\"color:var(--blue)\">click to select files</b>",
+      dropSub: "PNG / GIF / BMP supported, import multiple at once",
+      gridTitle: "2. Grid Settings",
+      cellW: "Cell W", cellH: "Cell H", cols: "Cols", rows: "Rows",
+      preset: "Preset:",
+      previewTitle: "3. Preview & Select",
+      markEmpty: "Mark Empty",
+      zoom: "Zoom:",
+      splitCur: "Split Current", splitAll: "🚀 Split All",
+      clearCur: "Clear Current", clearAll: "Clear All",
+      selHint: "💡 Drag to select/merge/deselect; click selected cell to highlight card; empty cells won't be selected",
+      listTitle: "4. Selected Areas — Custom Naming (batch / individual)",
+      nameFormat: "Name Format:",
+      prefixPh: "Prefix", suffixPh: "Suffix",
+      srcFilename: "Filename", srcCustom: "Custom", customPh: "Custom name",
+      seq: "Index",
+      reset: "↺ Reset", resetManual: "↺ Reset Manual",
+      findReplace: "🔄 Find & Replace",
+      findLabel: "Find:", replaceLabel: "Replace:",
+      findPh: "Text to find", replacePh: "New text",
+      doReplace: "Replace", collapse: "Collapse",
+      replaceHint: "Replace text in all card filenames, e.g. replace berry with fruit",
+      listHint: "💡 Click card name to edit, right-click orange input to clear manual mark; drag to reorder; click card to locate in preview",
+      emptyList: "👆 Import images then click \"Split All\" or drag manually in preview",
+      exportTitle: "5. Export to Folder",
+      pickDir: "📁 Choose Output Folder",
+      outputPh: "Not selected (browser default download)",
+      exportBtn: "✅ Export to Folder",
+      zipBtn: "📦 Download ZIP",
+      exportHint: "* Folder picker requires Chrome / Edge. Use Download ZIP for Firefox.",
+      langBtn: "中",
+      curImg: "Current", total: "Total", selected: " selected", unit: "",
+      totalPrefix: "Total: ", totalSuffix: "",
+      sizeHint: "Image: ",
+      namingPreviewEmpty: "Preview: import images and split to show",
+      namingPreviewPrefix: "Preview: ",
+      namingMore: " ... ", namingTotal: " total",
+      logApplyAll: "Applied ", logApplyAll2: " to all ", logApplyAll3: " images",
+      logSplitCur: "] split complete: ", logSplitCur2: " non-empty cells",
+      logSplitAll1: "All split complete! ", logSplitAll2: " images -> ", logSplitAll3: " total (prefixes: ",
+      logNaming: "Naming rule applied to all ", logNaming2: " areas",
+      logResetGlobal: "Global naming format reset (manual names kept)",
+      logResetAllManual: "All manual names cleared, auto naming restored",
+      logResetImg: "[", logResetImg2: "] manual names cleared",
+      logFind: "Find & Replace \"", logFind2: "\" → \"", logFind3: "\": ", logFind4: " affected",
+      logPickDir: "Output folder: ",
+      logExportDone: "\nDone! ", logExportDone2: " success, ", logExportDone3: " failed -> ",
+      logZip: "ZIP download: ", logZip2: " files",
+      alertNoDir: "Please choose output folder first",
+      alertNoArea: "No selected areas, split or select first",
+      alertNoArea2: "No selected areas",
+      alertClearAll: "Clear all selected areas for all images?",
+      alertNoBrowser: "Your browser does not support folder picking\n\nPlease use Chrome or Edge,\nor use Download ZIP instead.",
+      alertFindEmpty: "Please enter text to find",
+      locatePrefix: "📍 Located [", locateMid: "] area ", locateName: ", filename: ",
+    }
+  };
+
+  function t(key) {
+    var dict = I18N[curLang] || I18N.zh;
+    return dict[key] !== undefined ? dict[key] : key;
+  }
+
+  function applyLang() {
+    var els = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < els.length; i++) {
+      var key = els[i].getAttribute("data-i18n");
+      els[i].innerHTML = t(key);
+    }
+    var phs = document.querySelectorAll("[data-i18n-ph]");
+    for (var i = 0; i < phs.length; i++) {
+      var key = phs[i].getAttribute("data-i18n-ph");
+      phs[i].placeholder = t(key);
+    }
+    var langBtn = $("langToggle");
+    if (langBtn) { langBtn.textContent = t("langBtn"); }
+    if (imgs.length > 0) {
+      renderTabs();
+      updateInfo();
+      renderList();
+      updateNamingPreview();
+      var hint = $("sizeHint");
+      if (hint && imgs[ci]) { hint.textContent = t("sizeHint") + imgs[ci].img.width + " × " + imgs[ci].img.height; }
+    }
+  }
+
+  function toggleLang() {
+    curLang = (curLang === "zh") ? "en" : "zh";
+    applyLang();
+  }
 
   /* ===== 从文件名提取前缀（去掉扩展名） ===== */
   function getFileBase(name) {
@@ -225,9 +408,7 @@ button.sm{padding:4px 9px;font-size:11px;}
   var ci = 0;
   var cW = 16;
   var cH = 16;
-  var sGrid = true;
   var sEmpty = true;
-  var sLabel = false;
   var zoom = 2; /* 预览缩放倍数：1=原始, 2=2倍, 3=3倍 */
   var dirHandle = null;
   var dragging = false;
@@ -338,25 +519,42 @@ button.sm{padding:4px 9px;font-size:11px;}
     reader.readAsDataURL(f);
   }
 
-  /* ===== 渲染文件标签 ===== */
+  /* ===== 渲染文件标签 =====
+     可点击切换按钮渲染到预览区标题栏(imgTabsBar)
+     导入图片区(fileTabs)只显示纯文字信息，不可点击 */
   function renderTabs() {
+    /* 1. 预览区标题栏：可点击切换按钮 */
+    var bar = $("imgTabsBar");
+    if (bar) {
+      bar.innerHTML = "";
+      for (var i = 0; i < imgs.length; i++) {
+        (function(ii) {
+          var im = imgs[ii];
+          if (!im.letter) { im.letter = getFileBase(im.name); }
+          var b = document.createElement("span");
+          b.className = "img-tab" + (ii === ci ? " on" : "");
+          b.innerHTML = "<span>" + im.letter + "</span>" +
+                        '<span class="cnt">(' + im.areas.length + ")</span>";
+          b.onclick = function() { switchImg(ii); };
+          bar.appendChild(b);
+        })(i);
+      }
+    }
+
+    /* 2. 导入图片区：纯文字展示，不可点击，无高亮 */
     var el = $("fileTabs");
-    el.innerHTML = "";
-
-    for (var i = 0; i < imgs.length; i++) {
-      (function(ii) {
-        var im = imgs[ii];
-        if (!im.letter) { im.letter = getFileBase(im.name); }
-
-        var b = document.createElement("button");
-        b.className = "file-tab" + (ii === ci ? " on" : "");
-        b.innerHTML = "<span>" + im.letter + "</span>" +
-                      '<span class="cnt">(' + im.areas.length + ")</span>";
-
-        b.onclick = function() { switchImg(ii); };
-
-        el.appendChild(b);
-      })(i);
+    if (el) {
+      el.innerHTML = "";
+      for (var i = 0; i < imgs.length; i++) {
+        (function(ii) {
+          var im = imgs[ii];
+          if (!im.letter) { im.letter = getFileBase(im.name); }
+          var s = document.createElement("span");
+          s.style.cssText = "font-size:12px;color:var(--text2);margin-right:14px;white-space:nowrap;";
+          s.textContent = im.name + " (" + im.areas.length + ")";
+          el.appendChild(s);
+        })(i);
+      }
     }
   }
 
@@ -384,12 +582,30 @@ button.sm{padding:4px 9px;font-size:11px;}
     $("cellH").value = cH;
     $("cols").value = im.cols;
     $("rows").value = im.rows;
-    $("currentImgName").textContent = im.name;
+    /* 更新尺寸提示 */
+    var hint = $("sizeHint");
+    if (hint) { hint.textContent = "图片: " + im.img.width + " × " + im.img.height; }
 
     renderTabs();
     drawPreview();
     updateInfo();
     renderList();
+  }
+
+  /* 切换到上一张图片 */
+  function switchPrevImg() {
+    if (imgs.length <= 1) { return; }
+    var idx = ci - 1;
+    if (idx < 0) { idx = imgs.length - 1; }
+    switchImg(idx);
+  }
+
+  /* 切换到下一张图片 */
+  function switchNextImg() {
+    if (imgs.length <= 1) { return; }
+    var idx = ci + 1;
+    if (idx >= imgs.length) { idx = 0; }
+    switchImg(idx);
   }
 
   /* 点击卡片时在预览区定位并高亮 */
@@ -413,7 +629,7 @@ button.sm{padding:4px 9px;font-size:11px;}
     if (a.c2 > a.c1 || a.r2 > a.r1) {
       coord = "(" + a.c1 + "," + a.r1 + ")-(" + a.c2 + "," + a.r2 + ")";
     }
-    $("selInfo").innerHTML = "<b style='color:#f59e0b;'>📍 定位到 [" + im.name + "]</b> 区域 " + coord + "，文件名：<b>" + (a.name || "(自动)") + "</b> &nbsp;|&nbsp; <b>全部</b>：" + countTotal() + " 个";
+    $("selInfo").innerHTML = "<b style='color:#f59e0b;'>" + t("locatePrefix") + im.name + "]</b> " + t("locateMid") + coord + t("locateName") + "<b>" + (a.name || "(auto)") + "</b> &nbsp;|&nbsp; <b>" + t("total") + "</b>：" + countTotal() + t("unit");
     renderList(); /* 同图切换卡片也更新选中样式 */
   }
 
@@ -483,9 +699,7 @@ button.sm{padding:4px 9px;font-size:11px;}
     }
     drawPreview();
   };
-  $("showGrid").onchange = function() { sGrid = this.checked; drawPreview(); };
   $("skipEmpty").onchange = function() { sEmpty = this.checked; drawPreview(); };
-  $("showLabels").onchange = function() { sLabel = this.checked; drawPreview(); };
 
   /* ===== 空白检测 ===== */
   function isEmptyCell(im, c, r) {
@@ -508,47 +722,42 @@ button.sm{padding:4px 9px;font-size:11px;}
     return true;
   }
 
+  /* 判断一个矩形范围是否全空 */
+  function isRectEmpty(im, c1, r1, c2, r2) {
+    if (c1 > c2 || r1 > r2) { return true; }
+    for (var c = c1; c <= c2; c++) {
+      for (var r = r1; r <= r2; r++) {
+        if (!isEmptyCell(im, c, r)) { return false; }
+      }
+    }
+    return true;
+  }
+
   /* ===== 缩放控制 ===== */
   function setZoom(z) {
     zoom = z;
-    /* 更新按钮状态 */
+    updateZoomButtons();
+    drawPreview();
+  }
+
+  /* 更新缩放按钮高亮状态 */
+  function updateZoomButtons() {
     var btns = document.querySelectorAll('.toolbar button');
     for (var i = 0; i < btns.length; i++) {
-      if (btns[i].textContent === z + 'x') {
-        btns[i].style.background = 'var(--blue)';
-        btns[i].style.color = '#fff';
-        btns[i].style.borderColor = 'var(--blue)';
-      } else if (btns[i].textContent === '1x' || btns[i].textContent === '2x') {
+      var txt = btns[i].textContent;
+      if (txt === '1x' || txt === '2x') {
         btns[i].style.background = '';
         btns[i].style.color = '';
         btns[i].style.borderColor = '';
       }
     }
-    drawPreview();
-  }
-
-  /* ===== 坐标 overlay 层（HTML 渲染，清晰不模糊） ===== */
-  function renderCoordOverlay() {
-    var ov = $("coordOverlay");
-    if (!ov) { return; }
-    var im = imgs[ci];
-    if (!sLabel || !im || im.cols <= 0 || im.rows <= 0) {
-      ov.style.display = "none";
-      return;
-    }
-    ov.style.display = "block";
-    ov.style.width = canvas.width + "px";
-    ov.style.height = canvas.height + "px";
-    ov.style.transform = "scale(" + zoom + ")";
-    ov.innerHTML = "";
-    for (var r = 0; r < im.rows; r++) {
-      for (var c = 0; c < im.cols; c++) {
-        var span = document.createElement("div");
-        span.className = "coord-cell";
-        span.textContent = "(" + c + "," + r + ")";
-        span.style.left = (c * cW + cW / 2) + "px";
-        span.style.top = (r * cH + cH / 2) + "px";
-        ov.appendChild(span);
+    /* 高亮当前缩放对应的按钮 */
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].textContent === zoom + 'x') {
+        btns[i].style.background = 'var(--blue)';
+        btns[i].style.color = '#fff';
+        btns[i].style.borderColor = 'var(--blue)';
+        break;
       }
     }
   }
@@ -560,23 +769,6 @@ button.sm{padding:4px 9px;font-size:11px;}
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(im.img, 0, 0);
-
-    if (im.cols > 0 && im.rows > 0 && sGrid) {
-      ctx.strokeStyle = "rgba(0,0,0,0.12)";
-      ctx.lineWidth = 0.8;
-      for (var c = 0; c <= im.cols; c++) {
-        ctx.beginPath();
-        ctx.moveTo(c * cW, 0);
-        ctx.lineTo(c * cW, canvas.height);
-        ctx.stroke();
-      }
-      for (var r = 0; r <= im.rows; r++) {
-        ctx.beginPath();
-        ctx.moveTo(0, r * cH);
-        ctx.lineTo(canvas.width, r * cH);
-        ctx.stroke();
-      }
-    }
 
     if (im.cols > 0 && im.rows > 0) {
       for (var r = 0; r < im.rows; r++) {
@@ -624,8 +816,8 @@ button.sm{padding:4px 9px;font-size:11px;}
     canvas.style.width = (canvas.width * zoom) + "px";
     canvas.style.height = (canvas.height * zoom) + "px";
 
-    /* 更新坐标 overlay 层 */
-    renderCoordOverlay();
+    /* transform 不占文档流，手动设置容器高度避免与下方内容重叠 */
+    pWrap.style.height = (canvas.height * zoom * zoom) + "px";
   }
 
   function isCellSelected(im, c, r) {
@@ -641,6 +833,7 @@ button.sm{padding:4px 9px;font-size:11px;}
   /* ===== 鼠标事件：拖拽框选 + 单击选中 ===== */
   pWrap.addEventListener("mousedown", function(e) {
     if (e.target !== canvas) { return; }
+    if (e.button !== 0) { return; } /* 仅响应左键，取消右键框选 */
 
     var rect = canvas.getBoundingClientRect();
     var sx = canvas.width / rect.width;
@@ -702,19 +895,24 @@ button.sm{padding:4px 9px;font-size:11px;}
       }
 
       if (splitIdx >= 0) {
+        /* 子区域全空则不拆分 */
+        if (isRectEmpty(im, c1, r1, c2, r2)) {
+          drawPreview(); updateInfo(); renderList(); renderTabs();
+          return;
+        }
         var big = im.areas[splitIdx];
         im.areas.splice(splitIdx, 1);
         var parts = [];
         /* 子区域本身 */
         parts.push({c1: c1, c2: c2, r1: r1, r2: r2, name: "", manual: false});
-        /* 上部分 */
-        if (r1 > big.r1) { parts.push({c1: big.c1, c2: big.c2, r1: big.r1, r2: r1 - 1, name: "", manual: false}); }
-        /* 下部分 */
-        if (r2 < big.r2) { parts.push({c1: big.c1, c2: big.c2, r1: r2 + 1, r2: big.r2, name: "", manual: false}); }
-        /* 左部分 */
-        if (c1 > big.c1) { parts.push({c1: big.c1, c2: c1 - 1, r1: r1, r2: r2, name: "", manual: false}); }
-        /* 右部分 */
-        if (c2 < big.c2) { parts.push({c1: c2 + 1, c2: big.c2, r1: r1, r2: r2, name: "", manual: false}); }
+        /* 上部分（全空则跳过） */
+        if (r1 > big.r1 && !isRectEmpty(im, big.c1, big.r1, big.c2, r1 - 1)) { parts.push({c1: big.c1, c2: big.c2, r1: big.r1, r2: r1 - 1, name: "", manual: false}); }
+        /* 下部分（全空则跳过） */
+        if (r2 < big.r2 && !isRectEmpty(im, big.c1, r2 + 1, big.c2, big.r2)) { parts.push({c1: big.c1, c2: big.c2, r1: r2 + 1, r2: big.r2, name: "", manual: false}); }
+        /* 左部分（全空则跳过） */
+        if (c1 > big.c1 && !isRectEmpty(im, big.c1, r1, c1 - 1, r2)) { parts.push({c1: big.c1, c2: c1 - 1, r1: r1, r2: r2, name: "", manual: false}); }
+        /* 右部分（全空则跳过） */
+        if (c2 < big.c2 && !isRectEmpty(im, c2 + 1, r1, big.c2, r2)) { parts.push({c1: c2 + 1, c2: big.c2, r1: r1, r2: r2, name: "", manual: false}); }
         /* 在原位置插入拆分后的区域 */
         for (var pi = parts.length - 1; pi >= 0; pi--) {
           im.areas.splice(splitIdx, 0, parts[pi]);
@@ -931,8 +1129,8 @@ button.sm{padding:4px 9px;font-size:11px;}
     var cur = imgs[ci] ? imgs[ci].areas.length : 0;
     var curName = imgs[ci] ? imgs[ci].name : "";
 
-    $("selInfo").innerHTML = "<b>当前图 [" + curName + "]</b>：" + cur + " 个已选 &nbsp;|&nbsp; <b>全部</b>：" + total + " 个";
-    $("totalCount").textContent = "共 " + total + " 个";
+    $("selInfo").innerHTML = "<b>" + t("curImg") + " [" + curName + "]</b>：" + cur + t("selected") + " &nbsp;|&nbsp; <b>" + t("total") + "</b>：" + total + t("unit");
+    $("totalCount").textContent = t("totalPrefix") + total + t("totalSuffix");
   }
 
   /* ===== 命名系统：根据规则生成文件名 ===== */
@@ -1040,22 +1238,41 @@ button.sm{padding:4px 9px;font-size:11px;}
     log("命名规则已应用到全部 " + countTotal() + " 个区域", "ok");
   }
 
-  /* 重置全局命名输入为默认 */
+  /* 重置全局命名格式（前缀/名称来源/后缀），保留手动修改的名称 */
   function resetGlobalNaming() {
     $("globalPrefix").value = "";
     $("globalSuffix").value = "";
     $("globalCustomName").value = "";
     $("nameSource").value = "filename";
     $("globalCustomName").style.display = "none";
-    /* 清除所有图的独立命名设置和手动标记 */
     for (var i = 0; i < imgs.length; i++) {
       imgs[i].naming = null;
+    }
+    applyNamingLive();
+    log("全局命名格式已重置（手动修改的名称保留）", "info");
+  }
+
+  /* 重置全部手动修改的名称，恢复自动命名 */
+  function resetAllManual() {
+    for (var i = 0; i < imgs.length; i++) {
       for (var j = 0; j < imgs[i].areas.length; j++) {
         imgs[i].areas[j].manual = false;
       }
     }
     applyNamingLive();
-    log("全局命名已重置（含独立设置和手动标记）", "info");
+    renderList();
+    log("已清除全部手动修改的名称，恢复自动命名", "ok");
+  }
+
+  /* 重置单张图片的手动修改名称 */
+  function resetImgManual(ii) {
+    if (!imgs[ii]) { return; }
+    for (var j = 0; j < imgs[ii].areas.length; j++) {
+      imgs[ii].areas[j].manual = false;
+    }
+    applyNamingLive();
+    renderList();
+    log("[" + imgs[ii].name + "] 已清除手动修改的名称", "ok");
   }
 
   /* 实时应用命名规则 — 只更新非手动项，不打断正在编辑的输入框 */
@@ -1219,22 +1436,29 @@ button.sm{padding:4px 9px;font-size:11px;}
         numLabel.textContent = "序号";
         namingDiv.appendChild(numLabel);
 
-        /* 撤销按钮：清除该图独立命名，恢复全局默认 */
+        /* 重置按钮：清除该图独立命名配置，恢复全局默认（保留手动标记） */
         var resetBtn = document.createElement("button");
         resetBtn.className = "sm";
         resetBtn.textContent = "↺ 重置";
-        resetBtn.title = "清除该图独立命名，恢复全局默认";
+        resetBtn.title = "重置该图命名格式为全局默认（保留手动修改的名称）";
         resetBtn.style.cssText = "padding:2px 7px;font-size:11px;margin-left:4px;";
         resetBtn.onclick = function() {
           im.naming = null;
-          /* 清除该图所有手动标记 */
-          for (var j = 0; j < im.areas.length; j++) {
-            im.areas[j].manual = false;
-            im.areas[j].name = buildFileName(im.letter, j + 1);
-          }
+          applyNamingLive();
           renderList();
         };
         namingDiv.appendChild(resetBtn);
+
+        /* 重置手改按钮：清除该图手动标记，恢复自动命名 */
+        var resetManualBtn = document.createElement("button");
+        resetManualBtn.className = "sm";
+        resetManualBtn.textContent = "↺ 重置手改";
+        resetManualBtn.title = "清除该图所有手动修改的名称，恢复自动命名";
+        resetManualBtn.style.cssText = "padding:2px 7px;font-size:11px;margin-left:4px;";
+        resetManualBtn.onclick = function() {
+          resetImgManual(i);
+        };
+        namingDiv.appendChild(resetManualBtn);
 
         hdr.appendChild(namingDiv);
         container.appendChild(hdr);
@@ -1611,7 +1835,7 @@ button.sm{padding:4px 9px;font-size:11px;}
     var el = $("namingPreview");
     if (!el) { return; }
     if (imgs.length === 0 || countTotal() === 0) {
-      el.textContent = "预览：导入图片并拆分后显示";
+      el.textContent = t("namingPreviewEmpty");
       return;
     }
     /* 取第一张有区域的图做示例 */
@@ -1624,13 +1848,14 @@ button.sm{padding:4px 9px;font-size:11px;}
     var n1 = buildFileName(sampleIm.letter, 1, sampleIm.naming);
     var n2 = buildFileName(sampleIm.letter, 2, sampleIm.naming);
     var total = countTotal();
-    var more = total > 2 ? " ... 共 " + total + " 个" : "";
-    el.textContent = "预览：" + n1 + ".png / " + n2 + ".png" + more;
+    var more = total > 2 ? t("namingMore") + total + t("namingTotal") : "";
+    el.textContent = t("namingPreviewPrefix") + n1 + ".png / " + n2 + ".png" + more;
   }
 
   /* ===== 暴露给 inline onclick 使用的函数 ===== */
   window.setP = setP;
   window.setZoom = setZoom;
+  window.toggleLang = toggleLang;
   window.applyAll = applyAll;
   window.autoSplitCur = autoSplitCur;
   window.autoSplitAll = autoSplitAll;
@@ -1639,6 +1864,8 @@ button.sm{padding:4px 9px;font-size:11px;}
   window.applyNamingRule = applyNamingRule;
   window.applyNamingToCurrent = applyNamingToCurrent;
   window.resetGlobalNaming = resetGlobalNaming;
+  window.resetAllManual = resetAllManual;
+  window.resetImgManual = resetImgManual;
   window.toggleFindReplace = toggleFindReplace;
   window.doFindReplace = doFindReplace;
   window.pickDir = pickDir;
@@ -1666,6 +1893,7 @@ button.sm{padding:4px 9px;font-size:11px;}
 
   /* ===== 初始化 ===== */
   initFileImport();
+  applyLang(); /* 初始化语言 */
   console.log("[SpriteSplitter] 初始化完成");
 
 })();
