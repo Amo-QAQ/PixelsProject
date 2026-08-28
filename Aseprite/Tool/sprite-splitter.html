@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>精灵图批量拆分工具</title>
+<style>
+:root{--bg:#fff;--bg2:#f8f9fa;--bg3:#eff1f3;--text:#1a1a2e;--text2:#555;--text3:#999;--border:#ddd;--border2:#bbb;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--radius:10px;--rs:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);padding:14px;line-height:1.4;}
+h1{font-size:20px;font-weight:700;margin-bottom:2px;}
+.sub{color:var(--text2);font-size:13px;margin-bottom:16px;}
+.card{background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);padding:12px 16px;margin-bottom:12px;}
+.card h2{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.row>div{display:flex;flex-direction:column;gap:3px;}
+.row label{font-size:11px;color:var(--text2);font-weight:600;}
+.row input[type=number]{width:64px;padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+input[type=text]{padding:5px 8px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+button{padding:6px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--bg);font-size:12px;cursor:pointer;transition:all .15s;font-weight:500;}
+button:hover{background:var(--bg2);border-color:var(--text2);}
+button.pri{background:var(--blue);color:#fff;border-color:var(--blue);}
+button.pri:hover{background:#1d4ed8;}
+button.ok{background:var(--green);color:#fff;border-color:var(--green);}
+button.dan{color:var(--red);border-color:#fecaca;}
+button.dan:hover{background:#fef2f2;}
+button.sm{padding:4px 9px;font-size:11px;}
+.drop-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:28px;text-align:center;color:var(--text2);cursor:pointer;transition:all .2s;background:var(--bg2);}
+.drop-zone:hover,.drop-zone.act{border-color:var(--blue);background:#eff6ff;}
+.file-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:8px 10px;background:var(--bg3);border-radius:var(--rs);min-height:40px;align-items:center;}
+.file-tab{padding:6px 16px;border:2px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--bg);white-space:nowrap;font-weight:500;transition:all .15s;}
+.file-tab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(37,99,235,.3);}
+.file-tab:hover:not(.on){border-color:var(--blue);color:var(--blue);transform:translateY(-1px);}
+.file-tab .cnt{margin-left:4px;font-size:11px;opacity:.7;}
+.preview-area{position:relative;overflow:visible;background:var(--bg3);border-radius:var(--rs);user-select:none;min-height:150px;border:1px solid var(--border);}
+.preview-area canvas{display:block;image-rendering:pixelated;transform-origin:top left;}
+.sel-box{position:absolute;pointer-events:none;display:none;border:2px solid var(--blue);background:rgba(37,99,235,.12);z-index:10;}
+.coord-overlay{position:absolute;top:0;left:0;pointer-events:none;transform-origin:top left;z-index:5;display:none;}
+.coord-overlay .coord-cell{position:absolute;font-size:10px;font-family:monospace;color:rgba(0,0,0,.75);background:rgba(255,255,255,.8);border-radius:3px;pointer-events:none;white-space:nowrap;padding:1px 4px;line-height:14px;transform:translate(-50%,-50%);}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;}
+.toolbar label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-weight:500;}
+.sel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
+.sel-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:8px;position:relative;transition:border-color .15s;}
+.sel-card:hover{border-color:var(--blue);box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.sel-card .thumb{width:100%;height:90px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:4px;margin-bottom:6px;overflow:hidden;border:1px solid var(--border);}
+.sel-card .thumb img{max-width:80px;max-height:80px;image-rendering:pixelated;}
+.sel-card .name-input{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;font-weight:600;color:var(--blue);cursor:text;transition:all .15s;}
+.sel-card .name-input:hover{border-color:var(--blue);background:#eff6ff;}
+.sel-card .name-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.15);}
+.sel-card .meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:3px;}
+.sel-card .del-btn{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(255,255,255,.95);color:var(--red);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+.sel-card .del-btn:hover{background:var(--red);color:#fff;}
+.sel-card.manual .name-input{background:#fffbeb;color:#b45309;}
+.sel-card.card-focused{border:3px solid #f59e0b;background:#fffbeb;box-shadow:0 0 0 2px rgba(245,158,11,.2),0 4px 12px rgba(245,158,11,.25);}
+.manual-tag{position:absolute;top:3px;left:3px;background:#f59e0b;color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700;cursor:pointer;letter-spacing:.5px;}
+.manual-tag:hover{background:#d97706;}
+.sel-card[draggable=true]{cursor:grab;}
+.sel-card[draggable=true]:active{cursor:grabbing;}
+.sel-card.dragging{opacity:.4;transform:scale(.95);}
+.sel-card.drag-before{border-left:3px solid var(--blue);background:#eff6ff;}
+.sel-card.drag-after{border-right:3px solid var(--blue);background:#eff6ff;}
+.group-header{grid-column:1/-1;font-size:13px;font-weight:700;color:var(--text);padding:8px 4px 4px;border-bottom:2px solid var(--border);margin-top:6px;display:flex;align-items:center;gap:8px;}
+.group-header .letter-badge{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;background:var(--blue);color:#fff;border-radius:50%;font-size:12px;font-weight:700;}
+.group-naming{display:flex;align-items:center;gap:3px;flex-wrap:wrap;}
+.group-naming input{width:56px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;}
+.group-naming select{padding:3px 4px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--bg);}
+.group-naming input:focus,.group-naming select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.12);}
+#outputPath{flex:1;min-width:200px;font-family:monospace;font-size:12px;color:var(--text2);background:var(--bg3);padding:6px 10px;border-radius:var(--rs);border:1px solid var(--border);}
+#progressBar{width:100%;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;display:none;margin-top:10px;}
+#progressBar .fill{height:100%;background:linear-gradient(90deg,var(--green),#22c55e);transition:width .2s;}
+#logArea{font-family:monospace;font-size:11px;color:var(--text2);max-height:120px;overflow-y:auto;background:var(--bg3);padding:8px;border-radius:var(--rs);margin-top:8px;display:none;}
+.log-ok{color:var(--green)}.log-err{color:var(--red)}.log-info{color:var(--blue)}
+.batch-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+.action-label{font-size:11px;color:var(--text3);font-weight:600;}
+.action-sep{width:1px;height:20px;background:var(--border);margin:0 2px;}
+.naming-panel{background:var(--bg2);border-radius:var(--rs);padding:12px 16px;margin-bottom:10px;border:1px solid var(--border);}
+.naming-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.naming-row label{font-size:13px;font-weight:500;color:var(--text2);white-space:nowrap;}
+.naming-format{display:flex;align-items:center;gap:4px;flex:1;min-width:0;}
+.naming-format input,.naming-format select{padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);}
+.naming-format input:focus,.naming-format select:focus{outline:none;border-color:var(--blue);}
+.naming-format input[type=text]{width:80px;}
+.naming-sep{color:var(--text3);font-size:14px;font-weight:bold;user-select:none;}
+.naming-static{color:var(--text2);font-size:12px;padding:0 4px;}
+.naming-preview{font-size:11px;color:var(--text3);margin-top:6px;padding-left:70px;}
+.grid-settings{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.grid-inputs{display:flex;gap:10px;align-items:flex-end;}
+.grid-inputs>div{display:flex;flex-direction:column;gap:3px;}
+.grid-inputs label{font-size:11px;color:var(--text2);font-weight:600;}
+.grid-inputs input[type=number]{width:64px;padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+.grid-size-hint{font-size:11px;color:var(--text3);white-space:nowrap;font-family:monospace;margin-left:auto;}
+.preset-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap;flex-basis:100%;margin-top:8px;}
+.preset-label{font-size:11px;color:var(--text2);font-weight:600;margin-right:2px;}
+.preset-btn{padding:3px 8px;font-size:11px;border-radius:10px;transition:all .15s;white-space:nowrap;}
+.preset-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+.img-tabs-bar{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:10px;align-items:center;}
+.img-tabs-bar .img-tab{padding:3px 10px;border:1px solid var(--border);border-radius:14px;font-size:12px;cursor:pointer;background:var(--bg);white-space:nowrap;font-weight:500;transition:all .15s;}
+.img-tabs-bar .img-tab.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.img-tabs-bar .img-tab:hover:not(.on){border-color:var(--blue);color:var(--blue);}
+.img-tabs-bar .img-tab .cnt{margin-left:3px;font-size:10px;opacity:.75;}
+.lang-btn{min-width:36px;text-align:center;transition:all .15s;}
+.lang-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.lang-btn:not(.active):hover{background:var(--bg2);}
+</style>
+</head>
+<body>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+  <div>
+    <h1 data-i18n="title">🎨 精灵图批量拆分工具</h1>
+    <p class="sub" data-i18n="subtitle">批量导入 · 自动拆分 · 手动框选合并 · 按原文件名分组命名(berry_01/berry_02…) · 指定目录导出</p>
+  </div>
+  <div style="display:flex;gap:2px;margin-top:4px;">
+    <button class="sm lang-btn" id="langEn" onclick="setLang('en')" style="border-radius:6px 0 0 6px;font-weight:600;">EN</button>
+    <button class="sm lang-btn" id="langZh" onclick="setLang('zh')" style="border-radius:0 6px 6px 0;font-weight:600;">中</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span data-i18n="importTitle">1. 导入图片</span> <span style="font-weight:400;font-size:12px;color:var(--text2);" data-i18n="importHint">支持多选 / 拖拽</span></h2>
+  <div class="drop-zone" id="dropZone">
+    <p style="margin-bottom:4px;font-size:14px;" data-i18n="dropText">📂 拖拽多张图片到这里，或 <b style="color:var(--blue)">点击选择文件</b></p>
+    <p style="font-size:12px;" data-i18n="dropSub">支持 PNG / GIF / BMP，可一次导入多张</p>
+  </div>
+  <input type="file" id="fileInput" accept="image/png,image/gif,image/bmp" multiple style="display:none;">
+  <div class="file-tabs" id="fileTabs"></div>
+</div>
+
+<div class="card" id="settingsCard" style="display:none;">
+  <h2 data-i18n="gridTitle">2. 网格设置</h2>
+  <div class="grid-settings">
+    <div class="grid-inputs">
+      <div><label data-i18n="cellW">格子宽</label><input type="number" id="cellW" value="16" min="1"></div>
+      <div><label data-i18n="cellH">格子高</label><input type="number" id="cellH" value="16" min="1"></div>
+      <div><label data-i18n="cols">列数</label><input type="number" id="cols" placeholder="自动"></div>
+      <div><label data-i18n="rows">行数</label><input type="number" id="rows" placeholder="自动"></div>
+      <span class="grid-size-hint" id="sizeHint">图片: — × —</span>
+    </div>
+    <div class="preset-row">
+      <span class="preset-label" data-i18n="preset">预设:</span>
+      <button class="sm preset-btn" onclick="setP(8,8)">8×8</button>
+      <button class="sm preset-btn" onclick="setP(16,16)">16×16</button>
+      <button class="sm preset-btn" onclick="setP(24,24)">24×24</button>
+      <button class="sm preset-btn" onclick="setP(32,32)">32×32</button>
+      <button class="sm preset-btn" onclick="setP(48,48)">48×48</button>
+      <button class="sm preset-btn" onclick="setP(64,64)">64×64</button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="previewCard" style="display:none;">
+  <h2>
+    <span data-i18n="previewTitle">3. 预览与框选</span>
+    <div id="imgTabsBar" class="img-tabs-bar"></div>
+    <span class="toolbar">
+      <label><input type="checkbox" id="skipEmpty" checked> <span data-i18n="markEmpty">标空(红/绿)</span></label>
+      <span style="color:var(--text2);font-size:12px;margin-left:8px;" data-i18n="zoom">显示缩放:</span>
+      <button class="sm" onclick="setZoom(1)">1x</button>
+      <button class="sm" onclick="setZoom(2)" style="background:var(--blue);color:#fff;border-color:var(--blue);">2x</button>
+      <button class="sm pri" onclick="autoSplitCur()" data-i18n="splitCur">拆分当前图</button>
+      <button class="sm pri" onclick="autoSplitAll()" data-i18n="splitAll">🚀 拆分全部</button>
+      <button class="sm dan" onclick="clearCur()" data-i18n="clearCur">清空当前</button>
+      <button class="sm dan" onclick="clearAll()" data-i18n="clearAll">清空全部</button>
+    </span>
+  </h2>
+  <div class="preview-area" id="previewWrap">
+    <canvas id="canvas"></canvas>
+    <div class="sel-box" id="overlay"></div>
+  </div>
+  <p id="selInfo" style="font-size:13px;color:var(--text2);margin-top:8px;font-weight:500;"></p>
+  <p style="font-size:11px;color:var(--text3);margin-top:2px;" data-i18n="selHint">💡 拖动框选可选中/合并/取消区域；单击已选格子可高亮对应卡片；空格子不会被选中</p>
+</div>
+
+<div class="card" id="listCard" style="display:none;">
+  <h2>
+    <span data-i18n="listTitle">4. 已选区域 — 自定义命名（可批量/单独编辑）</span>
+    <span id="totalCount" style="font-size:13px;color:var(--blue);font-weight:600;"></span>
+  </h2>
+
+  <!-- 全局命名规则 -->
+  <div class="naming-panel">
+    <div class="naming-row">
+      <label data-i18n="nameFormat">命名格式：</label>
+      <div class="naming-format">
+        <input type="text" id="globalPrefix" data-i18n-ph="prefixPh" placeholder="前缀(可选)" value="">
+        <span class="naming-sep">_</span>
+        <select id="nameSource" title="中间名称来源">
+          <option value="filename" data-i18n="srcFilename">原文件名</option>
+          <option value="custom" data-i18n="srcCustom">自定义</option>
+        </select>
+        <input type="text" id="globalCustomName" data-i18n-ph="customPh" placeholder="自定义名称" style="display:none;width:100px;">
+        <span class="naming-sep">_</span>
+        <input type="text" id="globalSuffix" data-i18n-ph="suffixPh" placeholder="后缀(可选)" value="">
+        <span class="naming-sep">_</span>
+        <span class="naming-static" data-i18n="seq">序号</span>
+        <button class="sm" onclick="resetGlobalNaming()" title="重置命名格式为默认（前缀/名称来源/后缀），保留手动修改的名称" style="padding:2px 7px;font-size:11px;margin-left:4px;" data-i18n="reset">↺ 重置</button>
+        <button class="sm" onclick="resetAllManual()" title="清除所有手动修改的名称，恢复自动命名" style="padding:2px 7px;font-size:11px;margin-left:4px;" data-i18n="resetManual">↺ 重置手改</button>
+      </div>
+    </div>
+    <div class="naming-preview" id="namingPreview">预览：berry_01.png / berry_02.png ...</div>
+  </div>
+
+  <div class="batch-actions">
+    <button class="sm" onclick="toggleFindReplace()" data-i18n="findReplace">🔄 查找替换</button>
+  </div>
+  <div id="findReplacePanel" class="naming-panel" style="display:none;margin-top:0;">
+    <div class="naming-row">
+      <label data-i18n="findLabel">查找内容：</label>
+      <input type="text" id="findStr" data-i18n-ph="findPh" placeholder="输入要替换的文字" style="flex:1;min-width:120px;">
+      <label data-i18n="replaceLabel">替换为：</label>
+      <input type="text" id="replaceStr" data-i18n-ph="replacePh" placeholder="输入新文字" style="flex:1;min-width:120px;">
+      <button class="sm pri" onclick="doFindReplace()" data-i18n="doReplace">执行替换</button>
+      <button class="sm" onclick="toggleFindReplace()" data-i18n="collapse">收起</button>
+    </div>
+    <div class="naming-preview" data-i18n="replaceHint">对所有卡片的文件名做文字替换，例如把 berry 换成 fruit</div>
+  </div>
+  <p style="font-size:11px;color:var(--text3);margin:0 0 8px 2px;" data-i18n="listHint">💡 点卡片名称可单独编辑，右键橙色输入框清除手动标记；拖拽卡片可调整排序；点击卡片可在预览区定位</p>
+  <div class="sel-grid" id="selectedList">
+    <span style="color:var(--text3);grid-column:1/-1;padding:20px;text-align:center;font-size:14px;" data-i18n="emptyList">👆 导入图片后点击「拆分全部」或手动在预览区拖动框选</span>
+  </div>
+</div>
+
+<div class="card" id="exportCard" style="display:none;">
+  <h2 data-i18n="exportTitle">5. 导出到指定目录</h2>
+  <div class="row" style="margin-bottom:12px;">
+    <button class="pri" onclick="pickDir()" data-i18n="pickDir">📁 选择输出文件夹</button>
+    <input type="text" id="outputPath" readonly data-i18n-ph="outputPh" placeholder="未选择（将使用浏览器默认下载）">
+  </div>
+  <div class="row">
+    <button class="ok" onclick="exportAll()" style="padding:10px 24px;font-size:14px;" data-i18n="exportBtn">✅ 一键导出到指定目录</button>
+    <button onclick="downloadZip()" data-i18n="zipBtn">📦 下载 ZIP 包</button>
+  </div>
+  <p style="font-size:11px;color:var(--text3);margin-top:6px;" data-i18n="exportHint">* 选择文件夹需要 Chrome / Edge 浏览器。Firefox 请使用「下载 ZIP」</p>
+  <div id="progressBar"><div class="fill" id="progressFill"></div></div>
+  <div id="logArea"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===== 工具函数 ===== */
+  function $(id){ return document.getElementById(id); }
+
+  /* ===== i18n 中英文切换 ===== */
+  var curLang = "en";
+  var I18N = {
+    zh: {
+      title: "🎨 精灵图批量拆分工具",
+      subtitle: "批量导入 · 自动拆分 · 手动框选合并 · 按原文件名分组命名(berry_01/berry_02…) · 指定目录导出",
+      importTitle: "1. 导入图片",
+      importHint: "支持多选 / 拖拽",
+      dropText: "📂 拖拽多张图片到这里，或 <b style=\"color:var(--blue)\">点击选择文件</b>",
+      dropSub: "支持 PNG / GIF / BMP，可一次导入多张",
+      gridTitle: "2. 网格设置",
+      cellW: "格子宽", cellH: "格子高", cols: "列数", rows: "行数",
+      preset: "预设:",
+      previewTitle: "3. 预览与框选",
+      markEmpty: "标空(红/绿)",
+      zoom: "显示缩放:",
+      splitCur: "拆分当前图", splitAll: "🚀 拆分全部",
+      clearCur: "清空当前", clearAll: "清空全部",
+      selHint: "💡 拖动框选可选中/合并/取消区域；单击已选格子可高亮对应卡片；空格子不会被选中",
+      listTitle: "4. 已选区域 — 自定义命名（可批量/单独编辑）",
+      nameFormat: "命名格式：",
+      prefixPh: "前缀(可选)", suffixPh: "后缀(可选)",
+      srcFilename: "原文件名", srcCustom: "自定义", customPh: "自定义名称",
+      seq: "序号",
+      reset: "↺ 重置", resetManual: "↺ 重置手改",
+      findReplace: "🔄 查找替换",
+      findLabel: "查找内容：", replaceLabel: "替换为：",
+      findPh: "输入要替换的文字", replacePh: "输入新文字",
+      doReplace: "执行替换", collapse: "收起",
+      replaceHint: "对所有卡片的文件名做文字替换，例如把 berry 换成 fruit",
+      listHint: "💡 点卡片名称可单独编辑，右键橙色输入框清除手动标记；拖拽卡片可调整排序；点击卡片可在预览区定位",
+      emptyList: "👆 导入图片后点击「拆分全部」或手动在预览区拖动框选",
+      exportTitle: "5. 导出到指定目录",
+      pickDir: "📁 选择输出文件夹",
+      outputPh: "未选择（将使用浏览器默认下载）",
+      exportBtn: "✅ 一键导出到指定目录",
+      zipBtn: "📦 下载 ZIP 包",
+      exportHint: "* 选择文件夹需要 Chrome / Edge 浏览器。Firefox 请使用「下载 ZIP」",
+      langBtn: "EN",
+      /* 动态文本 */
+      curImg: "当前图", total: "全部", selected: "个已选", unit: "个",
+      totalPrefix: "共 ", totalSuffix: " 个",
+      sizeHint: "图片: ",
+      namingPreviewEmpty: "预览：导入图片并拆分后显示",
+      namingPreviewPrefix: "预览：",
+      namingMore: " ... 共 ", namingTotal: " 个",
+      logApplyAll: "已将 ", logApplyAll2: " 应用到全部 ", logApplyAll3: " 张",
+      logSplitCur: "] 拆分完成：", logSplitCur2: " 个非空格",
+      logSplitAll1: "全部拆分完成！", logSplitAll2: " 张图 -> 共 ", logSplitAll3: " 个（前缀：",
+      logNaming: "命名规则已应用到全部 ", logNaming2: " 个区域",
+      logResetGlobal: "全局命名格式已重置（手动修改的名称保留）",
+      logResetAllManual: "已清除全部手动修改的名称，恢复自动命名",
+      logResetImg: "[", logResetImg2: "] 已清除手动修改的名称",
+      logFind: "查找替换 \"", logFind2: "\" → \"", logFind3: "\"：影响 ", logFind4: " 个",
+      logPickDir: "输出目录：",
+      logExportDone: "\n完成！成功 ", logExportDone2: " 个，失败 ", logExportDone3: " 个 -> ",
+      logZip: "ZIP 下载：共 ", logZip2: " 个文件",
+      alertNoDir: "请先选择输出文件夹",
+      alertNoArea: "没有已选区域，请先拆分或手动选择",
+      alertNoArea2: "没有已选区域",
+      alertClearAll: "确定清空所有图片的已选区域吗？",
+      alertNoBrowser: "你的浏览器不支持选择文件夹\n\n请使用 Chrome 或 Edge 浏览器，\n或者使用「下载 ZIP」功能代替。",
+      alertFindEmpty: "请输入要查找的内容",
+      locatePrefix: "📍 定位到 [", locateMid: "] 区域 ", locateName: "，文件名：",
+      logNamingCur1: "命名规则已应用到当前图 [", logNamingCur2: "] 的 ", logNamingCur3: " 个区域",
+      resetImgTitle: "重置该图命名格式为全局默认（保留手动修改的名称）",
+      resetManualImgTitle: "清除该图所有手动修改的名称，恢复自动命名",
+      delTitle: "移除此区域",
+      previewAlt: "预览",
+      manualTitle: "手动命名，右键清除手动标记",
+      editTitle: "点击编辑文件名",
+      logPickFail: "选择失败: ",
+      logExportFail: "导出失败: ",
+    },
+    en: {
+      title: "🎨 Sprite Sheet Batch Splitter",
+      subtitle: "Batch Import · Auto Split · Manual Select & Merge · Group Naming by Original Filename(berry_01/berry_02…) · Export to Custom Folder",
+      importTitle: "1. Import Images",
+      importHint: "Multi-select / Drag & Drop",
+      dropText: "📂 Drag multiple images here, or <b style=\"color:var(--blue)\">click to select files</b>",
+      dropSub: "PNG / GIF / BMP supported, import multiple at once",
+      gridTitle: "2. Grid Settings",
+      cellW: "Cell W", cellH: "Cell H", cols: "Cols", rows: "Rows",
+      preset: "Preset:",
+      previewTitle: "3. Preview & Select",
+      markEmpty: "Mark Empty",
+      zoom: "Zoom:",
+      splitCur: "Split Current", splitAll: "🚀 Split All",
+      clearCur: "Clear Current", clearAll: "Clear All",
+      selHint: "💡 Drag to select/merge/deselect; click selected cell to highlight card; empty cells won't be selected",
+      listTitle: "4. Selected Areas — Custom Naming (batch / individual)",
+      nameFormat: "Name Format:",
+      prefixPh: "Prefix", suffixPh: "Suffix",
+      srcFilename: "Filename", srcCustom: "Custom", customPh: "Custom name",
+      seq: "Index",
+      reset: "↺ Reset", resetManual: "↺ Reset Manual",
+      findReplace: "🔄 Find & Replace",
+      findLabel: "Find:", replaceLabel: "Replace:",
+      findPh: "Text to find", replacePh: "New text",
+      doReplace: "Replace", collapse: "Collapse",
+      replaceHint: "Replace text in all card filenames, e.g. replace berry with fruit",
+      listHint: "💡 Click card name to edit, right-click orange input to clear manual mark; drag to reorder; click card to locate in preview",
+      emptyList: "👆 Import images then click \"Split All\" or drag manually in preview",
+      exportTitle: "5. Export to Folder",
+      pickDir: "📁 Choose Output Folder",
+      outputPh: "Not selected (browser default download)",
+      exportBtn: "✅ Export to Folder",
+      zipBtn: "📦 Download ZIP",
+      exportHint: "* Folder picker requires Chrome / Edge. Use Download ZIP for Firefox.",
+      langBtn: "中",
+      curImg: "Current", total: "Total", selected: " selected", unit: "",
+      totalPrefix: "Total: ", totalSuffix: "",
+      sizeHint: "Image: ",
+      namingPreviewEmpty: "Preview: import images and split to show",
+      namingPreviewPrefix: "Preview: ",
+      namingMore: " ... ", namingTotal: " total",
+      logApplyAll: "Applied ", logApplyAll2: " to all ", logApplyAll3: " images",
+      logSplitCur: "] split complete: ", logSplitCur2: " non-empty cells",
+      logSplitAll1: "All split complete! ", logSplitAll2: " images -> ", logSplitAll3: " total (prefixes: ",
+      logNaming: "Naming rule applied to all ", logNaming2: " areas",
+      logResetGlobal: "Global naming format reset (manual names kept)",
+      logResetAllManual: "All manual names cleared, auto naming restored",
+      logResetImg: "[", logResetImg2: "] manual names cleared",
+      logFind: "Find & Replace \"", logFind2: "\" → \"", logFind3: "\": ", logFind4: " affected",
+      logPickDir: "Output folder: ",
+      logExportDone: "\nDone! ", logExportDone2: " success, ", logExportDone3: " failed -> ",
+      logZip: "ZIP download: ", logZip2: " files",
+      alertNoDir: "Please choose output folder first",
+      alertNoArea: "No selected areas, split or select first",
+      alertNoArea2: "No selected areas",
+      alertClearAll: "Clear all selected areas for all images?",
+      alertNoBrowser: "Your browser does not support folder picking\n\nPlease use Chrome or Edge,\nor use Download ZIP instead.",
+      alertFindEmpty: "Please enter text to find",
+      locatePrefix: "📍 Located [", locateMid: "] area ", locateName: ", filename: ",
+      logNamingCur1: "Naming rule applied to current [", logNamingCur2: "]: ", logNamingCur3: " areas",
+      resetImgTitle: "Reset this image's naming to global default (keep manual names)",
+      resetManualImgTitle: "Clear all manual names for this image, restore auto naming",
+      delTitle: "Remove this area",
+      previewAlt: "Preview",
+      manualTitle: "Manual naming, right-click to clear manual mark",
+      editTitle: "Click to edit filename",
+      logPickFail: "Selection failed: ",
+      logExportFail: "Export failed: ",
+    }
+  };
+
+  function t(key) {
+    var dict = I18N[curLang] || I18N.zh;
+    return dict[key] !== undefined ? dict[key] : key;
+  }
+
+  function applyLang() {
+    var els = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < els.length; i++) {
+      var key = els[i].getAttribute("data-i18n");
+      els[i].innerHTML = t(key);
+    }
+    var phs = document.querySelectorAll("[data-i18n-ph]");
+    for (var i = 0; i < phs.length; i++) {
+      var key = phs[i].getAttribute("data-i18n-ph");
+      phs[i].placeholder = t(key);
+    }
+    var btnEn = $("langEn");
+    var btnZh = $("langZh");
+    if (btnEn) { btnEn.classList.toggle("active", curLang === "en"); }
+    if (btnZh) { btnZh.classList.toggle("active", curLang === "zh"); }
+    if (imgs.length > 0) {
+      renderTabs();
+      updateInfo();
+      renderList();
+      updateNamingPreview();
+      var hint = $("sizeHint");
+      if (hint && imgs[ci]) { hint.textContent = t("sizeHint") + imgs[ci].img.width + " × " + imgs[ci].img.height; }
+    }
+  }
+
+  function setLang(lang) {
+    if (curLang === lang) { return; }
+    curLang = lang;
+    applyLang();
+  }
+
+  /* ===== 从文件名提取前缀（去掉扩展名） ===== */
+  function getFileBase(name) {
+    if (!name) { return "sprite"; }
+    return name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_\-]/g, "_");
+  }
+
+  /* ===== 状态变量 ===== */
+  var imgs = [];
+  var ci = 0;
+  var cW = 16;
+  var cH = 16;
+  var sEmpty = true;
+  var zoom = 2; /* 预览缩放倍数：1=原始, 2=2倍, 3=3倍 */
+  var dirHandle = null;
+  var dragging = false;
+  var dSX = 0, dSY = 0, dCX = 0, dCY = 0;
+  var ctx = null;
+  var hlIi = -1; /* 高亮的图片索引 */
+  var hlAi = -1; /* 高亮的区域索引 */
+
+  var canvas = $("canvas");
+  var pWrap = $("previewWrap");
+  var overlay = $("overlay");
+
+  /* ===== 文件导入 ===== */
+  function initFileImport() {
+    var dropZone = $("dropZone");
+    var fileInput = $("fileInput");
+
+    dropZone.addEventListener("click", function(e) {
+      e.preventDefault();
+      fileInput.click();
+    });
+
+    dropZone.addEventListener("dragover", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add("act");
+    });
+
+    dropZone.addEventListener("dragleave", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove("act");
+    });
+
+    dropZone.addEventListener("drop", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove("act");
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+
+    fileInput.addEventListener("change", function(e) {
+      if (this.files && this.files.length > 0) {
+        handleFiles(this.files);
+        this.value = "";
+      }
+    });
+  }
+
+  function handleFiles(files) {
+    var remaining = Array.prototype.slice.call(files);
+    processNextFile(remaining);
+  }
+
+  function processNextFile(list) {
+    if (list.length === 0) {
+      renderTabs();
+      if (imgs.length > 0) {
+        switchImg(0);
+      }
+      return;
+    }
+
+    var f = list.shift();
+
+    if (!f.type.startsWith("image/")) {
+      processNextFile(list);
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function() {
+      var img = new Image();
+      img.onload = function() {
+        var hc = document.createElement("canvas");
+        hc.width = img.width;
+        hc.height = img.height;
+        var hctx = hc.getContext("2d", { willReadFrequently: true });
+        hctx.drawImage(img, 0, 0);
+
+        imgs.push({
+          img: img,
+          name: f.name,
+          hCanvas: hc,
+          hCtx: hctx,
+          cols: 0,
+          rows: 0,
+          areas: [],
+          letter: "",
+          naming: null,   /* null=使用全局默认, 对象=该图独立命名配置 {prefix,source,customName,suffix} */
+          namingOpen: false
+        });
+
+        processNextFile(list);
+      };
+      img.onerror = function() {
+        console.warn("[SpriteSplitter] 加载失败:", f.name);
+        processNextFile(list);
+      };
+      img.src = reader.result;
+    };
+    reader.onerror = function() {
+      console.warn("[SpriteSplitter] 读取失败:", f.name);
+      processNextFile(list);
+    };
+    reader.readAsDataURL(f);
+  }
+
+  /* ===== 渲染文件标签 =====
+     可点击切换按钮渲染到预览区标题栏(imgTabsBar)
+     导入图片区(fileTabs)只显示纯文字信息，不可点击 */
+  function renderTabs() {
+    /* 1. 预览区标题栏：可点击切换按钮 */
+    var bar = $("imgTabsBar");
+    if (bar) {
+      bar.innerHTML = "";
+      for (var i = 0; i < imgs.length; i++) {
+        (function(ii) {
+          var im = imgs[ii];
+          if (!im.letter) { im.letter = getFileBase(im.name); }
+          var b = document.createElement("span");
+          b.className = "img-tab" + (ii === ci ? " on" : "");
+          b.innerHTML = "<span>" + im.letter + "</span>" +
+                        '<span class="cnt">(' + im.areas.length + ")</span>";
+          b.onclick = function() { switchImg(ii); };
+          bar.appendChild(b);
+        })(i);
+      }
+    }
+
+    /* 2. 导入图片区：纯文字展示，不可点击，无高亮 */
+    var el = $("fileTabs");
+    if (el) {
+      el.innerHTML = "";
+      for (var i = 0; i < imgs.length; i++) {
+        (function(ii) {
+          var im = imgs[ii];
+          if (!im.letter) { im.letter = getFileBase(im.name); }
+          var s = document.createElement("span");
+          s.style.cssText = "font-size:12px;color:var(--text2);margin-right:14px;white-space:nowrap;";
+          s.textContent = im.name + " (" + im.areas.length + ")";
+          el.appendChild(s);
+        })(i);
+      }
+    }
+  }
+
+  /* ===== 切换图片 ===== */
+  function switchImg(idx) {
+    ci = idx;
+    var im = imgs[idx];
+    if (!im) { return; }
+
+    canvas.width = im.img.width;
+    canvas.height = im.img.height;
+
+    ctx = canvas.getContext("2d");
+
+    if (!im.letter) { im.letter = getFileBase(im.name); }
+
+    $("settingsCard").style.display = "block";
+    $("previewCard").style.display = "block";
+    $("listCard").style.display = "block";
+    $("exportCard").style.display = "block";
+
+    if (im.cols === 0) { detectGrid(im); }
+
+    $("cellW").value = cW;
+    $("cellH").value = cH;
+    $("cols").value = im.cols;
+    $("rows").value = im.rows;
+    /* 更新尺寸提示 */
+    var hint = $("sizeHint");
+    if (hint) { hint.textContent = t("sizeHint") + im.img.width + " × " + im.img.height; }
+
+    renderTabs();
+    drawPreview();
+    updateInfo();
+    renderList();
+  }
+
+  /* 切换到上一张图片 */
+  function switchPrevImg() {
+    if (imgs.length <= 1) { return; }
+    var idx = ci - 1;
+    if (idx < 0) { idx = imgs.length - 1; }
+    switchImg(idx);
+  }
+
+  /* 切换到下一张图片 */
+  function switchNextImg() {
+    if (imgs.length <= 1) { return; }
+    var idx = ci + 1;
+    if (idx >= imgs.length) { idx = 0; }
+    switchImg(idx);
+  }
+
+  /* 点击卡片时在预览区定位并高亮 */
+  function focusCard(ii, ai) {
+    if (!imgs[ii] || !imgs[ii].areas[ai]) { return; }
+    hlIi = ii;
+    hlAi = ai;
+    if (ii !== ci) { switchImg(ii); }
+    var im = imgs[ii];
+    var a = im.areas[ai];
+    /* 滚动预览区到对应格子 */
+    var px = a.c1 * cW * zoom;
+    var py = a.r1 * cH * zoom;
+    var pw = pWrap.clientWidth;
+    var ph = pWrap.clientHeight;
+    pWrap.scrollLeft = Math.max(0, px - pw / 2 + (a.c2 - a.c1 + 1) * cW * zoom / 2);
+    pWrap.scrollTop = Math.max(0, py - ph / 2 + (a.r2 - a.r1 + 1) * cH * zoom / 2);
+    drawPreview();
+    /* 更新提示 */
+    var coord = "(" + a.c1 + "," + a.r1 + ")";
+    if (a.c2 > a.c1 || a.r2 > a.r1) {
+      coord = "(" + a.c1 + "," + a.r1 + ")-(" + a.c2 + "," + a.r2 + ")";
+    }
+    $("selInfo").innerHTML = "<b style='color:#f59e0b;'>" + t("locatePrefix") + im.name + "]</b> " + t("locateMid") + coord + t("locateName") + "<b>" + (a.name || "(auto)") + "</b> &nbsp;|&nbsp; <b>" + t("total") + "</b>：" + countTotal() + t("unit");
+    renderList(); /* 同图切换卡片也更新选中样式 */
+  }
+
+  /* ===== 网格设置 ===== */
+  function setP(w, h) {
+    cW = w;
+    cH = h;
+    $("cellW").value = w;
+    $("cellH").value = h;
+    applyCur();
+  }
+
+  function detectGrid(im) {
+    im.cols = Math.floor(im.img.width / cW);
+    im.rows = Math.floor(im.img.height / cH);
+  }
+
+  function applyCur() {
+    if (!imgs[ci]) { return; }
+    detectGrid(imgs[ci]);
+    $("cols").value = imgs[ci].cols;
+    $("rows").value = imgs[ci].rows;
+    drawPreview();
+  }
+
+  function applyAll() {
+    for (var i = 0; i < imgs.length; i++) {
+      imgs[i].letter = getFileBase(imgs[i].name);
+      detectGrid(imgs[i]);
+    }
+    applyCur();
+    log(t("logApplyAll") + cW + "x" + cH + t("logApplyAll2") + imgs.length + t("logApplyAll3"), "info");
+    renderList();
+  }
+
+  $("cellW").onchange = function() {
+    cW = Math.max(1, parseInt(this.value) || 16);
+    applyCur();
+  };
+  $("cellH").onchange = function() {
+    cH = Math.max(1, parseInt(this.value) || 16);
+    applyCur();
+  };
+  $("cols").onchange = function() {
+    if (!imgs[ci]) { return; }
+    var v = parseInt(this.value);
+    if (v > 0) {
+      /* 输入列数 → 反推格子宽 */
+      cW = Math.max(1, Math.floor(imgs[ci].img.width / v));
+      $("cellW").value = cW;
+      imgs[ci].cols = v;
+    } else {
+      imgs[ci].cols = 0;
+    }
+    drawPreview();
+  };
+  $("rows").onchange = function() {
+    if (!imgs[ci]) { return; }
+    var v = parseInt(this.value);
+    if (v > 0) {
+      /* 输入行数 → 反推格子高 */
+      cH = Math.max(1, Math.floor(imgs[ci].img.height / v));
+      $("cellH").value = cH;
+      imgs[ci].rows = v;
+    } else {
+      imgs[ci].rows = 0;
+    }
+    drawPreview();
+  };
+  $("skipEmpty").onchange = function() { sEmpty = this.checked; drawPreview(); };
+
+  /* ===== 空白检测 ===== */
+  function isEmptyCell(im, c, r) {
+    if (!im.hCtx || c < 0 || r < 0 || c >= im.cols || r >= im.rows) { return true; }
+    var x = c * cW;
+    var y = r * cH;
+    var w = Math.min(cW, im.hCanvas.width - x);
+    var h = Math.min(cH, im.hCanvas.height - y);
+
+    if (w <= 0 || h <= 0) { return true; }
+
+    try {
+      var d = im.hCtx.getImageData(x, y, w, h).data;
+      for (var i = 3; i < d.length; i += 4) {
+        if (d[i] > 10) { return false; }
+      }
+    } catch (e) {
+      return true;
+    }
+    return true;
+  }
+
+  /* 判断一个矩形范围是否全空 */
+  function isRectEmpty(im, c1, r1, c2, r2) {
+    if (c1 > c2 || r1 > r2) { return true; }
+    for (var c = c1; c <= c2; c++) {
+      for (var r = r1; r <= r2; r++) {
+        if (!isEmptyCell(im, c, r)) { return false; }
+      }
+    }
+    return true;
+  }
+
+  /* ===== 缩放控制 ===== */
+  function setZoom(z) {
+    zoom = z;
+    updateZoomButtons();
+    drawPreview();
+  }
+
+  /* 更新缩放按钮高亮状态 */
+  function updateZoomButtons() {
+    var btns = document.querySelectorAll('.toolbar button');
+    for (var i = 0; i < btns.length; i++) {
+      var txt = btns[i].textContent;
+      if (txt === '1x' || txt === '2x') {
+        btns[i].style.background = '';
+        btns[i].style.color = '';
+        btns[i].style.borderColor = '';
+      }
+    }
+    /* 高亮当前缩放对应的按钮 */
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].textContent === zoom + 'x') {
+        btns[i].style.background = 'var(--blue)';
+        btns[i].style.color = '#fff';
+        btns[i].style.borderColor = 'var(--blue)';
+        break;
+      }
+    }
+  }
+
+  /* ===== 绘制预览 ===== */
+  function drawPreview() {
+    var im = imgs[ci];
+    if (!im || !ctx) { return; }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(im.img, 0, 0);
+
+    if (im.cols > 0 && im.rows > 0) {
+      for (var r = 0; r < im.rows; r++) {
+        for (var c = 0; c < im.cols; c++) {
+          var empty = isEmptyCell(im, c, r);
+
+          if (sEmpty) {
+            if (!empty) {
+              ctx.fillStyle = "rgba(22,163,74,0.18)";
+              ctx.fillRect(c * cW + 1, r * cH + 1, cW - 2, cH - 2);
+            } else {
+              ctx.fillStyle = "rgba(220,38,38,0.1)";
+              ctx.fillRect(c * cW + 1, r * cH + 1, cW - 2, cH - 2);
+            }
+          }
+
+        }
+      }
+
+      /* 按 area 画完整的蓝色选中框（合并区域显示为一个长框） */
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 1;
+      for (var ai = 0; ai < im.areas.length; ai++) {
+        var a = im.areas[ai];
+        ctx.strokeRect(a.c1 * cW + 0.5, a.r1 * cH + 0.5, (a.c2 - a.c1 + 1) * cW - 1, (a.r2 - a.r1 + 1) * cH - 1);
+      }
+
+      /* 高亮框：点击卡片时定位显示（橙色，与选中框粗细一致） */
+      if (hlIi === ci && hlAi >= 0 && im.areas[hlAi]) {
+        var ha = im.areas[hlAi];
+        var hx = ha.c1 * cW;
+        var hy = ha.r1 * cH;
+        var hw = (ha.c2 - ha.c1 + 1) * cW;
+        var hh = (ha.r2 - ha.r1 + 1) * cH;
+        ctx.fillStyle = "rgba(245,158,11,0.18)";
+        ctx.fillRect(hx, hy, hw, hh);
+        ctx.strokeStyle = "#f59e0b";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(hx + 0.5, hy + 0.5, hw - 1, hh - 1);
+      }
+    }
+
+    /* 应用缩放 */
+    canvas.style.transform = "scale(" + zoom + ")";
+    canvas.style.width = (canvas.width * zoom) + "px";
+    canvas.style.height = (canvas.height * zoom) + "px";
+
+    /* transform 不占文档流，手动设置容器高度避免与下方内容重叠 */
+    pWrap.style.height = (canvas.height * zoom * zoom) + "px";
+  }
+
+  function isCellSelected(im, c, r) {
+    for (var i = 0; i < im.areas.length; i++) {
+      var a = im.areas[i];
+      if (c >= a.c1 && c <= a.c2 && r >= a.r1 && r <= a.r2) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /* ===== 鼠标事件：拖拽框选 + 单击选中 ===== */
+  pWrap.addEventListener("mousedown", function(e) {
+    if (e.target !== canvas) { return; }
+    if (e.button !== 0) { return; } /* 仅响应左键，取消右键框选 */
+
+    var rect = canvas.getBoundingClientRect();
+    var sx = canvas.width / rect.width;
+    var sy = canvas.height / rect.height;
+    var x = (e.clientX - rect.left) * sx;
+    var y = (e.clientY - rect.top) * sy;
+
+    dragging = true;
+    dSX = x;
+    dSY = y;
+    dCX = x;
+    dCY = y;
+
+    overlay.style.display = "block";
+    updateOverlay(rect);
+    e.preventDefault();
+  });
+
+  pWrap.addEventListener("mousemove", function(e) {
+    if (!dragging) { return; }
+
+    var rect = canvas.getBoundingClientRect();
+    var sx = canvas.width / rect.width;
+    var sy = canvas.height / rect.height;
+
+    dCX = Math.max(0, Math.min(canvas.width, (e.clientX - rect.left) * sx));
+    dCY = Math.max(0, Math.min(canvas.height, (e.clientY - rect.top) * sy));
+
+    updateOverlay(rect);
+    e.preventDefault();
+  });
+
+  document.addEventListener("mouseup", function() {
+    if (!dragging) { return; }
+    dragging = false;
+    overlay.style.display = "none";
+
+    /* 小幅度移动视为单击，不创建区域（由 click 事件处理高亮） */
+    if (Math.abs(dCX - dSX) < 4 && Math.abs(dCY - dSY) < 4) { return; }
+
+    hlIi = -1; hlAi = -1; /* 框选操作时清除卡片高亮 */
+
+    var im = imgs[ci];
+    if (!im) { return; }
+
+    var c1 = Math.floor(Math.min(dSX, dCX) / cW);
+    var r1 = Math.floor(Math.min(dSY, dCY) / cH);
+    var c2 = Math.min(im.cols - 1, Math.floor(Math.max(dSX, dCX) / cW));
+    var r2 = Math.min(im.rows - 1, Math.floor(Math.max(dSY, dCY) / cH));
+
+    if (c1 >= 0 && r1 >= 0 && c2 >= c1 && r2 >= r1) {
+      /* 检查框选区域是否完全包含在某个已存在的大区域内 → 拆分 */
+      var splitIdx = -1;
+      for (var si = 0; si < im.areas.length; si++) {
+        var sa = im.areas[si];
+        var fullyInside = (c1 >= sa.c1 && c2 <= sa.c2 && r1 >= sa.r1 && r2 <= sa.r2);
+        var notSame = !(c1 === sa.c1 && c2 === sa.c2 && r1 === sa.r1 && r2 === sa.r2);
+        if (fullyInside && notSame) { splitIdx = si; break; }
+      }
+
+      if (splitIdx >= 0) {
+        /* 子区域全空则不拆分 */
+        if (isRectEmpty(im, c1, r1, c2, r2)) {
+          drawPreview(); updateInfo(); renderList(); renderTabs();
+          return;
+        }
+        var big = im.areas[splitIdx];
+        im.areas.splice(splitIdx, 1);
+        var parts = [];
+        /* 子区域本身 */
+        parts.push({c1: c1, c2: c2, r1: r1, r2: r2, name: "", manual: false});
+        /* 上部分（全空则跳过） */
+        if (r1 > big.r1 && !isRectEmpty(im, big.c1, big.r1, big.c2, r1 - 1)) { parts.push({c1: big.c1, c2: big.c2, r1: big.r1, r2: r1 - 1, name: "", manual: false}); }
+        /* 下部分（全空则跳过） */
+        if (r2 < big.r2 && !isRectEmpty(im, big.c1, r2 + 1, big.c2, big.r2)) { parts.push({c1: big.c1, c2: big.c2, r1: r2 + 1, r2: big.r2, name: "", manual: false}); }
+        /* 左部分（全空则跳过） */
+        if (c1 > big.c1 && !isRectEmpty(im, big.c1, r1, c1 - 1, r2)) { parts.push({c1: big.c1, c2: c1 - 1, r1: r1, r2: r2, name: "", manual: false}); }
+        /* 右部分（全空则跳过） */
+        if (c2 < big.c2 && !isRectEmpty(im, c2 + 1, r1, big.c2, r2)) { parts.push({c1: c2 + 1, c2: big.c2, r1: r1, r2: r2, name: "", manual: false}); }
+        /* 在原位置插入拆分后的区域 */
+        for (var pi = parts.length - 1; pi >= 0; pi--) {
+          im.areas.splice(splitIdx, 0, parts[pi]);
+        }
+        renumberAreas(im);
+        drawPreview();
+        updateInfo();
+        renderList();
+        renderTabs();
+        return;
+      }
+
+      var found = -1;
+      for (var i = 0; i < im.areas.length; i++) {
+        var a = im.areas[i];
+        if (a.c1 === c1 && a.c2 === c2 && a.r1 === r1 && a.r2 === r2) {
+          found = i;
+          break;
+        }
+      }
+
+      if (found >= 0) {
+        /* 完全相同的区域 → 切换取消 */
+        im.areas.splice(found, 1);
+      } else {
+        /* 检查新区域内是否全是空的，全空则不创建 */
+        var hasContent = false;
+        for (var cc = c1; cc <= c2 && !hasContent; cc++) {
+          for (var rr = r1; rr <= r2 && !hasContent; rr++) {
+            if (!isEmptyCell(im, cc, rr)) { hasContent = true; }
+          }
+        }
+        if (!hasContent) {
+          drawPreview();
+          updateInfo();
+          renderList();
+          renderTabs();
+          return;
+        }
+
+        /* 删除所有与新区域重叠的旧区域 → 合并替换（框选的总是合成一个完整区域） */
+        var minIdx = im.areas.length;
+        var toRemove = [];
+        for (var k = 0; k < im.areas.length; k++) {
+          var ak = im.areas[k];
+          var overlap = !(ak.c2 < c1 || ak.c1 > c2 || ak.r2 < r1 || ak.r1 > r2);
+          if (overlap) {
+            toRemove.push(k);
+            if (k < minIdx) { minIdx = k; }
+          }
+        }
+
+        if (toRemove.length > 0) {
+          /* 从后往前删除重叠的 area */
+          for (var r = toRemove.length - 1; r >= 0; r--) {
+            im.areas.splice(toRemove[r], 1);
+          }
+          /* 在最靠前的位置插入新合并区域 */
+          im.areas.splice(minIdx, 0, {c1: c1, c2: c2, r1: r1, r2: r2, name: "", manual: false});
+        } else {
+          im.areas.push({c1: c1, c2: c2, r1: r1, r2: r2, name: "", manual: false});
+        }
+      }
+
+      renumberAreas(im);
+      drawPreview();
+      updateInfo();
+      renderList();
+      renderTabs();
+    }
+  });
+
+  function updateOverlay(rect) {
+    var sx = rect.width / canvas.width;
+    var sy = rect.height / canvas.height;
+
+    overlay.style.left = Math.min(dSX, dCX) * sx + "px";
+    overlay.style.top = Math.min(dSY, dCY) * sy + "px";
+    overlay.style.width = Math.abs(dCX - dSX) * sx + "px";
+    overlay.style.height = Math.abs(dCY - dSY) * sy + "px";
+  }
+
+  /* 单击：高亮对应卡片（不创建/删除区域，只有框选才改变卡片） */
+  pWrap.addEventListener("click", function(e) {
+    if (e.target !== canvas) { return; }
+    if (Math.abs(dCX - dSX) > 3 || Math.abs(dCY - dSY) > 3) { return; }
+    e.stopPropagation(); /* 阻止冒泡，避免全局点击清除高亮 */
+
+    var rect = canvas.getBoundingClientRect();
+    var sx = canvas.width / rect.width;
+    var sy = canvas.height / rect.height;
+    var x = (e.clientX - rect.left) * sx;
+    var y = (e.clientY - rect.top) * sy;
+
+    var c = Math.floor(x / cW);
+    var r = Math.floor(y / cH);
+    var im = imgs[ci];
+
+    if (!im) { return; }
+    if (c < 0 || r < 0 || c >= im.cols || r >= im.rows) { return; }
+
+    /* 查找该格子属于哪个已选区域（含合并区域） */
+    var found = -1;
+    for (var i = 0; i < im.areas.length; i++) {
+      var a = im.areas[i];
+      if (c >= a.c1 && c <= a.c2 && r >= a.r1 && r <= a.r2) {
+        found = i;
+        break;
+      }
+    }
+
+    if (found >= 0) {
+      /* 高亮对应的卡片 */
+      focusCard(ci, found);
+    } else {
+      /* 点击未选中的格子，清除高亮 */
+      hlIi = -1; hlAi = -1;
+      renderList();
+      drawPreview();
+      updateInfo();
+    }
+  });
+
+  /* ===== 自动拆分 ===== */
+  function autoSplitCur() {
+    var im = imgs[ci];
+    if (!im) { return; }
+
+    im.areas = [];
+    if (!im.letter) { im.letter = getFileBase(im.name); }
+    var idx = 0;
+
+    for (var r = 0; r < im.rows; r++) {
+      for (var c = 0; c < im.cols; c++) {
+        if (!isEmptyCell(im, c, r)) {
+          idx++;
+          im.areas.push({c1: c, c2: c, r1: r, r2: r, name: buildFileName(im.letter, idx, im.naming), manual: false});
+        }
+      }
+    }
+
+    drawPreview();
+    updateInfo();
+    renderList();
+    renderTabs();
+    log("[" + im.name + t("logSplitCur") + im.areas.length + t("logSplitCur2"), "ok");
+  }
+
+  function autoSplitAll() {
+    var total = 0;
+
+    for (var ii = 0; ii < imgs.length; ii++) {
+      var im = imgs[ii];
+
+      if (im.cols === 0) { detectGrid(im); }
+
+      im.areas = [];
+      im.letter = getFileBase(im.name);
+      var idx = 0;
+
+      for (var r = 0; r < im.rows; r++) {
+        for (var c = 0; c < im.cols; c++) {
+          if (!isEmptyCell(im, c, r)) {
+            idx++;
+            total++;
+            im.areas.push({c1: c, c2: c, r1: r, r2: r, name: buildFileName(im.letter, idx, im.naming), manual: false});
+          }
+        }
+      }
+    }
+
+    drawPreview();
+    updateInfo();
+    renderList();
+    renderTabs();
+
+    var prefixes = "";
+    for (var k = 0; k < imgs.length; k++) {
+      prefixes += (k > 0 ? ", " : "") + getFileBase(imgs[k].name);
+    }
+    log(t("logSplitAll1") + imgs.length + t("logSplitAll2") + total + t("logSplitAll3") + prefixes + "）", "ok");
+  }
+
+  function clearCur() {
+    if (imgs[ci]) {
+      imgs[ci].areas = [];
+      drawPreview();
+      updateInfo();
+      renderList();
+      renderTabs();
+    }
+  }
+
+  function clearAll() {
+    if (!confirm(t("alertClearAll"))) { return; }
+
+    for (var i = 0; i < imgs.length; i++) {
+      imgs[i].areas = [];
+    }
+
+    drawPreview();
+    updateInfo();
+    renderList();
+    renderTabs();
+  }
+
+  /* ===== 已选列表渲染 ===== */
+  function updateInfo() {
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    var cur = imgs[ci] ? imgs[ci].areas.length : 0;
+    var curName = imgs[ci] ? imgs[ci].name : "";
+
+    $("selInfo").innerHTML = "<b>" + t("curImg") + " [" + curName + "]</b>：" + cur + t("selected") + " &nbsp;|&nbsp; <b>" + t("total") + "</b>：" + total + t("unit");
+    $("totalCount").textContent = t("totalPrefix") + total + t("totalSuffix");
+  }
+
+  /* ===== 命名系统：根据规则生成文件名 ===== */
+  function getGlobalPrefix() { return $("globalPrefix").value.trim(); }
+  function getGlobalSuffix() { return $("globalSuffix").value.trim(); }
+  function getNameSource() { return $("nameSource").value; }
+  function getCustomName() { return $("globalCustomName").value.trim(); }
+
+  /* 根据规则构建名字：前缀_名称_后缀_序号
+     cfg 可选，传入该图独立命名配置；不传则用全局默认 */
+  function buildFileName(baseName, idx, cfg) {
+    var prefix, suffix, source, custom;
+    if (cfg) {
+      prefix = cfg.prefix || "";
+      suffix = cfg.suffix || "";
+      source = cfg.source || "filename";
+      custom = cfg.customName || "";
+    } else {
+      prefix = getGlobalPrefix();
+      suffix = getGlobalSuffix();
+      source = getNameSource();
+      custom = getCustomName();
+    }
+    var middle = baseName;
+
+    if (source === "custom") {
+      middle = custom || baseName;
+    }
+
+    var numStr = String(idx);
+    if (numStr.length < 2) { numStr = "0" + numStr; }
+
+    var parts = [];
+    if (prefix) { parts.push(prefix); }
+    if (middle) { parts.push(middle); }
+    if (suffix) { parts.push(suffix); }
+    parts.push(numStr);
+
+    return parts.join("_");
+  }
+
+  /* 检查某个名字是否是自动生成的（可被重编号覆盖） */
+  function isAutoGenerated(name, im) {
+    if (!name || name === "") { return true; }
+    var prefix = getGlobalPrefix();
+    var suffix = getGlobalSuffix();
+    var source = getNameSource();
+    var middle = (source === "custom") ? (getCustomName() || im.letter) : im.letter;
+
+    var parts = [];
+    if (prefix) { parts.push(prefix); }
+    if (middle) { parts.push(middle); }
+    if (suffix) { parts.push(suffix); }
+    parts.push("\\d+");
+
+    var pattern = new RegExp("^" + parts.join("_") + "$");
+    return pattern.test(name);
+  }
+
+  /* 重新编号（拖拽/删除/手动改名后调用）
+     规则：
+     1. 手动修改 且 名字末尾无数字 → 排到列表最后
+     2. 非手动项（自动生成的）→ 按顺序连续重新编号
+     3. 手动修改 且 名字末尾有数字 → 保持原位、保持原名不动 */
+  function renumberAreas(im) {
+    if (!im || !im.areas) { return; }
+
+    var keep = [];   /* 前部：自动项 + 手动但含序号的项 */
+    var tail = [];   /* 末尾：手动修改且名字末尾无数字的项 */
+
+    for (var j = 0; j < im.areas.length; j++) {
+      var a = im.areas[j];
+      if (a.manual && a.name && !/\d+\s*$/.test(a.name.trim())) {
+        tail.push(a);
+      } else {
+        keep.push(a);
+      }
+    }
+
+    /* 对 keep 中的非手动项连续重新编号；手动项保持原名不动 */
+    var autoIdx = 0;
+    for (var k = 0; k < keep.length; k++) {
+      var a = keep[k];
+      if (!a.manual) {
+        autoIdx++;
+        a.name = buildFileName(im.letter, autoIdx, im.naming);
+      }
+    }
+
+    im.areas = keep.concat(tail);
+  }
+
+  /* 应用命名规则到全部区域 — 强制覆盖所有名字（包括手动修改的），清除各图独立配置 */
+  function applyNamingRule() {
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+      im.naming = null; /* 清除该图独立命名配置，恢复全局默认 */
+      for (var j = 0; j < im.areas.length; j++) {
+        im.areas[j].name = buildFileName(im.letter, j + 1);
+        im.areas[j].manual = false;
+      }
+    }
+    renderList();
+    updateNamingPreview();
+    log(t("logNaming") + countTotal() + t("logNaming2"), "ok");
+  }
+
+  /* 重置全局命名格式（前缀/名称来源/后缀），保留手动修改的名称 */
+  function resetGlobalNaming() {
+    $("globalPrefix").value = "";
+    $("globalSuffix").value = "";
+    $("globalCustomName").value = "";
+    $("nameSource").value = "filename";
+    $("globalCustomName").style.display = "none";
+    for (var i = 0; i < imgs.length; i++) {
+      imgs[i].naming = null;
+    }
+    applyNamingLive();
+    log(t("logResetGlobal"), "info");
+  }
+
+  /* 重置全部手动修改的名称，恢复自动命名 */
+  function resetAllManual() {
+    for (var i = 0; i < imgs.length; i++) {
+      for (var j = 0; j < imgs[i].areas.length; j++) {
+        imgs[i].areas[j].manual = false;
+      }
+    }
+    applyNamingLive();
+    renderList();
+    log(t("logResetAllManual"), "ok");
+  }
+
+  /* 重置单张图片的手动修改名称 */
+  function resetImgManual(ii) {
+    if (!imgs[ii]) { return; }
+    for (var j = 0; j < imgs[ii].areas.length; j++) {
+      imgs[ii].areas[j].manual = false;
+    }
+    applyNamingLive();
+    renderList();
+    log(t("logResetImg") + imgs[ii].name + t("logResetImg2"), "ok");
+  }
+
+  /* 实时应用命名规则 — 只更新非手动项，不打断正在编辑的输入框 */
+  function applyNamingLive() {
+    /* 如果用户正在编辑某个卡片名称，只更新数据不重渲染，避免抢焦点 */
+    var active = document.activeElement;
+    var editingCard = active && active.classList && active.classList.contains("name-input");
+
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+      for (var j = 0; j < im.areas.length; j++) {
+        if (!im.areas[j].manual) {
+          im.areas[j].name = buildFileName(im.letter, j + 1, im.naming);
+        }
+      }
+    }
+    updateNamingPreview();
+    if (!editingCard) { renderList(); }
+  }
+
+  /* 仅应用到当前图片 — 强制覆盖当前图所有区域，清除该图独立配置 */
+  function applyNamingToCurrent() {
+    if (!imgs[ci]) { return; }
+    var im = imgs[ci];
+    im.naming = null; /* 清除该图独立命名配置，恢复全局默认 */
+    for (var j = 0; j < im.areas.length; j++) {
+      im.areas[j].name = buildFileName(im.letter, j + 1);
+      im.areas[j].manual = false;
+    }
+    renderList();
+    updateNamingPreview();
+    log(t("logNamingCur1") + im.name + t("logNamingCur2") + im.areas.length + t("logNamingCur3"), "ok");
+  }
+
+  /* ===== 独立命名面板辅助函数 ===== */
+  function makeFieldLabel(text) {
+    var l = document.createElement("label");
+    l.textContent = text;
+    return l;
+  }
+  function makeSep() {
+    var s = document.createElement("span");
+    s.className = "naming-sep";
+    s.textContent = "_";
+    return s;
+  }
+  function makeNamingInput(ii, field, value, placeholder, width) {
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.value = value || "";
+    inp.placeholder = placeholder;
+    inp.style.width = width + "px";
+    inp.dataset.ii = ii;
+    inp.dataset.field = field;
+    inp.className = "img-naming-field";
+    inp.oninput = function() { updateImgNaming(parseInt(this.dataset.ii), field, this.value); };
+    return inp;
+  }
+  /* 更新某图独立命名配置，并重命名该组非手动卡片 */
+  function updateImgNaming(ii, field, value) {
+    var im = imgs[ii];
+    if (!im) { return; }
+    if (!im.naming) {
+      im.naming = { prefix: "", source: "filename", customName: "", suffix: "" };
+    }
+    im.naming[field] = value;
+    for (var j = 0; j < im.areas.length; j++) {
+      if (!im.areas[j].manual) {
+        im.areas[j].name = buildFileName(im.letter, j + 1, im.naming);
+      }
+    }
+    renderList();
+  }
+
+  function renderList() {
+    var container = $("selectedList");
+
+    /* 记录当前焦点（独立命名面板输入框），渲染后恢复 */
+    var activeEl = document.activeElement;
+    var focusInfo = null;
+    if (activeEl && activeEl.classList && activeEl.classList.contains("img-naming-field")) {
+      focusInfo = {
+        ii: parseInt(activeEl.dataset.ii),
+        field: activeEl.dataset.field,
+        value: activeEl.value,
+        selStart: activeEl.selectionStart,
+        selEnd: activeEl.selectionEnd
+      };
+    }
+
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    if (total === 0) {
+      container.innerHTML = '<span style="color:var(--text3);grid-column:1/-1;padding:20px;text-align:center;font-size:14px;">' +
+                           t("emptyList") + '</span>';
+      return;
+    }
+
+    container.innerHTML = "";
+
+    /* 渲染前先同步所有图片的编号 */
+    for (var si = 0; si < imgs.length; si++) {
+      renumberAreas(imgs[si]);
+    }
+
+    for (var ii = 0; ii < imgs.length; ii++) {
+      (function(i) {
+        var im = imgs[i];
+
+        if (im.areas.length === 0) { return; }
+
+        // 分组标题
+        var hdr = document.createElement("div");
+        hdr.className = "group-header";
+
+        /* 蓝色徽章：纯展示，不再可点击编辑 */
+        var badge = document.createElement("span");
+        badge.className = "letter-badge";
+        badge.textContent = im.letter;
+        hdr.appendChild(badge);
+
+        var nameSpan = document.createElement("span");
+        nameSpan.textContent = " " + im.name;
+        hdr.appendChild(nameSpan);
+
+        var countSpan = document.createElement("span");
+        countSpan.style.cssText = "font-weight:400;color:var(--text3);font-size:12px;";
+        countSpan.textContent = " — " + im.areas.length + t("unit");
+        hdr.appendChild(countSpan);
+
+        /* 内联命名控件：前缀_名称_后缀_序号 + 撤销 */
+        var cfg = im.naming || { prefix: "", source: "filename", customName: "", suffix: "" };
+        var namingDiv = document.createElement("div");
+        namingDiv.className = "group-naming";
+
+        namingDiv.appendChild(makeNamingInput(i, "prefix", cfg.prefix, t("prefixPh"), 56));
+        namingDiv.appendChild(makeSep());
+
+        var srcSel = document.createElement("select");
+        srcSel.innerHTML = '<option value="filename">' + t("srcFilename") + '</option><option value="custom">' + t("srcCustom") + '</option>';
+        srcSel.value = cfg.source;
+        srcSel.dataset.ii = i;
+        srcSel.dataset.field = "source";
+        srcSel.className = "img-naming-field";
+        srcSel.onchange = function() { updateImgNaming(i, "source", this.value); renderList(); };
+        namingDiv.appendChild(srcSel);
+
+        var customInp = makeNamingInput(i, "customName", cfg.customName, t("customPh"), 70);
+        customInp.style.display = cfg.source === "custom" ? "inline-block" : "none";
+        namingDiv.appendChild(customInp);
+
+        namingDiv.appendChild(makeSep());
+        namingDiv.appendChild(makeNamingInput(i, "suffix", cfg.suffix, t("suffixPh"), 56));
+        namingDiv.appendChild(makeSep());
+
+        var numLabel = document.createElement("span");
+        numLabel.className = "naming-static";
+        numLabel.textContent = t("seq");
+        namingDiv.appendChild(numLabel);
+
+        /* 重置按钮：清除该图独立命名配置，恢复全局默认（保留手动标记） */
+        var resetBtn = document.createElement("button");
+        resetBtn.className = "sm";
+        resetBtn.textContent = t("reset");
+        resetBtn.title = t("resetImgTitle");
+        resetBtn.style.cssText = "padding:2px 7px;font-size:11px;margin-left:4px;";
+        resetBtn.onclick = function() {
+          im.naming = null;
+          applyNamingLive();
+          renderList();
+        };
+        namingDiv.appendChild(resetBtn);
+
+        /* 重置手改按钮：清除该图手动标记，恢复自动命名 */
+        var resetManualBtn = document.createElement("button");
+        resetManualBtn.className = "sm";
+        resetManualBtn.textContent = t("resetManual");
+        resetManualBtn.title = t("resetManualImgTitle");
+        resetManualBtn.style.cssText = "padding:2px 7px;font-size:11px;margin-left:4px;";
+        resetManualBtn.onclick = function() {
+          resetImgManual(i);
+        };
+        namingDiv.appendChild(resetManualBtn);
+
+        hdr.appendChild(namingDiv);
+        container.appendChild(hdr);
+
+        // 该图的每个选中区域
+        for (var ai = 0; ai < im.areas.length; ai++) {
+          (function(a, areaIdx) {
+            var w = (a.c2 - a.c1 + 1) * cW;
+            var h = (a.r2 - a.r1 + 1) * cH;
+
+            var tc = document.createElement("canvas");
+            tc.width = w;
+            tc.height = h;
+            tc.getContext("2d").drawImage(im.img, a.c1 * cW, a.r1 * cH, w, h, 0, 0, w, h);
+
+            var numStr = String(areaIdx + 1);
+            if (numStr.length < 2) { numStr = "0" + numStr; }
+
+            var defaultName = a.name || (im.letter + "_" + numStr);
+
+            var card = document.createElement("div");
+            card.className = "sel-card" + (a.manual ? " manual" : "") + (hlIi === i && hlAi === areaIdx ? " card-focused" : "");
+            card.draggable = true;
+            card.dataset.ii = i;
+            card.dataset.ai = areaIdx;
+            card.innerHTML =
+              '<button class="del-btn" title="' + t("delTitle") + '">&times;</button>' +
+              '<div class="thumb"><img src="' + tc.toDataURL() + '" alt="' + t("previewAlt") + '"></div>' +
+              '<input class="name-input" type="text" value="' + defaultName + '" data-ii="' + i + '" data-ai="' + areaIdx + '" title="' + (a.manual ? t("manualTitle") : t("editTitle")) + '">' +
+              '<div class="meta"><span>' + w + 'x' + h + 'px</span><span class="card-name">' + defaultName + '</span></div>';
+
+            /* × 按钮删除 */
+            card.querySelector(".del-btn").onclick = function(e) {
+              e.stopPropagation();
+              im.areas.splice(areaIdx, 1);
+              renumberAreas(im);
+              drawPreview();
+              updateInfo();
+              renderList();
+              renderTabs();
+            };
+
+            /* 点击缩略图：在预览区定位并高亮 */
+            card.querySelector(".thumb").style.cursor = "pointer";
+            card.querySelector(".thumb").onclick = function() {
+              focusCard(i, areaIdx);
+            };
+
+            /* 名称编辑：输入时实时同步卡片下方预览名 */
+            card.querySelector(".name-input").oninput = function() {
+              var cardEl = this.closest(".sel-card");
+              var nameEl = cardEl ? cardEl.querySelector(".card-name") : null;
+              if (nameEl) { nameEl.textContent = this.value; }
+            };
+            /* 失焦/回车时：标记为手动修改并触发重编号 */
+            card.querySelector(".name-input").onchange = function() {
+              var ii = parseInt(this.dataset.ii);
+              var ai = parseInt(this.dataset.ai);
+              if (imgs[ii] && imgs[ii].areas[ai]) {
+                imgs[ii].areas[ai].name = this.value;
+                imgs[ii].areas[ai].manual = true;
+                renumberAreas(imgs[ii]);
+                renderList();
+              }
+            };
+            card.querySelector(".name-input").onkeydown = function(e) {
+              if (e.key === "Enter") { this.blur(); }
+            };
+            /* 输入框获得焦点时禁用卡片拖拽，避免选中文本触发拖动 */
+            card.querySelector(".name-input").onfocus = function() { card.draggable = false; };
+            card.querySelector(".name-input").onblur = function() { card.draggable = true; };
+            /* 右键输入框：清除手动标记，恢复自动命名 */
+            card.querySelector(".name-input").oncontextmenu = function(e) {
+              e.preventDefault();
+              var ii = parseInt(this.dataset.ii);
+              var ai = parseInt(this.dataset.ai);
+              if (imgs[ii] && imgs[ii].areas[ai] && imgs[ii].areas[ai].manual) {
+                imgs[ii].areas[ai].manual = false;
+                renumberAreas(imgs[ii]);
+                renderList();
+              }
+            };
+
+            /* ===== 拖拽排序：插入到两卡中间 ===== */
+            card.ondragstart = function(e) {
+              e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setData("text/plain", i + "," + areaIdx);
+              card.classList.add("dragging");
+            };
+            card.ondragend = function() {
+              card.classList.remove("dragging");
+            };
+            card.ondragover = function(e) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              /* 根据鼠标在卡片左/右半判断插入位置 */
+              var rect = card.getBoundingClientRect();
+              var isAfter = (e.clientX - rect.left) > rect.width / 2;
+              card.classList.remove("drag-before", "drag-after");
+              card.classList.add(isAfter ? "drag-after" : "drag-before");
+            };
+            card.ondragleave = function() {
+              card.classList.remove("drag-before", "drag-after");
+            };
+            card.ondrop = function(e) {
+              e.preventDefault();
+              card.classList.remove("drag-before", "drag-after");
+              var data = e.dataTransfer.getData("text/plain").split(",");
+              var fromIi = parseInt(data[0]);
+              var fromAi = parseInt(data[1]);
+              if (fromIi !== i) { return; } /* 不允许跨图拖拽 */
+
+              /* 判断插入到目标前还是后 */
+              var rect = card.getBoundingClientRect();
+              var isAfter = (e.clientX - rect.left) > rect.width / 2;
+
+              var areas = im.areas;
+              var moved = areas.splice(fromAi, 1)[0];
+              var toAi = areaIdx;
+              if (fromAi < toAi) { toAi--; } /* 删除源后目标索引偏移 */
+              if (isAfter) { toAi++; }        /* 插到目标后面 */
+              areas.splice(toAi, 0, moved);
+
+              renumberAreas(im);
+              drawPreview();
+              renderList();
+            };
+
+            container.appendChild(card);
+          })(im.areas[ai], ai);
+        }
+      })(ii);
+    }
+    updateNamingPreview();
+
+    /* 恢复独立命名面板的输入框焦点 */
+    if (focusInfo) {
+      var sel = '.img-naming-field[data-ii="' + focusInfo.ii + '"][data-field="' + focusInfo.field + '"]';
+      var el = container.querySelector(sel);
+      if (el) {
+        el.focus();
+        try { el.setSelectionRange(focusInfo.selStart, focusInfo.selEnd); } catch(e) {}
+      }
+    }
+  }
+
+  /* 展开/收起查找替换面板 */
+  function toggleFindReplace() {
+    var panel = $("findReplacePanel");
+    if (panel.style.display === "none") {
+      panel.style.display = "block";
+      $("findStr").focus();
+    } else {
+      panel.style.display = "none";
+    }
+  }
+
+  /* 执行查找替换 */
+  function doFindReplace() {
+    var findStr = $("findStr").value.trim();
+    var replaceStr = $("replaceStr").value;
+    if (!findStr) {
+      alert(t("alertFindEmpty"));
+      $("findStr").focus();
+      return;
+    }
+    var cnt = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      var changed = false;
+      for (var j = 0; j < imgs[i].areas.length; j++) {
+        var a = imgs[i].areas[j];
+        if (a.name && a.name.indexOf(findStr) > -1) {
+          a.name = a.name.replace(findStr, replaceStr);
+          a.manual = true; /* 查找替换视为手动修改 */
+          cnt++;
+          changed = true;
+        }
+      }
+      if (changed) { renumberAreas(imgs[i]); }
+    }
+    renderList();
+    log(t("logFind") + findStr + t("logFind2") + replaceStr + t("logFind3") + cnt + t("logFind4"), "ok");
+  }
+
+  /* ===== 导出功能 ===== */
+  async function pickDir() {
+    try {
+      if (!window.showDirectoryPicker) {
+        alert(t("alertNoBrowser"));
+        return;
+      }
+
+      dirHandle = await window.showDirectoryPicker();
+      $("outputPath").value = dirHandle.name;
+      log(t("logPickDir") + dirHandle.name, "ok");
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        log(t("logPickFail") + e.message, "err");
+      }
+    }
+  }
+
+  async function exportAll() {
+    if (!dirHandle) {
+      alert(t("alertNoDir"));
+      return;
+    }
+
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    if (total === 0) {
+      alert(t("alertNoArea"));
+      return;
+    }
+
+    $("progressBar").style.display = "block";
+    $("logArea").style.display = "block";
+    $("logArea").innerHTML = "";
+
+    /* 导出前强制重编号，确保名字和顺序一致 */
+    for (var ri = 0; ri < imgs.length; ri++) {
+      renumberAreas(imgs[ri]);
+    }
+    renderList();
+
+    var fill = $("progressFill");
+    var done = 0;
+    var okCount = 0;
+    var errCount = 0;
+
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+
+      for (var j = 0; j < im.areas.length; j++) {
+        var a = im.areas[j];
+
+        try {
+          var w = (a.c2 - a.c1 + 1) * cW;
+          var h = (a.r2 - a.r1 + 1) * cH;
+
+          var tc = document.createElement("canvas");
+          tc.width = w;
+          tc.height = h;
+          var tctx = tc.getContext("2d");
+          tctx.drawImage(im.img, a.c1 * cW, a.r1 * cH, w, h, 0, 0, w, h);
+
+          var blob = await new Promise(function(resolve) {
+            tc.toBlob(resolve, "image/png");
+          });
+
+          var fname = (a.name || im.letter + "_01") + ".png";
+          var safeFname = await getSafeName(dirHandle, fname);
+
+          var fh = await dirHandle.getFileHandle(safeFname, {create: true});
+          var wri = await fh.createWritable();
+          await wri.write(blob);
+          await wri.close();
+
+          log(safeFname + " (" + w + "x" + h + ")", "ok");
+          okCount++;
+        } catch (e) {
+          log("[" + im.name + "] " + t("logExportFail") + e.message, "err");
+          errCount++;
+        }
+
+        done++;
+        fill.style.width = Math.round(done / total * 100) + "%";
+      }
+    }
+
+    log("\n" + t("logExportDone") + okCount + t("logExportDone2") + errCount + t("logExportDone3") + dirHandle.name, "info");
+  }
+
+  async function getSafeName(dir, name) {
+    if (!name) { name = "unnamed.png"; }
+
+    var base = name.replace(/\.png$/i, "");
+    var ext = name.endsWith(".png") ? ".png" : ".png";
+
+    var cand = name;
+    var idx = 1;
+
+    while (true) {
+      try {
+        await dir.getFileHandle(cand);
+        cand = base + "_" + idx + ext;
+        idx++;
+      } catch (e) {
+        if (e.name === "NotFoundError") {
+          return cand;
+        }
+        throw e;
+      }
+    }
+  }
+
+  async function downloadZip() {
+    var total = 0;
+    for (var i = 0; i < imgs.length; i++) {
+      total += imgs[i].areas.length;
+    }
+
+    if (total === 0) {
+      alert(t("alertNoArea2"));
+      return;
+    }
+
+    var JSZipModule = await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js");
+    var JSZip = JSZipModule.default;
+    var zip = new JSZip();
+    var cnt = 0;
+
+    /* 导出前强制重编号 */
+    for (var ri = 0; ri < imgs.length; ri++) {
+      renumberAreas(imgs[ri]);
+    }
+
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+
+      for (var j = 0; j < im.areas.length; j++) {
+        var a = im.areas[j];
+        var w = (a.c2 - a.c1 + 1) * cW;
+        var h = (a.r2 - a.r1 + 1) * cH;
+
+        var tc = document.createElement("canvas");
+        tc.width = w;
+        tc.height = h;
+        tc.getContext("2d").drawImage(im.img, a.c1 * cW, a.r1 * cH, w, h, 0, 0, w, h);
+
+        var dataUrl = tc.toDataURL("image/png");
+        var base64Data = dataUrl.split(",")[1];
+
+        zip.file((a.name || "sprite") + ".png", base64Data, {base64: true});
+        cnt++;
+      }
+    }
+
+    var blob = await zip.generateAsync({type: "blob"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "sprites_splitted.zip";
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    log(t("logZip") + cnt + t("logZip2"), "ok");
+  }
+
+  /* ===== 日志 ===== */
+  function log(msg, type) {
+    if (!type) { type = "info"; }
+
+    var la = $("logArea");
+    la.style.display = "block";
+
+    var d = document.createElement("div");
+    d.className = "log-" + type;
+    d.textContent = msg;
+    la.appendChild(d);
+    la.scrollTop = la.scrollHeight;
+  }
+
+  /* ===== 命名预览 ===== */
+  function countTotal() {
+    var t = 0;
+    for (var i = 0; i < imgs.length; i++) { t += imgs[i].areas.length; }
+    return t;
+  }
+
+  function updateNamingPreview() {
+    var el = $("namingPreview");
+    if (!el) { return; }
+    if (imgs.length === 0 || countTotal() === 0) {
+      el.textContent = t("namingPreviewEmpty");
+      return;
+    }
+    /* 取第一张有区域的图做示例 */
+    var sampleIm = null;
+    for (var i = 0; i < imgs.length; i++) {
+      if (imgs[i].areas.length > 0) { sampleIm = imgs[i]; break; }
+    }
+    if (!sampleIm) { return; }
+
+    var n1 = buildFileName(sampleIm.letter, 1, sampleIm.naming);
+    var n2 = buildFileName(sampleIm.letter, 2, sampleIm.naming);
+    var total = countTotal();
+    var more = total > 2 ? t("namingMore") + total + t("namingTotal") : "";
+    el.textContent = t("namingPreviewPrefix") + n1 + ".png / " + n2 + ".png" + more;
+  }
+
+  /* ===== 暴露给 inline onclick 使用的函数 ===== */
+  window.setP = setP;
+  window.setZoom = setZoom;
+  window.setLang = setLang;
+  window.applyAll = applyAll;
+  window.autoSplitCur = autoSplitCur;
+  window.autoSplitAll = autoSplitAll;
+  window.clearCur = clearCur;
+  window.clearAll = clearAll;
+  window.applyNamingRule = applyNamingRule;
+  window.applyNamingToCurrent = applyNamingToCurrent;
+  window.resetGlobalNaming = resetGlobalNaming;
+  window.resetAllManual = resetAllManual;
+  window.resetImgManual = resetImgManual;
+  window.toggleFindReplace = toggleFindReplace;
+  window.doFindReplace = doFindReplace;
+  window.pickDir = pickDir;
+  window.exportAll = exportAll;
+  window.downloadZip = downloadZip;
+
+  /* ===== 命名面板事件绑定 — 输入实时生效 ===== */
+  $("globalPrefix").oninput = applyNamingLive;
+  $("globalSuffix").oninput = applyNamingLive;
+  $("globalCustomName").oninput = applyNamingLive;
+  $("nameSource").onchange = function() {
+    $("globalCustomName").style.display = this.value === "custom" ? "inline-block" : "none";
+    applyNamingLive();
+  };
+
+  /* ===== 全局点击：点击卡片以外区域时清除选中高亮 ===== */
+  document.addEventListener("click", function(e) {
+    if (hlIi < 0) { return; }
+    if (e.target.closest && e.target.closest(".sel-card")) { return; }
+    hlIi = -1; hlAi = -1;
+    renderList();
+    drawPreview();
+    updateInfo();
+  });
+
+  /* ===== 初始化 ===== */
+  initFileImport();
+  applyLang(); /* 初始化语言 */
+  console.log("[SpriteSplitter] 初始化完成");
+
+})();
+</script>
+</body>
+</html>

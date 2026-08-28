@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://x5fe1jh6xkb5"]
-
-[ext_resource type="TileSet" uid="uid://c2fogefrc0p6f" path="res://tilesets/world_tileset.tres" id="1_ts"]
-
-[node name="TestMap" type="Node2D" unique_id=508951124]
-
-[node name="Water" type="TileMapLayer" parent="." unique_id=805860212]
-tile_map_data = PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 3, 0, 1, 0)
-tile_set = ExtResource("1_ts")
