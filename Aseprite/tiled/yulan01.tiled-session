@@ -1,0 +1,54 @@
+{
+    "activeFile": "water_ani.tsj",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "map01.tmx": {
+            "scale": 0.5,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 614,
+                "y": 539
+            }
+        },
+        "water.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 3,
+            "scaleInEditor": 3
+        },
+        "water.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 4
+        },
+        "water_ani.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 4
+        }
+    },
+    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Terrain/Tilesets/Water",
+    "map.height": 50,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 50,
+    "openFiles": [
+        "map01.tmx",
+        "water.tsj",
+        "water_ani.tsj"
+    ],
+    "project": "yulan01.tiled-project",
+    "recentFiles": [
+        "map01.tmx",
+        "water.tsj",
+        "water_ani.tsj",
+        "water.tsx"
+    ],
+    "tileset.lastUsedFormat": "json",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    },
+    "tileset.type": 0
+}

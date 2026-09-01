@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>序列帧合成精灵图工具</title>
+<style>
+/* ============================================================
+   序列帧合成精灵图工具 - 网页版（浅色界面，布局与原版一致）
+   原逻辑由 sprite_sheet_generator.py 移植，全部在浏览器本地运行
+   ============================================================ */
+:root{
+  --bg:#f5f6f8;
+  --panel:#ffffff;
+  --panel2:#f0f1f4;
+  --panel3:#eef1f5;
+  --border:#e2e4e9;
+  --border-soft:#e8eaee;
+  --text:#1f2328;
+  --muted:#6a737d;
+  --muted-2:#9aa1ab;
+  --accent:#2f6fed;
+  --accent-hi:#2459c2;
+  --accent-dim:#9db8ee;
+  --ok-bg:#dafbe1; --ok:#116329;
+  --warn-bg:#fff8c5; --warn:#7d4e00;
+  --check-a:#e8e9ec; --check-b:#ffffff;
+  --mono:Consolas,"SFMono-Regular","Courier New",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  line-height:1.55;
+  min-width:1080px;
+}
+
+/* ===== 顶部 ===== */
+header{
+  display:flex;align-items:center;gap:16px;
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  background:#fff;
+  position:sticky;top:0;z-index:20;
+}
+.brand-mark{flex:0 0 auto;display:flex;align-items:center;gap:5px}
+.brand-mark .frame{
+  width:14px;height:20px;border-radius:2px;
+  background:linear-gradient(180deg,var(--accent) 0 34%,#c9d9f8 34% 40%,transparent 40%);
+  border:1px solid var(--accent);
+  opacity:.9;
+}
+.brand-mark .frame.off{background:#eef1f5;border-color:#d0d5dc;opacity:.6}
+header .titles{min-width:0}
+header h1{font-size:19px;font-weight:600;letter-spacing:.3px;display:flex;align-items:baseline;gap:10px}
+header h1 .en{font-size:11px;font-weight:500;color:var(--muted-2);letter-spacing:.6px;text-transform:uppercase}
+header p{color:var(--muted);font-size:12px;margin-top:3px}
+header .spacer{flex:1}
+header .local-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11.5px;color:var(--muted);
+  border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px;background:var(--panel2);
+}
+.local-badge .dot{width:7px;height:7px;border-radius:50%;background:#2da44e;box-shadow:0 0 0 3px rgba(45,164,78,.14)}
+
+/* ===== 布局：左参数 右结果 ===== */
+.layout{
+  display:grid;grid-template-columns:430px 1fr;gap:16px;
+  padding:16px 24px 40px;
+  align-items:start;
+}
+@media (max-width:1180px){
+  .layout{grid-template-columns:1fr}
+}
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px;
+  margin-bottom:16px;
+}
+.card h2{
+  font-size:13px;font-weight:600;
+  color:#444c56;
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.card h2 svg{flex:0 0 auto;color:var(--muted)}
+.card h2 .note{margin-left:auto;font-weight:500;font-size:11px;color:var(--muted-2)}
+
+/* ===== 控件 ===== */
+.field{margin-bottom:14px}
+.field>label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  cursor:pointer;border-radius:6px;border:1px solid transparent;
+  padding:8px 14px;font-size:12px;font-family:var(--sans);
+  transition:background .15s,border-color .15s,color .15s;
+  user-select:none;
+}
+.btn svg{flex:0 0 auto}
+.btn.primary{background:var(--accent);color:#fff;font-weight:500}
+.btn.primary:hover{background:var(--accent-hi)}
+.btn.primary:disabled{background:var(--accent-dim);cursor:not-allowed}
+.btn.green{background:#2da44e;color:#fff;font-weight:600}
+.btn.green:hover{background:#2c974b}
+.btn.green:disabled{background:#94d3a2;cursor:not-allowed}
+.btn.ghost{background:var(--panel2);color:var(--text);border-color:var(--border)}
+.btn.ghost:hover{background:#e2e5ea}
+.btn.ghost:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+select,input[type=text],input[type=number]{
+  background:#fff;color:var(--text);
+  border:1px solid #d8dbe0;border-radius:6px;
+  padding:7px 10px;font-size:12px;font-family:var(--sans);
+  outline:none;
+}
+select:focus,input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
+select{min-width:150px;cursor:pointer}
+input[type=number]{width:70px}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+/* 合成参数：三列等宽网格，控件占满各自列，杜绝挤压重叠 */
+.opt-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.opt-grid .field{margin-bottom:0;min-width:0}
+.opt-grid select,.opt-grid input[type=number]{
+  width:100%;min-width:0;
+}
+.opt-grid select{text-overflow:ellipsis}
+.checks{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer}
+
+/* 输入状态条（纯文字，无底色） */
+.input-state{
+  display:flex;align-items:baseline;gap:8px;
+  margin-top:10px;
+  font-size:12.5px;color:var(--muted);
+}
+.input-state .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.input-state .n{flex:0 0 auto;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.dropzone{
+  margin-top:10px;
+  border:1.5px dashed #c9ccd2;border-radius:6px;
+  padding:15px 12px;text-align:center;color:var(--muted-2);font-size:12px;
+  transition:border-color .15s,background .15s;
+  cursor:pointer;background:#fafbfc;
+}
+.dropzone.drag{border-color:var(--accent);background:#f0f6ff;color:var(--accent)}
+.dropzone b{color:var(--muted)}
+
+.hint{font-size:11px;color:var(--muted-2);margin-top:8px;line-height:1.6}
+
+/* 操作按钮 */
+.action-row{display:flex;gap:8px;margin-top:16px}
+.action-row .btn{flex:1}
+.action-row .btn:first-child{flex:1.2}
+.export-card{border-color:#2da44e88}
+.export-path{display:flex;gap:8px}
+.export-path input{
+  flex:1;min-width:0;background:#f6f8fa;color:var(--muted);cursor:default;
+}
+.export-path .btn{flex:0 0 auto;white-space:nowrap}
+.rename-card{border-color:#2f6fed55}
+.rename-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rename-grid .field{margin-bottom:0;min-width:0}
+.rename-grid input[type=text]{width:100%;min-width:0}
+
+/* ===== 工作区 ===== */
+.stage{min-width:0}
+.sec-head{
+  display:flex;align-items:center;gap:10px;
+  margin:0 0 12px;
+}
+.sec-head h3{font-size:13px;font-weight:600;color:#444c56;display:flex;align-items:center;gap:8px}
+.sec-head h3 .cnt{font-size:11px;font-weight:500;color:var(--muted-2)}
+.sec-head .spacer{flex:1}
+.sec-head .hint{font-size:11.5px;color:var(--muted-2)}
+
+/* 分组清单：多列网格 + 紧凑行 + 限高滚动，节省纵向空间 */
+.group-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:6px 10px;
+  max-height:272px;
+  overflow:auto;
+  padding-right:2px;
+}
+.group-item{
+  display:flex;flex-direction:column;gap:1px;
+  background:#fafbfc;border:1px solid var(--border);border-radius:6px;
+  padding:5px 10px 6px;min-width:0;
+}
+.group-item .gline{display:flex;align-items:baseline;gap:6px;min-width:0}
+.group-item .gname{font-size:12.5px;font-weight:600;line-height:1.45;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+.group-item .gmeta{font-size:11px;color:var(--muted);white-space:nowrap;flex:0 0 auto}
+.group-item .gfile{font-size:10.5px;color:var(--muted-2);font-family:var(--mono);line-height:1.45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.badge{
+  display:inline-block;font-size:11px;font-weight:500;
+  padding:1px 8px;border-radius:10px;
+  background:var(--panel3);color:var(--muted);
+  white-space:nowrap;
+}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.dim{background:var(--panel3);color:var(--muted-2)}
+
+/* 日志（保持原版深色终端样式） */
+#log{
+  font-family:var(--mono);font-size:12px;line-height:1.7;
+  background:#1e1e1e;border:1px solid #d8dbe0;border-radius:8px;
+  padding:10px 12px;height:150px;overflow:auto;
+  color:#d4d4d4;white-space:pre-wrap;word-break:break-all;
+}
+#log .ln-ok{color:#7ee787}
+#log .ln-warn{color:#e3b341}
+#log .ln-err{color:#ff7b72}
+#log .ln-mut{color:#8b949e}
+
+/* 结果 */
+#results{margin-top:16px}
+.res-title{font-size:13px;font-weight:600;color:#444c56;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.res-title .cnt{font-size:11.5px;color:var(--muted-2);font-weight:500}
+.sheet-card{
+  display:flex;gap:14px;align-items:flex-start;
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  padding:12px;margin-bottom:10px;
+}
+.sheet-thumb{
+  flex:0 0 auto;
+  width:150px;height:120px;
+  display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(var(--check-b) 25%,var(--check-a) 0 50%,var(--check-b) 0 75%,var(--check-a) 0) 0 0 / 14px 14px;
+  border:1px solid var(--border);border-radius:4px;
+  overflow:hidden;
+}
+.sheet-thumb img{max-width:100%;max-height:100%;display:block;image-rendering:pixelated}
+.sheet-info{flex:1;min-width:0}
+.sheet-title{font-size:13px;font-weight:600;word-break:break-all;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sheet-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.sheet-meta b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.sheet-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.saved-tag{font-size:11.5px;color:var(--ok);display:inline-flex;align-items:center;gap:6px}
+
+/* 布局预览网格 */
+.preview-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:10px;
+}
+.preview-card{
+  background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  padding:9px 10px;min-width:0;
+}
+.preview-head{display:flex;align-items:baseline;gap:6px;flex-wrap:nowrap;margin-bottom:6px}
+.preview-head .gname{font-size:12.5px;font-weight:600;word-break:break-all;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+.preview-head .gmeta{font-size:11px;color:var(--muted);white-space:nowrap;flex:0 0 auto}
+.preview-head .badge{flex:0 0 auto}
+.preview-body{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.mini-grid{
+  display:inline-grid;gap:2px;
+  padding:6px;background:#fafbfc;border:1px solid var(--border);border-radius:6px;
+}
+.cell-fill{width:12px;height:12px;background:var(--accent);border-radius:2px}
+.cell-empty{width:12px;height:12px;background:#f0f1f4;border:1px dashed #c9ccd2;border-radius:2px}
+.dir-line{font-size:12px;color:var(--muted);margin:2px 0;display:flex;align-items:center;gap:8px}
+.dir-line .dname{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.empty-tip{
+  padding:30px 20px;text-align:center;color:var(--muted-2);font-size:13px;
+  border:1px dashed #c9ccd2;border-radius:8px;background:#fafbfc;
+}
+.empty-tip svg{display:block;margin:0 auto 12px;opacity:.5}
+
+kbd{
+  font-family:var(--mono);font-size:11px;background:var(--panel2);
+  border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 5px;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部 ===== -->
+<header>
+  <div class="brand-mark" aria-hidden="true">
+    <span class="frame"></span><span class="frame"></span><span class="frame off"></span><span class="frame off"></span>
+  </div>
+  <div class="titles">
+    <h1>序列帧合成精灵图工具 <span class="en">Sprite Sheet Generator</span></h1>
+    <p>批量将序列帧 PNG 合成为精灵图，自动优化列数减少空白 · 本工具仅在本机浏览器内运行，无需安装任何软件</p>
+  </div>
+  <div class="spacer"></div>
+  <div class="local-badge"><span class="dot"></span>本地运行 · 不上传任何文件</div>
+</header>
+
+<div class="layout">
+
+  <!-- ===== 左栏：参数设置 ===== -->
+  <aside>
+    <div class="card">
+      <h2>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.2 4.2l2.8 2.8m10 10 2.8 2.8M1 12h4m14 0h4M4.2 19.8l2.8-2.8m10-10 2.8-2.8"/></svg>
+        参数设置
+        <span class="note">PNG</span>
+      </h2>
+
+      <div class="field">
+        <label>输入序列帧文件夹</label>
+        <div class="btn-row">
+          <button class="btn primary" id="btn-folder" onclick="pickFolder()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            选择文件夹
+          </button>
+          <button class="btn ghost" id="btn-files">选择文件或文件夹</button>
+        </div>
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+          或将文件夹 / PNG 文件拖到这里
+        </div>
+        <div class="input-state" id="input-state">
+          <span class="txt" id="input-txt">尚未选择输入</span>
+          <span class="n" id="input-n"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>合成参数</label>
+        <div class="opt-grid">
+          <div class="field">
+            <label for="mode">分组模式</label>
+            <select id="mode" onchange="onModeChange()">
+              <option value="animation">按动画分组</option>
+              <option value="action">按动作分组 · 多方向合一</option>
+              <option value="all">全部合并为一张</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="max-cols">每行最大帧数</label>
+            <input type="number" id="max-cols" min="1" max="64" value="5">
+          </div>
+          <div class="field">
+            <label for="padding">帧间距（像素）</label>
+            <input type="number" id="padding" min="0" max="64" value="0">
+          </div>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" id="opt-cols" checked>自动优化列数（减少空白）</label>
+          <label><input type="checkbox" id="gen-json">生成 JSON 元数据</label>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn ghost" id="btn-preview" onclick="doPreview()" disabled>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          预览布局
+        </button>
+      </div>
+      <p class="hint">提示：先点「预览布局」查看排版与空白数量，确认后再导出。</p>
+    </div>
+
+    <!-- ===== 重命名输出文件 ===== -->
+    <div class="card rename-card">
+      <h2>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 7 19 3 19 3 15 17 1"/><path d="M15 5l4 4"/></svg>
+        重命名输出文件
+        <span class="note">可选</span>
+      </h2>
+      <div class="field">
+        <label>导出文件名规则（作用于精灵图 / JSON 名称）</label>
+        <div class="rename-grid">
+          <div class="field">
+            <label for="rename-prefix">前缀</label>
+            <input type="text" id="rename-prefix" placeholder="如 out_">
+          </div>
+          <div class="field">
+            <label for="rename-suffix">后缀</label>
+            <input type="text" id="rename-suffix" placeholder="如 _v2">
+          </div>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" id="rename-special"><span>特殊规则：<b>角色_方向_动作</b> → <b>角色_动作_方向</b>（交换第 2、3 段）</span></label>
+        </div>
+      </div>
+      <div class="input-state">
+        <span class="txt" id="rename-preview-txt"></span>
+      </div>
+    </div>
+    <!-- ===== 导出到指定目录 ===== -->
+    <div class="card export-card">
+      <h2>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        导出到指定目录
+      </h2>
+      <div class="field">
+        <label>输出文件夹（未选择时将使用浏览器默认下载）</label>
+        <div class="export-path">
+          <input type="text" id="out-path" readonly placeholder="未选择（将使用浏览器默认下载）">
+          <button class="btn primary" id="btn-out-dir" onclick="pickOutputFolder()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            选择输出文件夹
+          </button>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn green" id="btn-export" onclick="doExport()" disabled>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          一键导出到指定目录
+        </button>
+        <button class="btn ghost" id="btn-zip" onclick="doExportZip()" disabled>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          下载 ZIP 包
+        </button>
+      </div>
+      <p class="hint">* 选择文件夹需要 Chrome / Edge 浏览器。Firefox 请使用「下载 ZIP 包」。</p>
+    </div>
+
+    <!-- ===== 运行日志（位于导出卡片下方） ===== -->
+    <div class="card">
+      <div class="sec-head"><h3>运行日志</h3></div>
+      <div id="log">就绪。选择序列帧文件夹后，先预览布局，再一键导出。</div>
+    </div>
+  </aside>
+
+  <!-- ===== 右栏：工作区 ===== -->
+  <div class="stage">
+    <div class="card" style="margin-bottom:16px">
+      <div class="sec-head">
+        <h3>扫描到的分组 <span class="cnt" id="group-cnt"></span></h3>
+        <div class="spacer"></div>
+        <span class="hint" id="group-hint">选择输入后自动扫描</span>
+      </div>
+      <div class="group-list" id="group-list"></div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+</div>
+
+<!-- 隐藏文件输入 -->
+<input type="file" id="file-input" multiple accept=".png,image/png" style="display:none">
+<input type="file" id="dir-input" webkitdirectory multiple accept=".png,image/png" style="display:none">
+
+<script>
+"use strict";
+/* ============================================================
+   状态
+   ============================================================ */
+var state = {
+  pngs: [],            // [{file, name, relPath, action, direction, frame}]
+  groups: null,        // Map<key, frames[]>
+  inputHandle: null,   // FileSystemDirectoryHandle（选择文件夹时）
+  inputName: '',
+  outHandle: null,     // 输出目录句柄（选择输出文件夹时）
+  outName: '',         // 输出目录名（用于显示）
+  busy: false
+};
+var $ = function (id) { return document.getElementById(id); };
+var pathMap = new Map(); // File -> 相对路径（拖拽文件夹用）
+/* ============================================================
+   重命名输出文件（前缀 / 后缀 / 角色_方向_动作 → 角色_动作_方向）
+   ============================================================ */
+function applySpecialRename(name) {
+  // 角色_方向_动作 → 角色_动作_方向：交换第 2、3 段
+  var parts = String(name).split('_');
+  if (parts.length >= 3) {
+    var t = parts[1];
+    parts[1] = parts[2];
+    parts[2] = t;
+  }
+  return parts.join('_');
+}
+function applyRename(name) {
+  var out = String(name);
+  if ($('rename-special').checked) out = applySpecialRename(out);
+  var prefix = $('rename-prefix').value || '';
+  var suffix = $('rename-suffix').value || '';
+  return prefix + out + suffix;
+}
+function renameSample() {
+  if (state.groups && state.groups.size) {
+    var keys = Array.from(state.groups.keys()).sort();
+    return keys[0];
+  }
+  return 'hero_up_walk';
+}
+function updateRenamePreview() {
+  var sample = renameSample();
+  var renamed = applyRename(sample);
+  $('rename-preview-txt').textContent =
+    sample === renamed
+      ? '示例：' + sample + '（当前规则下名称不变）'
+      : '示例：' + sample + ' → ' + renamed;
+}
+// 重命名输入变化时实时刷新预览与分组清单
+['rename-prefix', 'rename-suffix', 'rename-special'].forEach(function (id) {
+  $(id).addEventListener('input', function () {
+    updateRenamePreview();
+    renderGroups();
+  });
+});
+updateRenamePreview();
+
+/* ============================================================
+   核心算法（由 sprite_sheet_generator.py 移植）
+   ============================================================ */
+function parseFilename(name) {
+  // 去掉扩展名
+  var base = name.replace(/\.[^.]+$/, '');
+  // 模式1: prefix_DIRECTION_number（方向=单个大写字母）
+  var m = base.match(/^(.+)_([A-Z])_(\d+)$/);
+  if (m) return { action: m[1], direction: m[2], frame: parseInt(m[3], 10) };
+  // 模式2: prefix_number
+  m = base.match(/^(.+)_(\d+)$/);
+  if (m) return { action: m[1], direction: null, frame: parseInt(m[2], 10) };
+  return { action: base, direction: null, frame: 0 };
+}
+
+function findOptimalColumns(n, maxCols) {
+  if (n <= 0) return 1;
+  if (n <= maxCols) return n;
+  // 优先：[2,maxCols] 内能整除 n 的最大列数（0 空白）
+  for (var c = maxCols; c >= 2; c--) { if (n % c === 0) return c; }
+  // 其次：空白最少，优先列数大
+  var bestC = maxCols, bestBlanks = Infinity;
+  for (var c = maxCols; c >= 2; c--) {
+    var blanks = c * Math.ceil(n / c) - n;
+    if (blanks < bestBlanks) { bestBlanks = blanks; bestC = c; }
+  }
+  return bestC;
+}
+
+// 按分组模式把已解析帧归组（返回 Map<key, frames[]>）
+function buildGroups(pngs, mode) {
+  var groups = new Map();
+  pngs.forEach(function (p) {
+    var key;
+    if (mode === 'animation') key = p.direction ? p.action + '_' + p.direction : p.action;
+    else if (mode === 'action') key = p.action;
+    else key = 'sprite_sheet';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  });
+  groups.forEach(function (arr) { arr.sort(function (a, b) { return a.frame - b.frame; }); });
+  return groups;
+}
+
+// 加载图片为位图（ImageBitmap 优先，回退 HTMLImageElement）
+function loadBitmap(file) {
+  if (window.createImageBitmap) {
+    return createImageBitmap(file).catch(function () { return loadViaImage(file); });
+  }
+  return loadViaImage(file);
+}
+function loadViaImage(file) {
+  return new Promise(function (resolve, reject) {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('无法读取 ' + file.name)); };
+    img.src = url;
+  });
+}
+
+// 单组精灵图合成（等价 create_sprite_sheet）
+async function buildSheet(frames, maxCols, optimize, padding) {
+  var items = [];
+  var maxW = 0, maxH = 0;
+  for (var i = 0; i < frames.length; i++) {
+    var bmp = await loadBitmap(frames[i].file);
+    items.push({ frame: frames[i], bmp: bmp, w: bmp.width, h: bmp.height });
+    maxW = Math.max(maxW, bmp.width);
+    maxH = Math.max(maxH, bmp.height);
+  }
+  var n = items.length;
+  var cols = optimize ? findOptimalColumns(n, maxCols) : Math.min(n, maxCols);
+  var rows = Math.ceil(n / cols);
+  var cellW = maxW + padding, cellH = maxH + padding;
+  var sheetW = cols * cellW - padding, sheetH = rows * cellH - padding;
+  var canvas = document.createElement('canvas');
+  canvas.width = sheetW; canvas.height = sheetH;
+  var ctx = canvas.getContext('2d');
+  var frameData = [];
+  items.forEach(function (it, i) {
+    var col = i % cols, row = Math.floor(i / cols);
+    var x = col * cellW, y = row * cellH;
+    var ox = x + Math.floor((maxW - it.w) / 2);
+    var oy = y + Math.floor((maxH - it.h) / 2);
+    ctx.drawImage(it.bmp, ox, oy);
+    frameData.push({ index: i, frame: it.frame.frame, x: x, y: y, w: maxW, h: maxH, direction: it.frame.direction });
+    if (it.bmp.close) it.bmp.close();
+  });
+  var info = {
+    image: '',
+    cols: cols, rows: rows,
+    frameWidth: maxW, frameHeight: maxH,
+    sheetWidth: sheetW, sheetHeight: sheetH,
+    frameCount: n, blankCells: cols * rows - n,
+    padding: padding, frames: frameData
+  };
+  return { canvas: canvas, info: info };
+}
+
+// 多方向合一（等价 create_action_sprite_sheet），directionFrames: Map<dir, frames[]>
+async function buildActionSheet(directionFrames, maxCols, optimize, padding) {
+  var dirs = Array.from(directionFrames.keys()).sort();
+  var allImages = {}; // dir -> [{frame,bmp,w,h}]
+  var maxW = 0, maxH = 0, maxFrames = 0;
+  for (var i = 0; i < dirs.length; i++) {
+    var d = dirs[i];
+    var arr = directionFrames.get(d);
+    var imgs = [];
+    for (var j = 0; j < arr.length; j++) {
+      var bmp = await loadBitmap(arr[j].file);
+      imgs.push({ frame: arr[j], bmp: bmp, w: bmp.width, h: bmp.height });
+      maxW = Math.max(maxW, bmp.width);
+      maxH = Math.max(maxH, bmp.height);
+    }
+    allImages[d] = imgs;
+    maxFrames = Math.max(maxFrames, imgs.length);
+  }
+  var cols = optimize ? findOptimalColumns(maxFrames, maxCols) : Math.min(maxFrames, maxCols);
+  var dirRows = {}, totalRows = 0;
+  dirs.forEach(function (d) {
+    var r = Math.ceil(allImages[d].length / cols);
+    dirRows[d] = r; totalRows += r;
+  });
+  var cellW = maxW + padding, cellH = maxH + padding;
+  var sheetW = cols * cellW - padding, sheetH = totalRows * cellH - padding;
+  var canvas = document.createElement('canvas');
+  canvas.width = sheetW; canvas.height = sheetH;
+  var ctx = canvas.getContext('2d');
+  var frameData = [], animations = {};
+  var currentRow = 0;
+  dirs.forEach(function (d) {
+    var imgs = allImages[d];
+    var startIndex = frameData.length;
+    imgs.forEach(function (it, i) {
+      var col = i % cols, row = currentRow + Math.floor(i / cols);
+      var x = col * cellW, y = row * cellH;
+      var ox = x + Math.floor((maxW - it.w) / 2);
+      var oy = y + Math.floor((maxH - it.h) / 2);
+      ctx.drawImage(it.bmp, ox, oy);
+      frameData.push({
+        index: frameData.length,
+        frame: it.frame.frame, x: x, y: y, w: maxW, h: maxH, direction: d
+      });
+      if (it.bmp.close) it.bmp.close();
+    });
+    animations[d] = {
+      startFrame: startIndex, frameCount: imgs.length,
+      rowStart: currentRow, rowCount: dirRows[d]
+    };
+    currentRow += dirRows[d];
+  });
+  var totalCells = cols * totalRows;
+  var totalFrames = frameData.length;
+  var info = {
+    image: '',
+    cols: cols, rows: totalRows,
+    frameWidth: maxW, frameHeight: maxH,
+    sheetWidth: sheetW, sheetHeight: sheetH,
+    frameCount: totalFrames, blankCells: totalCells - totalFrames,
+    padding: padding, animations: animations, frames: frameData
+  };
+  return { canvas: canvas, info: info };
+}
+
+function canvasToBlob(canvas) {
+  return new Promise(function (resolve, reject) {
+    canvas.toBlob(function (b) { b ? resolve(b) : reject(new Error('PNG 导出失败')); }, 'image/png');
+  });
+}
+
+/* ============================================================
+   输入：选择文件夹 / 文件 / 拖拽
+   ============================================================ */
+function onModeChange() {
+  if (!state.pngs.length) return;
+  state.groups = buildGroups(state.pngs, $('mode').value);
+  renderGroups();
+  doPreview(); // 预览始终默认展开
+}
+
+async function pickFolder() {
+  if (!window.showDirectoryPicker) {
+    alert('当前浏览器不支持直接选择文件夹（需 Chrome / Edge）。\n请改用「选择文件或文件夹」，将自动切换为下载输出。');
+    $('dir-input').click();
+    return;
+  }
+  try {
+    var handle = await window.showDirectoryPicker();
+    var files = [];
+    for await (var entry of handle.values()) {
+      if (entry.kind === 'file' && /\.png$/i.test(entry.name)) {
+        files.push(await entry.getFile());
+      }
+    }
+    setInputFiles(files, handle, handle.name);
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // 用户取消
+    logLine('选择文件夹失败：' + (e && e.message ? e.message : e), 'ln-err');
+  }
+}
+
+function setInputFiles(files, handle, name) {
+  var pngs = [];
+  files.forEach(function (f) {
+    var rel = pathMap.get(f) || f.name;
+    var parsed = parseFilename(f.name);
+    pngs.push({ file: f, name: f.name, relPath: rel, action: parsed.action, direction: parsed.direction, frame: parsed.frame });
+  });
+  // 去重（同一文件可能被多次引用）
+  var seen = new Set();
+  pngs = pngs.filter(function (p) { var k = p.file.name + '|' + p.file.size + '|' + p.file.lastModified; if (seen.has(k)) return false; seen.add(k); return true; });
+  state.pngs = pngs;
+  state.inputHandle = handle || null;
+  state.inputName = name || '';
+  state.groups = buildGroups(pngs, $('mode').value);
+  $('btn-preview').disabled = !pngs.length;
+  $('btn-export').disabled = !pngs.length;
+  $('btn-zip').disabled = !pngs.length;
+  renderInputState();
+  renderGroups();
+  updateRenamePreview();
+  clearResults();
+  logLine('已载入 ' + pngs.length + ' 个 PNG 帧' + (name ? '（来源：' + name + '）' : ''));
+  if (!pngs.length) logLine('未在所选位置找到 PNG 文件，请检查目录。', 'ln-warn');
+  else doPreview(); // 载入后自动展开布局预览
+}
+
+function renderInputState() {
+  var n = state.pngs.length;
+  $('input-txt').textContent = state.inputName ? '已选择：' + state.inputName : (n ? '已载入文件' : '尚未选择输入');
+  $('input-n').textContent = n ? n + ' 帧' : '';
+}
+
+/* 文件/文件夹输入 */
+$('file-input').addEventListener('change', function (e) {
+  setInputFiles(Array.prototype.slice.call(e.target.files || []), null, '');
+  e.target.value = '';
+});
+$('dir-input').addEventListener('change', function (e) {
+  // webkitdirectory：过滤出所选文件夹顶层文件
+  var files = Array.prototype.slice.call(e.target.files || []);
+  var tops = files.filter(function (f) {
+    var rel = f.webkitRelativePath || f.name;
+    return rel.split('/').length === 2; // 顶层
+  });
+  var name = '';
+  if (files.length && files[0].webkitRelativePath) name = files[0].webkitRelativePath.split('/')[0];
+  setInputFiles(tops, null, name);
+  e.target.value = '';
+});
+// 「选择文件或文件夹」：优先文件夹选择器，降级文件选择器
+$('btn-files').addEventListener('click', function (e) {
+  e.preventDefault();
+  if ('webkitdirectory' in HTMLInputElement.prototype) { $('dir-input').click(); }
+  else { $('file-input').click(); }
+});
+
+/* 拖拽：递归读取文件夹内所有 PNG，兼容拖入单个/多个文件 */
+var dz = $('dropzone');
+['dragenter', 'dragover'].forEach(function (ev) {
+  dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('drag'); });
+});
+['dragleave', 'drop'].forEach(function (ev) {
+  dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('drag'); });
+});
+// 统一拖放处理：支持拖入文件夹 / PNG，dropzone 与页面任意位置均可触发
+async function handleDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  var dt = e.dataTransfer;
+  if (!dt) return;
+  var items = Array.prototype.slice.call(dt.items || []);
+  var dtFiles = dt.files ? Array.prototype.slice.call(dt.files) : [];
+  var fileList = [];
+  var pushed = new Set();
+  var pushFile = function (f) {
+    if (!f || !/\.png$/i.test(f.name)) return;
+    var k = f.name + '|' + f.size + '|' + f.lastModified;
+    if (!pushed.has(k)) { pushed.add(k); fileList.push(f); }
+  };
+  // 方案1：逐条目 getAsEntry / webkitGetAsEntry 递归读取（支持拖入文件夹）
+  var entrySupported = false;
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    if (!item || (typeof item.getAsEntry !== 'function' && typeof item.webkitGetAsEntry !== 'function')) continue;
+    entrySupported = true;
+    var entry = null;
+    try { entry = item.getAsEntry ? item.getAsEntry() : item.webkitGetAsEntry(); }
+    catch (err) { entry = null; }
+    if (!entry) continue; // 某些浏览器对文件夹项返回 null，走方案2兜底
+    var out = [];
+    try { await readEntryRecursive(entry, '', out); } catch (err) { out = []; }
+    out.forEach(pushFile);
+  }
+  // 方案2：dataTransfer.files 兜底（文件夹内含文件时带 webkitRelativePath）
+  dtFiles.forEach(function (f) {
+    if (!/\.png$/i.test(f.name)) return;
+    pathMap.set(f, f.webkitRelativePath || f.name);
+    pushFile(f);
+  });
+  if (fileList.length) {
+    setInputFiles(fileList, null, '拖入文件');
+  } else {
+    logLine('拖放未读取到 PNG：' +
+      (items.length ? '条目 ' + items.length + ' 个' + (entrySupported ? '' : '（浏览器不支持文件夹条目读取）') : '无条目') +
+      '、files ' + dtFiles.length + ' 个', 'ln-err');
+    alert('未读取到 PNG 文件。若拖入的是文件夹且无效，请改用「选择文件夹」按钮；或直接拖入 PNG 文件。');
+  }
+}
+dz.addEventListener('drop', handleDrop);
+// 阻止在页面其它位置拖放时浏览器直接打开文件夹/文件，并同样处理拖放
+document.addEventListener('dragover', function (e) { e.preventDefault(); });
+document.addEventListener('drop', handleDrop);
+function readEntryRecursive(entry, prefix, out) {
+  return new Promise(function (resolve) {
+    if (entry.isFile) {
+      entry.file(function (f) {
+        if (/\.png$/i.test(f.name)) { pathMap.set(f, prefix ? prefix + '/' + f.name : f.name); out.push(f); }
+        resolve();
+      }, function () { resolve(); });
+    } else if (entry.isDirectory) {
+      var reader = entry.createReader();
+      var childPrefix = prefix ? prefix + '/' + entry.name : entry.name;
+      var readBatch = function () {
+        reader.readEntries(function (entries) {
+          if (!entries.length) { resolve(); return; }
+          var pending = entries.length;
+          entries.forEach(function (sub) {
+            readEntryRecursive(sub, childPrefix, out).then(function () {
+              if (--pending === 0) readBatch();
+            });
+          });
+        }, function () { resolve(); });
+      };
+      readBatch();
+    } else resolve();
+  });
+}
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function renderGroups() {
+  var box = $('group-list');
+  var n = state.groups ? state.groups.size : 0;
+  $('group-cnt').textContent = n ? '(' + n + ' 个)' : '';
+  $('group-hint').textContent = n ? '' : '选择输入后自动扫描';
+  if (!state.groups || !n) { box.innerHTML = ''; return; }
+  var html = '';
+  state.groups.forEach(function (frames, key) {
+    var dirs = new Set(frames.map(function (f) { return f.direction || 'default'; }));
+    var sub = dirs.size > 1 ? ' · ' + dirs.size + ' 个方向' : '';
+    html += '<div class="group-item">' +
+      '<div class="gline">' +
+        '<span class="gname" title="' + esc(key) + '">' + esc(key) + '</span>' +
+        '<span class="gmeta">' + frames.length + ' 帧' + sub + '</span>' +
+      '</div>' +
+      '<div class="gfile" title="' + esc(applyRename(key) + '.png') + '">' + esc(applyRename(key) + '.png') + '</div>' +
+      '</div>';
+  });
+  box.innerHTML = html;
+}
+
+function clearResults() { $('results').innerHTML = ''; }
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function logLine(msg, cls) {
+  var box = $('log');
+  var div = document.createElement('div');
+  if (cls) div.className = cls;
+  div.textContent = msg;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ============================================================
+   预览布局（等价 preview_layout）
+   ============================================================ */
+function previewItems(groups, mode, maxCols, optimize) {
+  var items = [];
+  Array.from(groups.keys()).sort().forEach(function (key) {
+    var frames = groups.get(key);
+    var n = frames.length;
+    var item = { name: key, frames: n };
+    if (mode === 'action') {
+      var dirCounts = new Map();
+      frames.forEach(function (f) { var d = f.direction || 'default'; dirCounts.set(d, (dirCounts.get(d) || 0) + 1); });
+      var maxN = 0;
+      dirCounts.forEach(function (c) { maxN = Math.max(maxN, c); });
+      var c = optimize ? findOptimalColumns(maxN, maxCols) : Math.min(maxN, maxCols);
+      var dirs = [];
+      var totalRows = 0;
+      Array.from(dirCounts.entries()).sort(function (a, b) { return a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0); })
+        .forEach(function (entry) {
+          var d = entry[0], cnt = entry[1];
+          var r = Math.ceil(cnt / c);
+          dirs.push({ dir: d, count: cnt, cols: c, rows: r });
+          totalRows += r;
+        });
+      var blanks = c * totalRows - n;
+      item.kind = 'action'; item.cols = c; item.rows = totalRows;
+      item.blankCells = blanks; item.dirs = dirs;
+    } else {
+      var c2 = optimize ? findOptimalColumns(n, maxCols) : Math.min(n, maxCols);
+      var r2 = Math.ceil(n / c2);
+      var blanks2 = c2 * r2 - n;
+      var grid = [];
+      for (var ri = 0; ri < r2; ri++) {
+        var rowA = [];
+        for (var ci = 0; ci < c2; ci++) rowA.push(ri * c2 + ci < n ? 1 : 0);
+        grid.push(rowA);
+      }
+      item.kind = 'grid'; item.cols = c2; item.rows = r2;
+      item.blankCells = blanks2; item.grid = grid;
+    }
+    items.push(item);
+  });
+  return items;
+}
+
+function renderPreview(items) {
+  var box = $('results');
+  if (!items.length) { box.innerHTML = '<div class="empty-tip">没有可预览的分组</div>'; return; }
+  var html = '<div class="res-title">布局预览 <span class="cnt">' + items.length + ' 个分组</span></div>';
+  html += '<div class="preview-list">';
+  items.forEach(function (it) {
+    var badge = it.blankCells === 0
+      ? '<span class="badge ok">0 空白</span>'
+      : '<span class="badge warn">' + it.blankCells + ' 空白格</span>';
+    html += '<div class="preview-card">';
+    html += '<div class="preview-head"><span class="gname" title="' + esc(it.name) + '">' + esc(applyRename(it.name)) + '</span>' +
+            '<span class="gmeta">' + it.frames + ' 帧 · ' + it.cols + '列 × ' + it.rows + '行</span>' + badge + '</div>';
+    html += '<div class="preview-body">';
+    if (it.kind === 'grid') {
+      html += miniGrid(it.grid, it.cols);
+    } else {
+      html += '<div>';
+      it.dirs.forEach(function (d) {
+        html += '<div class="dir-line"><span class="dname">' + esc(d.dir) + '</span>' +
+                d.count + ' 帧 → ' + d.cols + '列 × ' + d.rows + '行</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+  box.innerHTML = html;
+}
+
+function miniGrid(grid, cols) {
+  var html = '<div class="mini-grid" style="grid-template-columns:repeat(' + cols + ',12px)">';
+  grid.forEach(function (rowA) {
+    rowA.forEach(function (cell) {
+      html += cell ? '<div class="cell-fill"></div>' : '<div class="cell-empty"></div>';
+    });
+  });
+  return html + '</div>';
+}
+
+/* ============================================================
+   生成（等价 generate_all）
+   ============================================================ */
+async function doPreview() {
+  if (state.busy || !state.groups || !state.groups.size) return;
+  clearResults();
+  logLine('— 预览布局 —');
+  try {
+    var maxCols = parseInt($('max-cols').value, 10) || 5;
+    var mode = $('mode').value;
+    var optimize = $('opt-cols').checked;
+    var items = previewItems(state.groups, mode, maxCols, optimize);
+    renderPreview(items);
+    logLine('预览 ' + items.length + ' 个分组完成。', 'ln-ok');
+  } catch (e) {
+    logLine('预览失败：' + (e && e.message ? e.message : e), 'ln-err');
+  }
+}
+
+// 公共：生成全部精灵图（不输出），返回 [{key, canvas, info}]
+async function runGenerate() {
+  var maxCols = parseInt($('max-cols').value, 10) || 5;
+  var mode = $('mode').value;
+  var optimize = $('opt-cols').checked;
+  var padding = parseInt($('padding').value, 10) || 0;
+  var keys = Array.from(state.groups.keys()).sort();
+  var results = [];
+  logLine('发现 ' + keys.length + ' 个分组');
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var frames = state.groups.get(key);
+    var built;
+    if (mode === 'action') {
+      var dirFrames = new Map();
+      frames.forEach(function (f) { var d = f.direction || 'default'; if (!dirFrames.has(d)) dirFrames.set(d, []); dirFrames.get(d).push(f); });
+      built = await buildActionSheet(dirFrames, maxCols, optimize, padding);
+    } else {
+      built = await buildSheet(frames, maxCols, optimize, padding);
+    }
+    var outBase = applyRename(key);
+    built.info.image = outBase + '.png';
+    var status = built.info.blankCells === 0 ? '0 空白' : built.info.blankCells + ' 空白格';
+    var label = outBase === key ? key : key + ' → ' + outBase;
+    logLine('  ' + label + ': ' + built.info.frameCount + '帧 → ' + built.info.cols + '列×' + built.info.rows + '行, ' +
+            built.info.sheetWidth + '×' + built.info.sheetHeight + 'px, ' + status);
+    results.push({ key: key, outBase: outBase, canvas: built.canvas, info: built.info });
+  }
+  return results;
+}
+
+// 选择输出文件夹（Chrome / Edge）
+async function pickOutputFolder() {
+  if (!window.showDirectoryPicker) {
+    alert('当前浏览器不支持选择输出文件夹（需 Chrome / Edge）。\n请使用「下载 ZIP 包」导出。');
+    return;
+  }
+  try {
+    var handle = await window.showDirectoryPicker();
+    state.outHandle = handle;
+    state.outName = handle.name;
+    $('out-path').value = handle.name;
+    logLine('输出文件夹已选择：' + handle.name, 'ln-ok');
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // 用户取消
+    logLine('选择输出文件夹失败：' + (e && e.message ? e.message : e), 'ln-err');
+  }
+}
+
+// 一键导出到指定目录（未选择输出文件夹时改为浏览器下载）
+async function doExport() {
+  if (state.busy || !state.groups || !state.groups.size) return;
+  state.busy = true;
+  var btn = $('btn-export');
+  var old = btn.innerHTML;
+  btn.disabled = true; btn.textContent = '导出中…';
+  clearResults();
+  logLine('— 一键导出 —');
+  try {
+    var genJson = $('gen-json').checked;
+    var results = await runGenerate();
+    if (state.outHandle) {
+      for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        var ob = r.outBase || r.key;
+        await writeHandle(state.outHandle, ob + '.png', await canvasToBlob(r.canvas));
+        if (genJson) await writeHandle(state.outHandle, ob + '.json', new Blob([JSON.stringify(r.info, null, 2)], { type: 'application/json' }));
+      }
+      renderSheets(results, '已写入 ' + state.outName);
+      logLine('完成！共 ' + results.length + ' 张精灵图已导出到：' + state.outName, 'ln-ok');
+    } else {
+      for (var j = 0; j < results.length; j++) {
+        var r2 = results[j];
+        await saveDownload(r2.outBase || r2.key, r2.canvas, r2.info, genJson);
+      }
+      renderSheets(results, '已下载到本地');
+      logLine('完成！共 ' + results.length + ' 张精灵图已下载（未选择输出文件夹）', 'ln-ok');
+    }
+  } catch (e) {
+    logLine('导出失败：' + (e && e.message ? e.message : e), 'ln-err');
+  } finally {
+    state.busy = false; btn.disabled = false; btn.innerHTML = old;
+  }
+}
+
+// 下载 ZIP 包（通用，Firefox 等也可用）
+async function doExportZip() {
+  if (state.busy || !state.groups || !state.groups.size) return;
+  state.busy = true;
+  var btn = $('btn-zip');
+  var old = btn.innerHTML;
+  btn.disabled = true; btn.textContent = '打包中…';
+  clearResults();
+  logLine('— 生成并打包 ZIP —');
+  try {
+    var genJson = $('gen-json').checked;
+    var results = await runGenerate();
+    var files = [];
+    for (var i = 0; i < results.length; i++) {
+      var r = results[i];
+      var ob = r.outBase || r.key;
+      files.push({ name: ob + '.png', data: await canvasToBlob(r.canvas) });
+      if (genJson) files.push({ name: ob + '.json', data: new Blob([JSON.stringify(r.info, null, 2)], { type: 'application/json' }) });
+    }
+    var zipBlob = await buildZip(files);
+    downloadBlob(zipBlob, 'sprite_sheets.zip');
+    renderSheets(results, '已打包 ZIP');
+    logLine('完成！' + files.length + ' 个文件已打包为 sprite_sheets.zip', 'ln-ok');
+  } catch (e) {
+    logLine('打包失败：' + (e && e.message ? e.message : e), 'ln-err');
+  } finally {
+    state.busy = false; btn.disabled = false; btn.innerHTML = old;
+  }
+}
+
+// 写入指定目录句柄
+async function writeHandle(dirHandle, name, blob) {
+  var fh = await dirHandle.getFileHandle(name, { create: true });
+  var w = await fh.createWritable();
+  await w.write(blob);
+  await w.close();
+}
+
+// 下载输出
+async function saveDownload(key, canvas, info, genJson) {
+  var pngBlob = await canvasToBlob(canvas);
+  downloadBlob(pngBlob, key + '.png');
+  if (genJson) downloadBlob(new Blob([JSON.stringify(info, null, 2)], { type: 'application/json' }), key + '.json');
+}
+function downloadBlob(blob, name) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+
+/* ============================================================
+   ZIP 打包（store 无压缩，纯前端生成，无需外部库）
+   ============================================================ */
+var CRC_TABLE = (function () {
+  var t = new Uint32Array(256);
+  for (var i = 0; i < 256; i++) {
+    var c = i;
+    for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[i] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(data) {
+  var c = 0xFFFFFFFF;
+  for (var i = 0; i < data.length; i++) c = CRC_TABLE[(c ^ data[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function dosTimeDate(d) {
+  d = d || new Date();
+  return {
+    time: ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF,
+    date: (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF
+  };
+}
+function buildZip(entries) {
+  // entries: [{name, data: Blob}]
+  return new Promise(async function (resolve, reject) {
+    try {
+      var parts = [];
+      var central = [];
+      var offset = 0;
+      var td = dosTimeDate();
+      var enc = new TextEncoder();
+      for (var i = 0; i < entries.length; i++) {
+        var nameBytes = enc.encode(entries[i].name);
+        var data = new Uint8Array(await entries[i].data.arrayBuffer());
+        var crc = crc32(data);
+        // 本地文件头
+        var lh = new Uint8Array(30 + nameBytes.length);
+        var lv = new DataView(lh.buffer);
+        lv.setUint32(0, 0x04034b50, true);
+        lv.setUint16(4, 20, true);
+        lv.setUint16(6, 0x0800, true);      // UTF-8
+        lv.setUint16(8, 0, true);           // store
+        lv.setUint16(10, td.time, true);
+        lv.setUint16(12, td.date, true);
+        lv.setUint32(14, crc, true);
+        lv.setUint32(18, data.length, true);
+        lv.setUint32(22, data.length, true);
+        lv.setUint16(26, nameBytes.length, true);
+        lv.setUint16(28, 0, true);
+        lh.set(nameBytes, 30);
+        parts.push(lh, data);
+        // 中央目录记录
+        var ch = new Uint8Array(46 + nameBytes.length);
+        var cv = new DataView(ch.buffer);
+        cv.setUint32(0, 0x02014b50, true);
+        cv.setUint16(4, 20, true);
+        cv.setUint16(6, 20, true);
+        cv.setUint16(8, 0x0800, true);
+        cv.setUint16(10, 0, true);
+        cv.setUint16(12, td.time, true);
+        cv.setUint16(14, td.date, true);
+        cv.setUint32(16, crc, true);
+        cv.setUint32(20, data.length, true);
+        cv.setUint32(24, data.length, true);
+        cv.setUint16(28, nameBytes.length, true);
+        cv.setUint16(30, 0, true);
+        cv.setUint16(32, 0, true);
+        cv.setUint16(34, 0, true);
+        cv.setUint16(36, 0, true);
+        cv.setUint32(42, offset, true);     // 本地头偏移
+        ch.set(nameBytes, 46);
+        central.push(ch);
+        offset += lh.length + data.length;
+      }
+      // 中央目录大小与 EOCD
+      var cdSize = 0;
+      central.forEach(function (b) { cdSize += b.length; });
+      var eocd = new Uint8Array(22);
+      var ev = new DataView(eocd.buffer);
+      ev.setUint32(0, 0x06054b50, true);
+      ev.setUint16(4, 0, true);
+      ev.setUint16(6, 0, true);
+      ev.setUint16(8, entries.length, true);
+      ev.setUint16(10, entries.length, true);
+      ev.setUint32(12, cdSize, true);
+      ev.setUint32(16, offset, true);
+      ev.setUint16(20, 0, true);
+      parts.push.apply(parts, central);
+      parts.push(eocd);
+      resolve(new Blob(parts, { type: 'application/zip' }));
+    } catch (e) { reject(e); }
+  });
+}
+
+function thumbDataUrl(canvas, maxSize) {
+  maxSize = maxSize || 400;
+  if (canvas.width <= maxSize && canvas.height <= maxSize) return canvas.toDataURL('image/png');
+  var scale = Math.min(maxSize / canvas.width, maxSize / canvas.height);
+  var t = document.createElement('canvas');
+  t.width = Math.max(1, Math.round(canvas.width * scale));
+  t.height = Math.max(1, Math.round(canvas.height * scale));
+  t.getContext('2d').drawImage(canvas, 0, 0, t.width, t.height);
+  return t.toDataURL('image/png');
+}
+
+function renderSheets(results, outDesc) {
+  lastSheets.clear();
+  results.forEach(function (r) { lastSheets.set(r.key, { canvas: r.canvas, info: r.info, outBase: r.outBase || r.key }); });
+  var box = $('results');
+  var html = '<div class="res-title">生成结果 <span class="cnt">' + results.length + ' 张' + (outDesc ? ' · ' + esc(outDesc) : '') + '</span></div>';
+  results.forEach(function (r) {
+    var ob = r.outBase || r.key;
+    var badge = r.info.blankCells === 0
+      ? '<span class="badge ok">0 空白</span>'
+      : '<span class="badge warn">' + r.info.blankCells + ' 空白格</span>';
+    var animMeta = r.info.animations
+      ? ' · ' + Object.keys(r.info.animations).length + ' 个方向'
+      : '';
+    html += '<div class="sheet-card">';
+    html += '<div class="sheet-thumb"><img src="' + thumbDataUrl(r.canvas) + '" alt="' + esc(ob) + '"></div>';
+    html += '<div class="sheet-info">';
+    html += '<div class="sheet-title">' + esc(ob) + '.png ' + badge + '</div>';
+    html += '<div class="sheet-meta">' + r.info.frameCount + ' 帧' + animMeta + ' · ' + r.info.cols + '列×' + r.info.rows + '行 · ' +
+            '<b>' + r.info.sheetWidth + '×' + r.info.sheetHeight + '</b> px' +
+            (r.info.padding ? ' · 间距 ' + r.info.padding : '') + '</div>';
+    html += '<div class="sheet-actions">' +
+      '<button class="btn ghost small" onclick="downloadSheet(\'' + r.key + '\')">下载 PNG</button>' +
+      (r.info.frames ? '<button class="btn ghost small" onclick="downloadJson(\'' + r.key + '\')">下载 JSON</button>' : '') +
+      '</div>';
+    html += '</div></div>';
+  });
+  box.innerHTML = html;
+}
+
+// 生成结果后再下载（预览数据保留在全局缓存）
+var lastSheets = new Map(); // key -> {canvas, info}
+function downloadSheet(key) { var s = lastSheets.get(key); if (s) downloadBlob(canvasToBlobSync(s.canvas), (s.outBase || key) + '.png'); }
+function downloadJson(key) { var s = lastSheets.get(key); if (s) downloadBlob(new Blob([JSON.stringify(s.info, null, 2)], { type: 'application/json' }), (s.outBase || key) + '.json'); }
+function canvasToBlobSync(canvas) {
+  var data = canvas.toDataURL('image/png');
+  var bin = atob(data.split(',')[1]);
+  var arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: 'image/png' });
+}
+
+/* ============================================================
+   初始化
+   ============================================================ */
+if (!window.showDirectoryPicker) {
+  logLine('提示：当前浏览器不支持直接选择文件夹，请用「选择文件或文件夹」输入、用「下载 ZIP 包」导出。建议使用 Chrome / Edge。', 'ln-warn');
+}
+</script>
+
+</body>
+</html>
