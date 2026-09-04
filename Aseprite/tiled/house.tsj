@@ -1,0 +1,42 @@
+{ "columns":0,
+ "grid":
+    {
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
+    },
+ "margin":0,
+ "name":"house",
+ "spacing":0,
+ "tilecount":4,
+ "tiledversion":"1.12.2",
+ "tileheight":80,
+ "tiles":[
+        {
+         "id":0,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Buildings\/house_01.png",
+         "imageheight":80,
+         "imagewidth":80
+        }, 
+        {
+         "id":1,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Buildings\/house_02.png",
+         "imageheight":80,
+         "imagewidth":80
+        }, 
+        {
+         "id":2,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Buildings\/house_03.png",
+         "imageheight":80,
+         "imagewidth":112
+        }, 
+        {
+         "id":3,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Buildings\/house_04.png",
+         "imageheight":80,
+         "imagewidth":112
+        }],
+ "tilewidth":112,
+ "type":"tileset",
+ "version":"1.10"
+}

@@ -1,16 +1,61 @@
 {
-    "activeFile": "water_ani.tsj",
+    "activeFile": "fence.tsj",
     "expandedProjectPaths": [
         "."
     ],
     "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "bridge.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "fence.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 3,
+            "scaleInEditor": 4
+        },
+        "grass_01.tsj": {
+            "scaleInDock": 2,
+            "scaleInEditor": 3
+        },
+        "grass_01_island.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 8
+        },
+        "grass_01_shadow.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 5.5
+        },
+        "house.tsj": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "map01.tmx": {
-            "scale": 0.5,
-            "selectedLayer": 1,
+            "scale": 2,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 614,
-                "y": 539
+                "x": 667,
+                "y": 654
             }
+        },
+        "soil_field.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "soil_island.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 4
+        },
+        "soil_shadow.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "water.tsj": {
             "dynamicWrapping": false,
@@ -27,7 +72,7 @@
             "scaleInEditor": 4
         }
     },
-    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Terrain/Tilesets/Water",
+    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Terrain/Tilesets/Soil",
     "map.height": 50,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
@@ -36,14 +81,31 @@
     "openFiles": [
         "map01.tmx",
         "water.tsj",
-        "water_ani.tsj"
+        "water_ani.tsj",
+        "soil_island.tsj",
+        "grass_01_island.tsj",
+        "grass_01.tsj",
+        "grass_01_shadow.tsj",
+        "house.tsj",
+        "bridge.tsj",
+        "fence.tsj",
+        "soil_shadow.tsj",
+        "soil_field.tsj"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
         "map01.tmx",
         "water.tsj",
         "water_ani.tsj",
-        "water.tsx"
+        "soil_island.tsj",
+        "grass_01_island.tsj",
+        "grass_01.tsj",
+        "grass_01_shadow.tsj",
+        "house.tsj",
+        "bridge.tsj",
+        "soil_field.tsj",
+        "soil_shadow.tsj",
+        "fence.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {

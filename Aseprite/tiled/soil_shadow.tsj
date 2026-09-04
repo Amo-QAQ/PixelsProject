@@ -1,0 +1,14 @@
+{ "columns":13,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Terrain\/Tilesets\/Soil\/soil_shadow.png",
+ "imageheight":80,
+ "imagewidth":208,
+ "margin":0,
+ "name":"soil_shadow",
+ "spacing":0,
+ "tilecount":65,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}
