@@ -1,0 +1,14 @@
+{ "columns":14,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Terrain\/Tilesets\/Water\/water_island_ani02.png",
+ "imageheight":16,
+ "imagewidth":224,
+ "margin":0,
+ "name":"water_island_ani02",
+ "spacing":0,
+ "tilecount":14,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

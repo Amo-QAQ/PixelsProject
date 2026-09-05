@@ -1,0 +1,14 @@
+{ "columns":7,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Object\/other.png",
+ "imageheight":32,
+ "imagewidth":112,
+ "margin":0,
+ "name":"other",
+ "spacing":0,
+ "tilecount":14,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}
