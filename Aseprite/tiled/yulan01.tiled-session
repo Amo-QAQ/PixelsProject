@@ -1,5 +1,5 @@
 {
-    "activeFile": "other.tsj",
+    "activeFile": "water_island_ani02.tsj",
     "expandedProjectPaths": [
         "."
     ],
@@ -39,8 +39,8 @@
             "scale": 1.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 584.6666666666666,
-                "y": 742.6666666666666
+                "x": 708,
+                "y": 635
             }
         },
         "other.tsj": {
@@ -80,6 +80,14 @@
             "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 3
+        },
+        "water_island_ani.tsj": {
+            "scaleInDock": 3,
+            "scaleInEditor": 3
+        },
+        "water_island_ani02.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 3
         }
     },
     "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Terrain/Tilesets/Water",
@@ -91,7 +99,23 @@
     "openFiles": [
         "map01.tmx",
         "water.tsj",
-        "water_ani.tsj",
+        "soil_island.tsj",
+        "grass_01_island.tsj",
+        "grass_01.tsj",
+        "grass_01_shadow.tsj",
+        "house.tsj",
+        "bridge.tsj",
+        "fence.tsj",
+        "soil_shadow.tsj",
+        "soil_field.tsj",
+        "other.tsj",
+        "water_island_ani.tsj",
+        "water_island_ani02.tsj"
+    ],
+    "project": "yulan01.tiled-project",
+    "recentFiles": [
+        "map01.tmx",
+        "water.tsj",
         "soil_island.tsj",
         "grass_01_island.tsj",
         "grass_01.tsj",
@@ -102,21 +126,6 @@
         "soil_shadow.tsj",
         "soil_field.tsj",
         "other.tsj"
-    ],
-    "project": "yulan01.tiled-project",
-    "recentFiles": [
-        "map01.tmx",
-        "water.tsj",
-        "water_ani.tsj",
-        "soil_island.tsj",
-        "grass_01_island.tsj",
-        "grass_01.tsj",
-        "grass_01_shadow.tsj",
-        "house.tsj",
-        "bridge.tsj",
-        "fence.tsj",
-        "soil_shadow.tsj",
-        "soil_field.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {
