@@ -1,0 +1,14 @@
+{ "columns":5,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Terrain\/Tilesets\/Water\/water_decoration.png",
+ "imageheight":16,
+ "imagewidth":80,
+ "margin":0,
+ "name":"water_decoration",
+ "spacing":0,
+ "tilecount":5,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

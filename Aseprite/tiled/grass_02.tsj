@@ -1,0 +1,14 @@
+{ "columns":15,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Terrain\/Tilesets\/Grass\/grass_02.png",
+ "imageheight":80,
+ "imagewidth":240,
+ "margin":0,
+ "name":"grass_02",
+ "spacing":0,
+ "tilecount":75,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

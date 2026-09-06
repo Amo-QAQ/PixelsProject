@@ -1,0 +1,210 @@
+{ "columns":0,
+ "grid":
+    {
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
+    },
+ "margin":0,
+ "name":"D:\\CodeProject\\PixelsProject\\Aseprite\\project_end\\Cozy Lands - Asset Pack\\Crops",
+ "spacing":0,
+ "tilecount":32,
+ "tiledversion":"1.12.2",
+ "tileheight":32,
+ "tiles":[
+        {
+         "id":0,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":1,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_02.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":2,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_a_03.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":3,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_b_03.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":4,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/cabbage_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":5,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/cabbage_02.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":6,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/cabbage_03.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":7,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/cabbage_06.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":8,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/onion_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":9,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/onion_02.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":10,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/onion_03.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":11,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/onion_04.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":12,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/potato_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":13,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/potato_02.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":14,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/potato_03.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":15,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/potato_04.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":16,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/pumpkin_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":17,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/pumpkin_02.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":18,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/pumpkin_03.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":19,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/pumpkin_04.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":20,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/radish_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":21,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/radish_02.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":22,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/radish_03.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":23,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/radish_04.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":24,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/rice_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":25,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/rice_02.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":26,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/rice_03.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":27,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/rice_04.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":28,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_03.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":29,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_04.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":30,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_01.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":31,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_02.png",
+         "imageheight":32,
+         "imagewidth":16
+        }],
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

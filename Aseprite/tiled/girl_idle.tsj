@@ -1,0 +1,14 @@
+{ "columns":4,
+ "image":"..\/project_end(Free)\/Cozy Lands - Asset Pack\/Characters\/girl_idle.png",
+ "imageheight":384,
+ "imagewidth":192,
+ "margin":0,
+ "name":"girl_idle",
+ "spacing":0,
+ "tilecount":32,
+ "tiledversion":"1.12.2",
+ "tileheight":48,
+ "tilewidth":48,
+ "type":"tileset",
+ "version":"1.10"
+}
