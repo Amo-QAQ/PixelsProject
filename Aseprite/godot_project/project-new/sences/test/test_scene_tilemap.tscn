@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://dexknd5rftsg7"]
+
+[node name="TestSceneTilemap" type="Node2D" unique_id=899118006]
+
+[node name="GameTileMap" type="Node" parent="." unique_id=2028362560]
