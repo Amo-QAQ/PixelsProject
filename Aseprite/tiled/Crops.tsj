@@ -15,25 +15,25 @@
         {
          "id":0,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_01.png",
-         "imageheight":16,
+         "imageheight":32,
          "imagewidth":16
         }, 
         {
          "id":1,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_02.png",
-         "imageheight":16,
+         "imageheight":32,
          "imagewidth":16
         }, 
         {
          "id":2,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_a_03.png",
-         "imageheight":16,
+         "imageheight":32,
          "imagewidth":16
         }, 
         {
          "id":3,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/berry_b_03.png",
-         "imageheight":16,
+         "imageheight":32,
          "imagewidth":16
         }, 
         {
@@ -99,13 +99,13 @@
         {
          "id":14,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/potato_03.png",
-         "imageheight":16,
+         "imageheight":32,
          "imagewidth":16
         }, 
         {
          "id":15,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/potato_04.png",
-         "imageheight":16,
+         "imageheight":32,
          "imagewidth":16
         }, 
         {
@@ -181,18 +181,6 @@
          "imagewidth":16
         }, 
         {
-         "id":28,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_03.png",
-         "imageheight":32,
-         "imagewidth":16
-        }, 
-        {
-         "id":29,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_04.png",
-         "imageheight":32,
-         "imagewidth":16
-        }, 
-        {
          "id":30,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_01.png",
          "imageheight":16,
@@ -201,6 +189,18 @@
         {
          "id":31,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_02.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":28,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_03.png",
+         "imageheight":32,
+         "imagewidth":16
+        }, 
+        {
+         "id":29,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Crops\/corn_04.png",
          "imageheight":32,
          "imagewidth":16
         }],
