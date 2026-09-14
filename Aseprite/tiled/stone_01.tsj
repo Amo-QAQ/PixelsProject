@@ -8,7 +8,7 @@
  "margin":0,
  "name":"stone_01",
  "spacing":0,
- "tilecount":34,
+ "tilecount":36,
  "tiledversion":"1.12.2",
  "tileheight":48,
  "tiles":[
@@ -215,6 +215,18 @@
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Nature\/tree_root_03.png",
          "imageheight":16,
          "imagewidth":16
+        }, 
+        {
+         "id":35,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Mineral\/stone_06.png",
+         "imageheight":32,
+         "imagewidth":32
+        }, 
+        {
+         "id":36,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Mineral\/stone_05.png",
+         "imageheight":32,
+         "imagewidth":32
         }],
  "tilewidth":32,
  "type":"tileset",
