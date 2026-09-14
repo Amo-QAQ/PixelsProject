@@ -1,5 +1,5 @@
 {
-    "activeFile": "Crops.tsj",
+    "activeFile": "stone_01.tsj",
     "expandedProjectPaths": [
         "."
     ],
@@ -13,7 +13,9 @@
             "scaleInEditor": 1.5
         },
         "box.tsj": {
-            "dynamicWrapping": true
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "bridge.tsj": {
             "dynamicWrapping": false,
@@ -88,10 +90,14 @@
             "scaleInEditor": 3
         },
         "play_idle_F.tsj": {
-            "dynamicWrapping": false
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "seed.tsj": {
-            "dynamicWrapping": true
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "soil.tsj": {
             "dynamicWrapping": false,
@@ -118,7 +124,8 @@
         },
         "stone_01.tsj": {
             "dynamicWrapping": true,
-            "scaleInDock": 1
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "water-ani - 02.tsj": {
             "scaleInDock": 1,
@@ -155,11 +162,11 @@
             "expandedObjectLayers": [
                 12
             ],
-            "scale": 1,
+            "scale": 1.5,
             "selectedLayer": 8,
             "viewCenter": {
-                "x": 178,
-                "y": 180.5
+                "x": 285.3333333333333,
+                "y": 131
             }
         }
     },
@@ -185,12 +192,17 @@
         "water_island_ani02.tsj",
         "预览01.tmx",
         "Crops.tsj",
-        "map01.tmx",
-        "soil.tsj"
+        "soil.tsj",
+        "seed.tsj",
+        "box.tsj",
+        "play_idle_F.tsj",
+        "play_idle_F.tsj",
+        "stone_01.tsj",
+        "map01_预览.tmx",
+        "map01.tmx"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
-        "map01.tmx",
         "water.tsj",
         "soil_island.tsj",
         "grass_01_island.tsj",
@@ -201,7 +213,8 @@
         "fence.tsj",
         "soil_shadow.tsj",
         "soil_field.tsj",
-        "other.tsj"
+        "other.tsj",
+        "water_island_ani.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {
