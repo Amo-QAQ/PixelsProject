@@ -8,7 +8,7 @@
  "margin":0,
  "name":"stone_01",
  "spacing":0,
- "tilecount":33,
+ "tilecount":34,
  "tiledversion":"1.12.2",
  "tileheight":48,
  "tiles":[
@@ -27,6 +27,12 @@
         {
          "id":2,
          "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Mineral\/stone_03.png",
+         "imageheight":16,
+         "imagewidth":16
+        }, 
+        {
+         "id":33,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Mineral\/stone_04.png",
          "imageheight":16,
          "imagewidth":16
         }, 
