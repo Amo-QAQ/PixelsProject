@@ -1,0 +1,36 @@
+{ "columns":0,
+ "grid":
+    {
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
+    },
+ "margin":0,
+ "name":"box",
+ "spacing":0,
+ "tilecount":3,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tiles":[
+        {
+         "id":0,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Object\/box_A_01.png",
+         "imageheight":16,
+         "imagewidth":32
+        }, 
+        {
+         "id":1,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Object\/box_A_02.png",
+         "imageheight":16,
+         "imagewidth":32
+        }, 
+        {
+         "id":2,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Object\/box_A_03.png",
+         "imageheight":16,
+         "imagewidth":32
+        }],
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.10"
+}
