@@ -1,5 +1,5 @@
 {
-    "activeFile": "stone_01.tsj",
+    "activeFile": "预览02.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -27,7 +27,28 @@
             "scaleInDock": 3,
             "scaleInEditor": 3
         },
+        "girl_idle_b.tsj": {
+            "scaleInDock": 1
+        },
         "girl_idle_f.tsj": {
+            "scaleInDock": 1
+        },
+        "girl_idle_l.tsj": {
+            "scaleInDock": 1
+        },
+        "girl_idle_r.tsj": {
+            "scaleInDock": 1
+        },
+        "girl_walk_b.tsj": {
+            "scaleInDock": 1
+        },
+        "girl_walk_f.tsj": {
+            "scaleInDock": 1
+        },
+        "girl_walk_l.tsj": {
+            "scaleInDock": 1
+        },
+        "girl_walk_r.tsj": {
             "scaleInDock": 1
         },
         "grass_01.tsj": {
@@ -65,12 +86,15 @@
             "scaleInDock": 1,
             "scaleInEditor": 3
         },
+        "icon.tsj": {
+            "scaleInDock": 1
+        },
         "map01.tmx": {
             "scale": 1.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 675.3333333333333,
-                "y": 625
+                "x": 640,
+                "y": 640.3333333333333
             }
         },
         "map01_预览.tmx": {
@@ -80,8 +104,8 @@
             "scale": 2,
             "selectedLayer": 13,
             "viewCenter": {
-                "x": 228,
-                "y": 214.25
+                "x": 224,
+                "y": 183.75
             }
         },
         "other.tsj": {
@@ -165,8 +189,16 @@
             "scale": 1.5,
             "selectedLayer": 8,
             "viewCenter": {
-                "x": 285.3333333333333,
-                "y": 131
+                "x": 184,
+                "y": 151.66666666666663
+            }
+        },
+        "预览02.tmx": {
+            "scale": 4,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 88.75,
+                "y": 110.125
             }
         }
     },
@@ -196,10 +228,10 @@
         "seed.tsj",
         "box.tsj",
         "play_idle_F.tsj",
-        "play_idle_F.tsj",
         "stone_01.tsj",
         "map01_预览.tmx",
-        "map01.tmx"
+        "map01.tmx",
+        "预览02.tmx"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [

@@ -134,6 +134,22 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:po
 .checks{display:flex;flex-direction:column;gap:9px;margin-top:10px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer}
 
+/* 动作排序（按方向分组时可拖拽的动作标签） */
+.chip-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--panel2);border:1px solid var(--border);border-radius:16px;
+  padding:4px 11px 4px 8px;font-size:12px;color:var(--text);
+  cursor:grab;user-select:none;transition:border-color .15s,background .15s,opacity .15s;
+}
+.chip:hover{border-color:var(--accent-dim);background:#f0f6ff}
+.chip.dragging{opacity:.45;border-style:dashed;border-color:var(--accent)}
+.chip .idx{
+  flex:0 0 auto;min-width:16px;height:16px;padding:0 4px;border-radius:9px;
+  background:var(--accent);color:#fff;font-size:10px;line-height:16px;text-align:center;
+  font-variant-numeric:tabular-nums;
+}
+
 /* 输入状态条（纯文字，无底色） */
 .input-state{
   display:flex;align-items:baseline;gap:8px;
@@ -330,8 +346,9 @@ kbd{
           <div class="field">
             <label for="mode">分组模式</label>
             <select id="mode" onchange="onModeChange()">
-              <option value="animation">按动画分组</option>
+              <option value="action-dir">按动作分组 · 每方向一张</option>
               <option value="action">按动作分组 · 多方向合一</option>
+              <option value="direction">按方向分组 · 多动作合一</option>
               <option value="all">全部合并为一张</option>
             </select>
           </div>
@@ -347,6 +364,24 @@ kbd{
         <div class="checks">
           <label><input type="checkbox" id="opt-cols" checked>自动优化列数（减少空白）</label>
           <label><input type="checkbox" id="gen-json">生成 JSON 元数据</label>
+        </div>
+        <div class="field" id="action-sort-box" style="display:none;margin-top:12px;margin-bottom:0">
+          <label>动作排列顺序（拖拽标签调整先后，仅「按方向分组 · 多动作合一」生效）</label>
+          <div class="chip-list" id="action-sort-list"></div>
+        </div>
+        <div class="field" id="dir-recognize-box" style="margin-top:12px;margin-bottom:0">
+          <label for="dir-style">方向段写法（自动识别大小写 / 全称 / 任意位置，此处控制导出文件名中的方向）</label>
+          <select id="dir-style" style="width:100%;min-width:0">
+            <option value="raw">保留原始写法（如 B / b / back 原样输出）</option>
+            <option value="lower">统一小写字母（u / d / l / r）</option>
+            <option value="upper">统一大写字母（U / D / L / R）</option>
+            <option value="full">统一全称（up / down / left / right）</option>
+          </select>
+          <details style="margin-top:8px">
+            <summary style="font-size:12px;color:var(--muted);cursor:pointer;user-select:none">高级：方向别名词表（遇到新的方向写法时在此添加，自动重新识别）</summary>
+            <textarea id="dir-aliases" rows="8" spellcheck="false" style="width:100%;margin-top:6px;font-family:var(--mono);font-size:11px;line-height:1.6;border:1px solid #d8dbe0;border-radius:6px;padding:7px 10px;resize:vertical"></textarea>
+            <p class="hint" style="margin-top:4px">每行格式：<b>标准码,别名1,别名2…</b>。标准码：U=上/后、D=下/前、L=左、R=右，斜向 UL/UR/DL/DR；别名不区分大小写。例如新增 <b>U,bei,后上</b>。</p>
+          </details>
         </div>
       </div>
 
@@ -379,7 +414,8 @@ kbd{
           </div>
         </div>
         <div class="checks">
-          <label><input type="checkbox" id="rename-special"><span>特殊规则：<b>角色_方向_动作</b> → <b>角色_动作_方向</b>（交换第 2、3 段）</span></label>
+          <label><input type="checkbox" id="rename-special" checked><span>特殊规则：统一为 <b>角色_动作_方向</b> 顺序（把方向段移到动作后，默认开启；取消勾选则保留文件名原始顺序）</span></label>
+          <label><input type="checkbox" id="rename-lowercase" checked><span>导出名称全部小写（默认开启）</span></label>
         </div>
       </div>
       <div class="input-state">
@@ -447,7 +483,7 @@ kbd{
    状态
    ============================================================ */
 var state = {
-  pngs: [],            // [{file, name, relPath, action, direction, frame}]
+  pngs: [],            // [{file, name, relPath, prefix, action, direction, dirRaw, dirBeforeAction, frame}]
   groups: null,        // Map<key, frames[]>
   inputHandle: null,   // FileSystemDirectoryHandle（选择文件夹时）
   inputName: '',
@@ -461,12 +497,15 @@ var pathMap = new Map(); // File -> 相对路径（拖拽文件夹用）
    重命名输出文件（前缀 / 后缀 / 角色_方向_动作 → 角色_动作_方向）
    ============================================================ */
 function applySpecialRename(name) {
-  // 角色_方向_动作 → 角色_动作_方向：交换第 2、3 段
+  // 角色_方向_动作 → 角色_动作_方向：把角色段之后连续的方向段整体移动到末尾
+  // 基于方向词表识别，兼容小写/全称/斜向与多段动作名；方向本就在末尾的名字保持不动
   var parts = String(name).split('_');
-  if (parts.length >= 3) {
-    var t = parts[1];
-    parts[1] = parts[2];
-    parts[2] = t;
+  if (parts.length < 3) return parts.join('_');
+  var i = 1;
+  var dirSegs = [];
+  while (i < parts.length && matchDirection(parts[i])) { dirSegs.push(parts[i]); i++; }
+  if (dirSegs.length && i < parts.length) {
+    return [parts[0]].concat(parts.slice(i), dirSegs).join('_');
   }
   return parts.join('_');
 }
@@ -475,7 +514,9 @@ function applyRename(name) {
   if ($('rename-special').checked) out = applySpecialRename(out);
   var prefix = $('rename-prefix').value || '';
   var suffix = $('rename-suffix').value || '';
-  return prefix + out + suffix;
+  var result = prefix + out + suffix;
+  if ($('rename-lowercase').checked) result = result.toLowerCase();
+  return result;
 }
 function renameSample() {
   if (state.groups && state.groups.size) {
@@ -493,27 +534,131 @@ function updateRenamePreview() {
       : '示例：' + sample + ' → ' + renamed;
 }
 // 重命名输入变化时实时刷新预览与分组清单
-['rename-prefix', 'rename-suffix', 'rename-special'].forEach(function (id) {
+['rename-prefix', 'rename-suffix', 'rename-special', 'rename-lowercase'].forEach(function (id) {
   $(id).addEventListener('input', function () {
     updateRenamePreview();
     renderGroups();
   });
 });
-updateRenamePreview();
+// 注意：updateRenamePreview() 的首次调用放在脚本末尾初始化区（需等方向词表就绪）
 
 /* ============================================================
    核心算法（由 sprite_sheet_generator.py 移植）
    ============================================================ */
+/* ============================================================
+   方向识别词表（可在界面「高级：方向别名词表」中编辑扩展）
+   标准码：U=上/后  D=下/前  L=左  R=右  UL/UR/DL/DR=斜向
+   ============================================================ */
+var DEFAULT_DIR_ALIASES = [
+  'U,u,up,back,b,n,north,上,后',
+  'D,d,down,front,f,s,south,下,前',
+  'L,l,left,w,west,左',
+  'R,r,right,e,east,右',
+  'UL,ul,up-left,upleft,nw,northwest,左上,后左',
+  'UR,ur,up-right,upright,ne,northeast,右上,后右',
+  'DL,dl,down-left,downleft,sw,southwest,左下,前左',
+  'DR,dr,down-right,downright,se,southeast,右下,前右'
+];
+var DIR_FULL_NAMES = { U: 'up', D: 'down', L: 'left', R: 'right', UL: 'up-left', UR: 'up-right', DL: 'down-left', DR: 'down-right' };
+var DIR_ORDER = { U: 0, D: 1, L: 2, R: 3, UL: 4, UR: 5, DL: 6, DR: 7 };
+// 方向标准排序：上 → 下 → 左 → 右 → 斜向，未知方向（含 default）排最后
+function dirSort(a, b) {
+  var da = (a in DIR_ORDER) ? DIR_ORDER[a] : 99;
+  var db = (b in DIR_ORDER) ? DIR_ORDER[b] : 99;
+  if (da !== db) return da - db;
+  return a < b ? -1 : (a > b ? 1 : 0);
+}
+var DIR_KEY_RE = /^(U|D|L|R|UL|UR|DL|DR)$/;
+var dirAliasMap = null; // 别名(小写) -> 标准码
+function buildDirAliasMap() {
+  var map = {};
+  var builtin = (typeof DEFAULT_DIR_ALIASES !== 'undefined' && DEFAULT_DIR_ALIASES) ? DEFAULT_DIR_ALIASES.join('\n') : '';
+  var raw = ($('dir-aliases') && $('dir-aliases').value) ? $('dir-aliases').value : builtin;
+  raw.split(/\r?\n/).forEach(function (line) {
+    var segs = line.split(/[，,]/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!segs.length) return;
+    var key = segs[0].toUpperCase();
+    if (!DIR_KEY_RE.test(key)) return; // 每行首段必须是标准码
+    segs.forEach(function (alias) { map[alias.toLowerCase()] = key; });
+  });
+  dirAliasMap = map;
+}
+function matchDirection(seg) {
+  if (!dirAliasMap) buildDirAliasMap();
+  return dirAliasMap[String(seg).toLowerCase()] || null;
+}
+// 连续两个方向段合并为斜向（垂直段在前、水平段在后），如 up+left -> UL
+function combineDirKeys(keys) {
+  if (keys.length === 2) {
+    var v = keys.filter(function (k) { return k === 'U' || k === 'D'; })[0];
+    var h = keys.filter(function (k) { return k === 'L' || k === 'R'; })[0];
+    if (v && h) return v + h;
+  }
+  return keys.join('_');
+}
+// 导出文件名中使用的方向段写法（按「方向段写法」下拉设置）
+function dirSegment(p) {
+  if (!p.direction) return null;
+  var style = $('dir-style') ? $('dir-style').value : 'raw';
+  if (style === 'upper') return p.direction;
+  if (style === 'lower') return p.direction.toLowerCase();
+  if (style === 'full') return DIR_FULL_NAMES[p.direction] || p.direction.toLowerCase();
+  return p.dirRaw || p.direction; // raw：保留原始写法
+}
+
 function parseFilename(name) {
-  // 去掉扩展名
+  // 去掉扩展名，按下划线分段
   var base = name.replace(/\.[^.]+$/, '');
-  // 模式1: prefix_DIRECTION_number（方向=单个大写字母）
-  var m = base.match(/^(.+)_([A-Z])_(\d+)$/);
-  if (m) return { action: m[1], direction: m[2], frame: parseInt(m[3], 10) };
-  // 模式2: prefix_number
-  m = base.match(/^(.+)_(\d+)$/);
-  if (m) return { action: m[1], direction: null, frame: parseInt(m[2], 10) };
-  return { action: base, direction: null, frame: 0 };
+  var parts = base.split('_');
+  // 最后一段为纯数字 => 帧号
+  var frame = 0;
+  if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+    frame = parseInt(parts.pop(), 10);
+  }
+  // 扫描方向段（命中词表；允许连续多段，如 up_left）
+  var dirIdx = -1, dirLen = 0, dirKey = null, dirRaw = null;
+  for (var i = 0; i < parts.length; i++) {
+    var hit = matchDirection(parts[i]);
+    if (hit) {
+      var keys = [], raws = [], j = i;
+      while (j < parts.length && matchDirection(parts[j])) {
+        keys.push(matchDirection(parts[j]));
+        raws.push(parts[j]);
+        j++;
+      }
+      dirIdx = i; dirLen = raws.length;
+      dirKey = keys.length > 1 ? combineDirKeys(keys) : keys[0];
+      dirRaw = raws.join('_');
+      break;
+    }
+  }
+  var prefix = '', action = '', dirBeforeAction = false;
+  if (dirIdx >= 0) {
+    var before = parts.slice(0, dirIdx);
+    var after = parts.slice(dirIdx + dirLen);
+    if (after.length) {
+      // 方向在动作之前（角色_方向_动作）：方向前=角色，方向后=动作
+      prefix = before.join('_');
+      action = after.join('_');
+      dirBeforeAction = true;
+    } else if (before.length >= 2) {
+      // 方向在末尾（角色_动作_方向）：紧挨方向的一段为动作，其余为角色
+      prefix = before.slice(0, before.length - 1).join('_');
+      action = before[before.length - 1];
+      dirBeforeAction = false;
+    } else if (before.length === 1) {
+      // 仅 词_方向：该词视为角色（如 girl_B_0）
+      prefix = before[0]; action = '';
+      dirBeforeAction = false;
+    }
+  } else if (parts.length >= 2) {
+    // 无方向：首段为角色，其余为动作
+    prefix = parts[0];
+    action = parts.slice(1).join('_');
+  } else {
+    action = parts.join('_');
+  }
+  return { prefix: prefix, action: action, direction: dirKey, dirRaw: dirRaw, dirBeforeAction: dirBeforeAction, frame: frame };
 }
 
 function findOptimalColumns(n, maxCols) {
@@ -530,14 +675,111 @@ function findOptimalColumns(n, maxCols) {
   return bestC;
 }
 
+/* ============================================================
+   动作排序（按方向分组·多动作合一时，决定同一方向内动作的先后）
+   ============================================================ */
+var actionOrder = []; // 用户拖拽后的动作顺序
+// 默认优先级：待机 → 行走 → 跑步，其余动作按名称排在后面
+var ACTION_PRIORITY_RULES = [
+  { re: /待机|待機|idle|ideal|stand|stay|breath/i, rank: 0 },
+  { re: /行走|走路|walk/i, rank: 1 },
+  { re: /跑步|奔跑|sprint|run/i, rank: 2 }
+];
+function actionRank(name) {
+  for (var i = 0; i < ACTION_PRIORITY_RULES.length; i++) {
+    if (ACTION_PRIORITY_RULES[i].re.test(name)) return ACTION_PRIORITY_RULES[i].rank;
+  }
+  return 100;
+}
+function defaultActionOrder(names) {
+  return names.slice().sort(function (a, b) {
+    var ra = actionRank(a), rb = actionRank(b);
+    if (ra !== rb) return ra - rb;
+    return a < b ? -1 : (a > b ? 1 : 0);
+  });
+}
+// 结合用户已拖拽顺序，输出给定动作集合的最终顺序
+function mergeActionOrder(names) {
+  var merged = [];
+  actionOrder.forEach(function (a) { if (names.indexOf(a) >= 0 && merged.indexOf(a) < 0) merged.push(a); });
+  defaultActionOrder(names.filter(function (a) { return merged.indexOf(a) < 0; }))
+    .forEach(function (a) { merged.push(a); });
+  return merged;
+}
+// 渲染可拖拽的动作标签（HTML5 拖拽排序）
+function renderActionSort() {
+  var box = $('action-sort-box');
+  var listEl = $('action-sort-list');
+  if ($('mode').value !== 'direction' || !state.pngs.length) { box.style.display = 'none'; return; }
+  var names = Array.from(new Set(state.pngs.map(function (p) { return p.action || 'default'; })));
+  if (!names.length) { box.style.display = 'none'; return; }
+  actionOrder = mergeActionOrder(names);
+  listEl.innerHTML = '';
+  // 拦截标签拖拽事件，避免冒泡到页面级文件拖放处理（误报“未读取到 PNG”）
+  if (!listEl._dragBound) {
+    listEl._dragBound = true;
+    ['dragover', 'drop'].forEach(function (ev) {
+      listEl.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); });
+    });
+  }
+  actionOrder.forEach(function (a, i) {
+    var chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.draggable = true;
+    chip.dataset.action = a;
+    var idx = document.createElement('span');
+    idx.className = 'idx'; idx.textContent = String(i + 1);
+    var cname = document.createElement('span');
+    cname.className = 'cname'; cname.textContent = a;
+    chip.appendChild(idx); chip.appendChild(cname);
+    chip.addEventListener('dragstart', function (e) {
+      chip.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', a); } catch (err) {}
+    });
+    chip.addEventListener('dragend', function () {
+      chip.classList.remove('dragging');
+      var order = [];
+      Array.prototype.forEach.call(listEl.children, function (el) { order.push(el.dataset.action); });
+      actionOrder = order;
+      renderActionSort(); // 刷新序号
+      doPreview();        // 联动刷新布局预览
+    });
+    chip.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      var draggingEl = listEl.querySelector('.dragging');
+      if (!draggingEl || draggingEl === chip) return;
+      var rect = chip.getBoundingClientRect();
+      var after = (e.clientX - rect.left) > rect.width / 2 || (e.clientY - rect.top) > rect.height / 2;
+      listEl.insertBefore(draggingEl, after ? chip.nextSibling : chip);
+    });
+    listEl.appendChild(chip);
+  });
+  box.style.display = 'block';
+}
+
+// 按分组模式计算单帧所属分组键（默认保持文件名原始段顺序；顺序调换交给「特殊规则」）
+function frameGroupKey(p, mode) {
+  var segs = [];
+  if (p.prefix) segs.push(p.prefix);
+  var dirSeg = p.direction ? dirSegment(p) : null;
+  if (mode === 'action' || mode === 'action-dir') {
+    // 方向原本就在动作前：先放方向；否则动作在前、方向在后（还原原始顺序）
+    if (mode === 'action-dir' && dirSeg && p.dirBeforeAction) segs.push(dirSeg);
+    if (p.action) segs.push(p.action);
+    if (mode === 'action-dir' && dirSeg && !p.dirBeforeAction) segs.push(dirSeg);
+  }
+  if (mode === 'direction') segs.push(dirSeg || 'default');
+  if (mode === 'all') return 'sprite_sheet';
+  return segs.join('_') || 'sprite_sheet';
+}
+
 // 按分组模式把已解析帧归组（返回 Map<key, frames[]>）
 function buildGroups(pngs, mode) {
   var groups = new Map();
   pngs.forEach(function (p) {
-    var key;
-    if (mode === 'animation') key = p.direction ? p.action + '_' + p.direction : p.action;
-    else if (mode === 'action') key = p.action;
-    else key = 'sprite_sheet';
+    var key = frameGroupKey(p, mode);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(p);
   });
@@ -603,7 +845,7 @@ async function buildSheet(frames, maxCols, optimize, padding) {
 
 // 多方向合一（等价 create_action_sprite_sheet），directionFrames: Map<dir, frames[]>
 async function buildActionSheet(directionFrames, maxCols, optimize, padding) {
-  var dirs = Array.from(directionFrames.keys()).sort();
+  var dirs = Array.from(directionFrames.keys()).sort(dirSort);
   var allImages = {}; // dir -> [{frame,bmp,w,h}]
   var maxW = 0, maxH = 0, maxFrames = 0;
   for (var i = 0; i < dirs.length; i++) {
@@ -666,6 +908,79 @@ async function buildActionSheet(directionFrames, maxCols, optimize, padding) {
   return { canvas: canvas, info: info };
 }
 
+// 按方向分组·多动作合一（actionFrames: Map<action, frames[]>，actionOrder 决定动作先后）
+async function buildDirectionSheet(actionFrames, actionOrder, maxCols, optimize, padding) {
+  // 合并动作顺序：用户拖拽顺序优先，未列出的新动作按默认规则排序追加
+  var allActions = Array.from(actionFrames.keys());
+  var ordered = [];
+  (actionOrder || []).forEach(function (a) {
+    if (actionFrames.has(a) && ordered.indexOf(a) < 0) ordered.push(a);
+  });
+  defaultActionOrder(allActions.filter(function (a) { return ordered.indexOf(a) < 0; }))
+    .forEach(function (a) { ordered.push(a); });
+
+  var allImages = {}; // action -> [{frame,bmp,w,h}]
+  var maxW = 0, maxH = 0, maxFrames = 0;
+  for (var i = 0; i < ordered.length; i++) {
+    var a = ordered[i];
+    var arr = actionFrames.get(a).slice().sort(function (x, y) { return x.frame - y.frame; });
+    var imgs = [];
+    for (var j = 0; j < arr.length; j++) {
+      var bmp = await loadBitmap(arr[j].file);
+      imgs.push({ frame: arr[j], bmp: bmp, w: bmp.width, h: bmp.height });
+      maxW = Math.max(maxW, bmp.width);
+      maxH = Math.max(maxH, bmp.height);
+    }
+    allImages[a] = imgs;
+    maxFrames = Math.max(maxFrames, imgs.length);
+  }
+  var cols = optimize ? findOptimalColumns(maxFrames, maxCols) : Math.min(maxFrames, maxCols);
+  var actRows = {}, totalRows = 0;
+  ordered.forEach(function (a) {
+    var r = Math.ceil(allImages[a].length / cols);
+    actRows[a] = r; totalRows += r;
+  });
+  var cellW = maxW + padding, cellH = maxH + padding;
+  var sheetW = cols * cellW - padding, sheetH = totalRows * cellH - padding;
+  var canvas = document.createElement('canvas');
+  canvas.width = sheetW; canvas.height = sheetH;
+  var ctx = canvas.getContext('2d');
+  var frameData = [], actions = {};
+  var currentRow = 0;
+  ordered.forEach(function (a) {
+    var imgs = allImages[a];
+    var startIndex = frameData.length;
+    imgs.forEach(function (it, i) {
+      var col = i % cols, row = currentRow + Math.floor(i / cols);
+      var x = col * cellW, y = row * cellH;
+      var ox = x + Math.floor((maxW - it.w) / 2);
+      var oy = y + Math.floor((maxH - it.h) / 2);
+      ctx.drawImage(it.bmp, ox, oy);
+      frameData.push({
+        index: frameData.length,
+        frame: it.frame.frame, x: x, y: y, w: maxW, h: maxH, action: a
+      });
+      if (it.bmp.close) it.bmp.close();
+    });
+    actions[a] = {
+      startFrame: startIndex, frameCount: imgs.length,
+      rowStart: currentRow, rowCount: actRows[a]
+    };
+    currentRow += actRows[a];
+  });
+  var totalCells = cols * totalRows;
+  var totalFrames = frameData.length;
+  var info = {
+    image: '',
+    cols: cols, rows: totalRows,
+    frameWidth: maxW, frameHeight: maxH,
+    sheetWidth: sheetW, sheetHeight: sheetH,
+    frameCount: totalFrames, blankCells: totalCells - totalFrames,
+    padding: padding, actions: actions, frames: frameData
+  };
+  return { canvas: canvas, info: info };
+}
+
 function canvasToBlob(canvas) {
   return new Promise(function (resolve, reject) {
     canvas.toBlob(function (b) { b ? resolve(b) : reject(new Error('PNG 导出失败')); }, 'image/png');
@@ -675,7 +990,28 @@ function canvasToBlob(canvas) {
 /* ============================================================
    输入：选择文件夹 / 文件 / 拖拽
    ============================================================ */
+// 方向词表 / 方向命名风格变化后，重新解析全部已载入文件并刷新
+function reparseAll() {
+  buildDirAliasMap();
+  if (!state.pngs.length) return;
+  state.pngs.forEach(function (p) {
+    var parsed = parseFilename(p.name);
+    p.prefix = parsed.prefix;
+    p.action = parsed.action;
+    p.direction = parsed.direction;
+    p.dirRaw = parsed.dirRaw;
+    p.dirBeforeAction = parsed.dirBeforeAction;
+    p.frame = parsed.frame;
+  });
+  state.groups = buildGroups(state.pngs, $('mode').value);
+  renderGroups();
+  renderActionSort();
+  updateRenamePreview();
+  doPreview();
+}
+
 function onModeChange() {
+  renderActionSort();
   if (!state.pngs.length) return;
   state.groups = buildGroups(state.pngs, $('mode').value);
   renderGroups();
@@ -708,7 +1044,7 @@ function setInputFiles(files, handle, name) {
   files.forEach(function (f) {
     var rel = pathMap.get(f) || f.name;
     var parsed = parseFilename(f.name);
-    pngs.push({ file: f, name: f.name, relPath: rel, action: parsed.action, direction: parsed.direction, frame: parsed.frame });
+    pngs.push({ file: f, name: f.name, relPath: rel, prefix: parsed.prefix, action: parsed.action, direction: parsed.direction, dirRaw: parsed.dirRaw, dirBeforeAction: parsed.dirBeforeAction, frame: parsed.frame });
   });
   // 去重（同一文件可能被多次引用）
   var seen = new Set();
@@ -722,6 +1058,7 @@ function setInputFiles(files, handle, name) {
   $('btn-zip').disabled = !pngs.length;
   renderInputState();
   renderGroups();
+  renderActionSort();
   updateRenamePreview();
   clearResults();
   logLine('已载入 ' + pngs.length + ' 个 PNG 帧' + (name ? '（来源：' + name + '）' : ''));
@@ -852,8 +1189,14 @@ function renderGroups() {
   if (!state.groups || !n) { box.innerHTML = ''; return; }
   var html = '';
   state.groups.forEach(function (frames, key) {
-    var dirs = new Set(frames.map(function (f) { return f.direction || 'default'; }));
-    var sub = dirs.size > 1 ? ' · ' + dirs.size + ' 个方向' : '';
+    var sub = '';
+    if ($('mode').value === 'direction') {
+      var acts = new Set(frames.map(function (f) { return f.action || 'default'; }));
+      if (acts.size > 1) sub = ' · ' + acts.size + ' 个动作';
+    } else {
+      var dirs = new Set(frames.map(function (f) { return f.direction || 'default'; }));
+      if (dirs.size > 1) sub = ' · ' + dirs.size + ' 个方向';
+    }
     html += '<div class="group-item">' +
       '<div class="gline">' +
         '<span class="gname" title="' + esc(key) + '">' + esc(key) + '</span>' +
@@ -897,7 +1240,7 @@ function previewItems(groups, mode, maxCols, optimize) {
       var c = optimize ? findOptimalColumns(maxN, maxCols) : Math.min(maxN, maxCols);
       var dirs = [];
       var totalRows = 0;
-      Array.from(dirCounts.entries()).sort(function (a, b) { return a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0); })
+      Array.from(dirCounts.entries()).sort(function (a, b) { return dirSort(a[0], b[0]); })
         .forEach(function (entry) {
           var d = entry[0], cnt = entry[1];
           var r = Math.ceil(cnt / c);
@@ -907,6 +1250,23 @@ function previewItems(groups, mode, maxCols, optimize) {
       var blanks = c * totalRows - n;
       item.kind = 'action'; item.cols = c; item.rows = totalRows;
       item.blankCells = blanks; item.dirs = dirs;
+    } else if (mode === 'direction') {
+      var actCounts = new Map();
+      frames.forEach(function (f) { var an = f.action || 'default'; actCounts.set(an, (actCounts.get(an) || 0) + 1); });
+      var maxNA = 0;
+      actCounts.forEach(function (c) { maxNA = Math.max(maxNA, c); });
+      var cA = optimize ? findOptimalColumns(maxNA, maxCols) : Math.min(maxNA, maxCols);
+      var acts = [];
+      var totalRowsA = 0;
+      mergeActionOrder(Array.from(actCounts.keys())).forEach(function (a) {
+        var cnt = actCounts.get(a);
+        var r = Math.ceil(cnt / cA);
+        acts.push({ action: a, count: cnt, cols: cA, rows: r });
+        totalRowsA += r;
+      });
+      var blanksA = cA * totalRowsA - n;
+      item.kind = 'direction'; item.cols = cA; item.rows = totalRowsA;
+      item.blankCells = blanksA; item.acts = acts;
     } else {
       var c2 = optimize ? findOptimalColumns(n, maxCols) : Math.min(n, maxCols);
       var r2 = Math.ceil(n / c2);
@@ -941,9 +1301,11 @@ function renderPreview(items) {
     if (it.kind === 'grid') {
       html += miniGrid(it.grid, it.cols);
     } else {
+      var lines = it.kind === 'action' ? it.dirs : it.acts;
+      var nameKey = it.kind === 'action' ? 'dir' : 'action';
       html += '<div>';
-      it.dirs.forEach(function (d) {
-        html += '<div class="dir-line"><span class="dname">' + esc(d.dir) + '</span>' +
+      lines.forEach(function (d) {
+        html += '<div class="dir-line"><span class="dname">' + esc(d[nameKey]) + '</span>' +
                 d.count + ' 帧 → ' + d.cols + '列 × ' + d.rows + '行</div>';
       });
       html += '</div>';
@@ -1000,6 +1362,10 @@ async function runGenerate() {
       var dirFrames = new Map();
       frames.forEach(function (f) { var d = f.direction || 'default'; if (!dirFrames.has(d)) dirFrames.set(d, []); dirFrames.get(d).push(f); });
       built = await buildActionSheet(dirFrames, maxCols, optimize, padding);
+    } else if (mode === 'direction') {
+      var actFrames = new Map();
+      frames.forEach(function (f) { var an = f.action || 'default'; if (!actFrames.has(an)) actFrames.set(an, []); actFrames.get(an).push(f); });
+      built = await buildDirectionSheet(actFrames, actionOrder, maxCols, optimize, padding);
     } else {
       built = await buildSheet(frames, maxCols, optimize, padding);
     }
@@ -1239,7 +1605,7 @@ function renderSheets(results, outDesc) {
       : '<span class="badge warn">' + r.info.blankCells + ' 空白格</span>';
     var animMeta = r.info.animations
       ? ' · ' + Object.keys(r.info.animations).length + ' 个方向'
-      : '';
+      : (r.info.actions ? ' · ' + Object.keys(r.info.actions).length + ' 个动作' : '');
     html += '<div class="sheet-card">';
     html += '<div class="sheet-thumb"><img src="' + thumbDataUrl(r.canvas) + '" alt="' + esc(ob) + '"></div>';
     html += '<div class="sheet-info">';
@@ -1271,6 +1637,14 @@ function canvasToBlobSync(canvas) {
 /* ============================================================
    初始化
    ============================================================ */
+// 方向别名词表预填内置值，并构建映射
+$('dir-aliases').value = DEFAULT_DIR_ALIASES.join('\n');
+buildDirAliasMap();
+$('dir-style').addEventListener('change', reparseAll);
+$('dir-aliases').addEventListener('input', reparseAll);
+// 词表就绪后再做首次重命名预览（避免初始化时序导致未定义调用）
+updateRenamePreview();
+
 if (!window.showDirectoryPicker) {
   logLine('提示：当前浏览器不支持直接选择文件夹，请用「选择文件或文件夹」输入、用「下载 ZIP 包」导出。建议使用 Chrome / Edge。', 'ln-warn');
 }
