@@ -1,11 +1,11 @@
-{ "columns":4,
- "image":"..\/project_end\/Cozy Lands - Asset Pack\/Characters\/combined\/girl_idle.png",
+{ "columns":3,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Characters\/combined\/girl_run.png",
  "imageheight":384,
- "imagewidth":192,
+ "imagewidth":144,
  "margin":0,
- "name":"girl_idle",
+ "name":"girl_run",
  "spacing":0,
- "tilecount":32,
+ "tilecount":24,
  "tiledversion":"1.12.2",
  "tileheight":48,
  "tiles":[
@@ -34,7 +34,11 @@
                 {
                  "duration":100,
                  "tileid":5
-                }, 
+                }],
+         "id":0
+        }, 
+        {
+         "animation":[
                 {
                  "duration":100,
                  "tileid":6
@@ -42,11 +46,7 @@
                 {
                  "duration":100,
                  "tileid":7
-                }],
-         "id":0
-        }, 
-        {
-         "animation":[
+                }, 
                 {
                  "duration":100,
                  "tileid":8
@@ -62,7 +62,11 @@
                 {
                  "duration":100,
                  "tileid":11
-                }, 
+                }],
+         "id":6
+        }, 
+        {
+         "animation":[
                 {
                  "duration":100,
                  "tileid":12
@@ -78,11 +82,7 @@
                 {
                  "duration":100,
                  "tileid":15
-                }],
-         "id":8
-        }, 
-        {
-         "animation":[
+                }, 
                 {
                  "duration":100,
                  "tileid":16
@@ -90,7 +90,11 @@
                 {
                  "duration":100,
                  "tileid":17
-                }, 
+                }],
+         "id":12
+        }, 
+        {
+         "animation":[
                 {
                  "duration":100,
                  "tileid":18
@@ -115,43 +119,7 @@
                  "duration":100,
                  "tileid":23
                 }],
-         "id":16
-        }, 
-        {
-         "animation":[
-                {
-                 "duration":100,
-                 "tileid":24
-                }, 
-                {
-                 "duration":100,
-                 "tileid":25
-                }, 
-                {
-                 "duration":100,
-                 "tileid":26
-                }, 
-                {
-                 "duration":100,
-                 "tileid":27
-                }, 
-                {
-                 "duration":100,
-                 "tileid":28
-                }, 
-                {
-                 "duration":100,
-                 "tileid":29
-                }, 
-                {
-                 "duration":100,
-                 "tileid":30
-                }, 
-                {
-                 "duration":100,
-                 "tileid":31
-                }],
-         "id":24
+         "id":18
         }],
  "tilewidth":48,
  "type":"tileset",

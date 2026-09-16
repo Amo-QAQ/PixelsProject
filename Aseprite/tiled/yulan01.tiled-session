@@ -27,19 +27,37 @@
             "scaleInDock": 3,
             "scaleInEditor": 3
         },
+        "girl_idle.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "girl_idle_b.tsj": {
-            "scaleInDock": 1
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "girl_idle_f.tsj": {
-            "scaleInDock": 1
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "girl_idle_l.tsj": {
             "scaleInDock": 1
         },
         "girl_idle_r.tsj": {
+            "dynamicWrapping": true,
             "scaleInDock": 1
         },
+        "girl_run.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "girl_walk.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "girl_walk_b.tsj": {
+            "dynamicWrapping": true,
             "scaleInDock": 1
         },
         "girl_walk_f.tsj": {
@@ -49,6 +67,7 @@
             "scaleInDock": 1
         },
         "girl_walk_r.tsj": {
+            "dynamicWrapping": true,
             "scaleInDock": 1
         },
         "grass_01.tsj": {
@@ -75,6 +94,7 @@
             "scaleInDock": 1
         },
         "grass_03_island.tsj": {
+            "dynamicWrapping": false,
             "scaleInDock": 1
         },
         "grass_decoration.tsj": {
@@ -87,25 +107,29 @@
             "scaleInEditor": 3
         },
         "icon.tsj": {
+            "dynamicWrapping": true,
             "scaleInDock": 1
         },
         "map01.tmx": {
-            "scale": 1.5,
-            "selectedLayer": 0,
+            "expandedObjectLayers": [
+                10
+            ],
+            "scale": 1,
+            "selectedLayer": 13,
             "viewCenter": {
                 "x": 640,
-                "y": 640.3333333333333
+                "y": 499.5
             }
         },
         "map01_预览.tmx": {
             "expandedObjectLayers": [
                 10
             ],
-            "scale": 2,
+            "scale": 1.5,
             "selectedLayer": 13,
             "viewCenter": {
                 "x": 224,
-                "y": 183.75
+                "y": 184.33333333333331
             }
         },
         "other.tsj": {
@@ -184,69 +208,51 @@
         },
         "预览01.tmx": {
             "expandedObjectLayers": [
+                13,
                 12
             ],
             "scale": 1.5,
-            "selectedLayer": 8,
+            "selectedLayer": 12,
             "viewCenter": {
                 "x": 184,
-                "y": 151.66666666666663
+                "y": 152.33333333333334
             }
         },
         "预览02.tmx": {
-            "scale": 4,
-            "selectedLayer": 0,
+            "scale": 2,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 88.75,
-                "y": 110.125
+                "x": 83.5,
+                "y": 242
             }
         }
     },
-    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Objects/Mineral",
+    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Characters/combined",
     "map.height": 20,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
     "map.tileWidth": 16,
     "map.width": 20,
     "openFiles": [
-        "water.tsj",
-        "soil_island.tsj",
-        "grass_01_island.tsj",
-        "grass_01.tsj",
-        "grass_01_shadow.tsj",
-        "house.tsj",
-        "bridge.tsj",
-        "fence.tsj",
-        "soil_shadow.tsj",
-        "soil_field.tsj",
-        "other.tsj",
-        "water_island_ani.tsj",
-        "water_island_ani02.tsj",
-        "预览01.tmx",
-        "Crops.tsj",
-        "soil.tsj",
-        "seed.tsj",
-        "box.tsj",
-        "play_idle_F.tsj",
-        "stone_01.tsj",
-        "map01_预览.tmx",
         "map01.tmx",
+        "map01_预览.tmx",
+        "预览01.tmx",
         "预览02.tmx"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
-        "water.tsj",
-        "soil_island.tsj",
-        "grass_01_island.tsj",
-        "grass_01.tsj",
-        "grass_01_shadow.tsj",
-        "house.tsj",
-        "bridge.tsj",
-        "fence.tsj",
-        "soil_shadow.tsj",
-        "soil_field.tsj",
-        "other.tsj",
-        "water_island_ani.tsj"
+        "map01.tmx",
+        "map01_预览.tmx",
+        "预览01.tmx",
+        "预览02.tmx",
+        "girl_run.tsj",
+        "girl_walk.tsj",
+        "girl_idle.tsj",
+        "stone_01.tsj",
+        "box.tsj",
+        "seed.tsj",
+        "soil.tsj",
+        "Crops.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {

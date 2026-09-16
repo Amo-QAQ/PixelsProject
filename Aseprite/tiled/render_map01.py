@@ -1,12 +1,23 @@
 import json
 import os
+import math
 import xml.etree.ElementTree as ET
 from PIL import Image
 
 TILED_DIR = r"E:\My_work\PixelsProject\Aseprite\tiled"
-TMX_PATH = os.path.join(TILED_DIR, "预览01.tmx")
-OUTPUT_GIF = os.path.join(TILED_DIR, "预览01.gif")
-OUTPUT_GIF_SMALL = os.path.join(TILED_DIR, "预览01_小.gif")
+TMX_PATH = os.path.join(TILED_DIR, "map01_预览.tmx")
+OUTPUT_GIF = os.path.join(TILED_DIR, "map01_预览.gif")
+OUTPUT_GIF_SMALL = os.path.join(TILED_DIR, "map01_预览_小.gif")
+TITLE_PATH = r"E:\My_work\PixelsProject\Aseprite\备份\标题.png"
+OUT_STATIC = os.path.join(TILED_DIR, "map01_预览.png")
+
+# Title placement (matching the old export):
+# 4x big frame: title block was at (28,28)-(977,524) in 1792x1472, height 497.
+# Keep aspect ratio of title.png (755x411), scale to height 497 -> width 913,
+# horizontally centered on the old block center.
+TITLE_BIG = (46, 28, 913, 497)      # (x, y, w, h) on the 4x frame
+TITLE_SMALL = (23, 14, 456, 248)    # half of the above on the 2x frame
+SMALL_SCALE = 2                     # small output is 2x of native
 
 tree = ET.parse(TMX_PATH)
 root = tree.getroot()
@@ -38,20 +49,17 @@ for ts_elem in root.findall("tileset"):
     tile_w = tsj.get("tilewidth", TILE_W)
     tile_h = tsj.get("tileheight", TILE_H)
 
-    # Determine format: spritesheet or collection
     spritesheet = None
-    tile_images = {}  # local_id -> (image, px, py, w, h)
+    tile_images = {}
 
     if "image" in tsj:
-        # Single spritesheet
         img_path = os.path.normpath(os.path.join(tsj_dir, tsj["image"]))
         if os.path.exists(img_path):
             spritesheet = Image.open(img_path).convert("RGBA")
-            print(f"  [spritesheet] {name} firstgid={firstgid} cols={columns} tiles={tilecount} img={os.path.basename(img_path)}")
+            print(f"  [spritesheet] {name} firstgid={firstgid} img={os.path.basename(img_path)}")
         else:
             print(f"  WARNING: Image not found: {img_path}")
     else:
-        # Collection of images - each tile has its own image
         for tile_info in tsj.get("tiles", []):
             tid = tile_info["id"]
             if "image" in tile_info:
@@ -65,7 +73,6 @@ for ts_elem in root.findall("tileset"):
                     print(f"  WARNING: Tile image not found: {img_path}")
         print(f"  [collection] {name} firstgid={firstgid} tiles={tilecount} loaded={len(tile_images)}")
 
-    # Parse animations
     animations = {}
     for tile_info in tsj.get("tiles", []):
         if "animation" in tile_info:
@@ -83,8 +90,7 @@ for ts_elem in root.findall("tileset"):
         "animations": animations,
     })
 
-# Compute actual gid ranges based on adjacent tileset firstgids
-# (tsj tilecount can be larger than the range actually assigned in this map)
+# Actual gid ranges from adjacent firstgids (not tsj tilecount)
 for i, ts in enumerate(tilesets):
     start = ts["firstgid"]
     if i + 1 < len(tilesets):
@@ -105,8 +111,6 @@ def gid_to_tileset_and_local(gid):
 
 def get_tile_image(ts_idx, local_id, anim_frame=0):
     ts = tilesets[ts_idx]
-
-    # Resolve animation frame
     if local_id in ts["animations"]:
         frames = ts["animations"][local_id]
         frame_idx = anim_frame % len(frames)
@@ -114,14 +118,12 @@ def get_tile_image(ts_idx, local_id, anim_frame=0):
     else:
         actual_tile = local_id
 
-    # Collection of images
     if ts["spritesheet"] is None:
         if actual_tile in ts["tile_images"]:
             im, _, _, _, _ = ts["tile_images"][actual_tile]
             return im.copy()
         return None
 
-    # Spritesheet
     cols = ts["columns"]
     tx = (actual_tile % cols) * ts["tile_w"]
     ty = (actual_tile // cols) * ts["tile_h"]
@@ -149,14 +151,12 @@ for child in root:
             w = float(obj.get("width", TILE_W))
             h = float(obj.get("height", TILE_H))
             objects.append({"gid": gid, "x": x, "y": y, "w": w, "h": h})
-        # Sort objects by bottom y (painter's algorithm: lower objects render on top)
         objects.sort(key=lambda o: o["y"])
         layers.append({"type": "objectgroup", "name": child.get("name"), "objects": objects})
 
 print(f"\nRendering {len(layers)} layers/groups...")
 
-# Determine animation cycles - find LCM of all animation lengths for perfect loop
-import math
+# Animation LCM
 anim_lengths = set()
 frame_duration_ms = 100
 for ts in tilesets:
@@ -165,14 +165,12 @@ for ts in tilesets:
         anim_lengths.add(n)
         frame_duration_ms = frames[0].get("duration", 100)
 
-# Calculate LCM of all cycle lengths
 total_frames = 1
 for n in anim_lengths:
     total_frames = total_frames * n // math.gcd(total_frames, n)
 
 print(f"Animation cycles found: {sorted(anim_lengths)} frames each")
-print(f"LCM = {total_frames} frames (water cycles: {total_frames//7 if 7 in anim_lengths else 'N/A'}, char cycles: {total_frames//8 if 8 in anim_lengths else 'N/A'})")
-print(f"Frame duration: {frame_duration_ms}ms, total loop: {total_frames * frame_duration_ms / 1000:.1f}s")
+print(f"LCM = {total_frames} frames, frame duration: {frame_duration_ms}ms, total: {total_frames * frame_duration_ms / 1000:.1f}s")
 
 def render_frame(anim_frame=0):
     canvas = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
@@ -190,7 +188,6 @@ def render_frame(anim_frame=0):
                     tile_img = get_tile_image(ts_idx, local_id, anim_frame)
                     if tile_img:
                         px = col_idx * TILE_W
-                        # Bottom-align: tile image bottom sits at the grid cell bottom
                         py = row_idx * TILE_H + TILE_H - tile_img.height
                         canvas.paste(tile_img, (px, py), tile_img)
         elif layer["type"] == "objectgroup":
@@ -208,37 +205,52 @@ def render_frame(anim_frame=0):
                     canvas.paste(tile_img, (px, py), tile_img)
     return canvas
 
-# Scale factor
+# Title images (resized once)
+title_src = Image.open(TITLE_PATH).convert("RGBA")
+tx, ty, tw, th = TITLE_BIG
+title_big = title_src.resize((tw, th), Image.LANCZOS)
+txs, tys, tws, ths = TITLE_SMALL
+title_small = title_src.resize((tws, ths), Image.LANCZOS)
+
+def composite(frame, title_img, pos):
+    out = frame.copy()
+    out.paste(title_img, pos, title_img)
+    return out
+
+# Render frames
 SCALE = 4
 OUT_W = CANVAS_W * SCALE
 OUT_H = CANVAS_H * SCALE
+SMALL_W = CANVAS_W * SMALL_SCALE
+SMALL_H = CANVAS_H * SMALL_SCALE
 
-# Render all frames (at native resolution, then upscale)
-frames = []
+big_frames = []
+small_frames = []
 for fi in range(total_frames):
     canvas = render_frame(fi)
-    # Composite over a sky-blue background
     bg = Image.new("RGBA", (CANVAS_W, CANVAS_H), (135, 205, 225, 255))
     bg.paste(canvas, (0, 0), canvas)
-    # Upscale 4x with nearest-neighbor for pixel art
-    upscaled = bg.convert("RGB").resize((OUT_W, OUT_H), Image.NEAREST)
-    frames.append(upscaled)
 
-print(f"Rendered {len(frames)} frames, {OUT_W}x{OUT_H} (4x scale)")
+    big = bg.convert("RGB").resize((OUT_W, OUT_H), Image.NEAREST)
+    big = composite(big, title_big, (tx, ty))
+    big_frames.append(big)
 
-# Save full GIF (4x)
-frames[0].save(
+    small = bg.convert("RGB").resize((SMALL_W, SMALL_H), Image.NEAREST)
+    small = composite(small, title_small, (txs, tys))
+    small_frames.append(small)
+
+print(f"Rendered {len(big_frames)} frames, {OUT_W}x{OUT_H} (4x) + {SMALL_W}x{SMALL_H} (2x)")
+
+big_frames[0].save(
     OUTPUT_GIF,
     save_all=True,
-    append_images=frames[1:],
+    append_images=big_frames[1:],
     duration=frame_duration_ms,
     loop=0,
     optimize=True,
 )
 print(f"Saved: {OUTPUT_GIF}")
 
-# Save small version (original resolution)
-small_frames = [f.resize((CANVAS_W, CANVAS_H), Image.NEAREST) for f in frames]
 small_frames[0].save(
     OUTPUT_GIF_SMALL,
     save_all=True,
@@ -249,8 +261,6 @@ small_frames[0].save(
 )
 print(f"Saved: {OUTPUT_GIF_SMALL}")
 
-# Save static PNG (4x)
-static_png = os.path.join(TILED_DIR, "预览01.png")
-frames[0].save(static_png)
-print(f"Saved: {static_png}")
+big_frames[0].save(OUT_STATIC)
+print(f"Saved: {OUT_STATIC}")
 print("Done!")

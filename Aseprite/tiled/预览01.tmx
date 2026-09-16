@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="23" height="19" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="95">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="23" height="19" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="96">
  <tileset firstgid="1" source="water.tsj"/>
  <tileset firstgid="21" source="soil_island.tsj"/>
  <tileset firstgid="66" source="soil_shadow.tsj"/>
@@ -23,6 +23,7 @@
  <tileset firstgid="674" source="grass_02.tsj"/>
  <tileset firstgid="749" source="bridge.tsj"/>
  <tileset firstgid="757" source="icon.tsj"/>
+ <tileset firstgid="766" source="girl_idle.tsj"/>
  <layer id="1" name="水" width="23" height="19">
   <data encoding="csv">
 20,15,15,15,15,15,19,20,15,15,15,15,14,15,15,15,15,15,15,15,15,15,15,
@@ -336,6 +337,6 @@
   <object id="94" gid="759" x="226" y="210.182" width="32" height="16"/>
  </objectgroup>
  <objectgroup id="12" name="角色">
-  <object id="1" gid="504" x="72.6663" y="170" width="48" height="48"/>
+  <object id="95" gid="774" x="68.6667" y="171.333" width="48" height="48"/>
  </objectgroup>
 </map>

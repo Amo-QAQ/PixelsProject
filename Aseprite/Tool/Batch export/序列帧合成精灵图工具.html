@@ -253,7 +253,10 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:po
   border:1px solid var(--border);border-radius:4px;
   overflow:hidden;
 }
-.sheet-thumb img{max-width:100%;max-height:100%;display:block;image-rendering:pixelated}
+.sheet-thumb img{
+  max-width:100%;max-height:100%;display:block;image-rendering:pixelated;
+  border:1px solid rgba(0,0,0,.55);box-shadow:0 0 0 1px rgba(255,255,255,.8);
+}
 .sheet-info{flex:1;min-width:0}
 .sheet-title{font-size:13px;font-weight:600;word-break:break-all;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sheet-meta{font-size:12px;color:var(--muted);margin-top:4px}
@@ -267,6 +270,17 @@ input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:po
   grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
   gap:10px;
 }
+.preview-list-real{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.preview-canvas{
+  margin-top:6px;border:1px solid var(--border);border-radius:6px;padding:8px;
+  display:flex;align-items:center;justify-content:center;min-height:56px;overflow:hidden;
+  background:conic-gradient(var(--check-b) 25%,var(--check-a) 0 50%,var(--check-b) 0 75%,var(--check-a) 0) 0 0 / 14px 14px;
+}
+.preview-canvas img{
+  max-width:100%;max-height:260px;display:block;image-rendering:pixelated;
+  border:1px solid rgba(0,0,0,.55);box-shadow:0 0 0 1px rgba(255,255,255,.8);
+}
+.preview-meta{font-size:11px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
 .preview-card{
   background:var(--panel);border:1px solid var(--border);border-radius:8px;
   padding:9px 10px;min-width:0;
@@ -391,7 +405,7 @@ kbd{
           预览布局
         </button>
       </div>
-      <p class="hint">提示：先点「预览布局」查看排版与空白数量，确认后再导出。</p>
+      <p class="hint">提示：导入后自动显示导出效果缩略图，调整列数 / 间距 / 分组模式 / 动作顺序会实时刷新，确认排版与空白后再导出。</p>
     </div>
 
     <!-- ===== 重命名输出文件 ===== -->
@@ -538,6 +552,7 @@ function updateRenamePreview() {
   $(id).addEventListener('input', function () {
     updateRenamePreview();
     renderGroups();
+    schedulePreview();
   });
 });
 // 注意：updateRenamePreview() 的首次调用放在脚本末尾初始化区（需等方向词表就绪）
@@ -787,12 +802,14 @@ function buildGroups(pngs, mode) {
   return groups;
 }
 
-// 加载图片为位图（ImageBitmap 优先，回退 HTMLImageElement）
+// 加载图片为位图（ImageBitmap 优先，回退 HTMLImageElement）；带缓存，预览反复重绘时复用
+var bmpCache = new Map(); // File -> 位图
 function loadBitmap(file) {
-  if (window.createImageBitmap) {
-    return createImageBitmap(file).catch(function () { return loadViaImage(file); });
-  }
-  return loadViaImage(file);
+  if (bmpCache.has(file)) return Promise.resolve(bmpCache.get(file));
+  var p = window.createImageBitmap
+    ? createImageBitmap(file).catch(function () { return loadViaImage(file); })
+    : loadViaImage(file);
+  return p.then(function (bmp) { bmpCache.set(file, bmp); return bmp; });
 }
 function loadViaImage(file) {
   return new Promise(function (resolve, reject) {
@@ -830,7 +847,6 @@ async function buildSheet(frames, maxCols, optimize, padding) {
     var oy = y + Math.floor((maxH - it.h) / 2);
     ctx.drawImage(it.bmp, ox, oy);
     frameData.push({ index: i, frame: it.frame.frame, x: x, y: y, w: maxW, h: maxH, direction: it.frame.direction });
-    if (it.bmp.close) it.bmp.close();
   });
   var info = {
     image: '',
@@ -843,141 +859,100 @@ async function buildSheet(frames, maxCols, optimize, padding) {
   return { canvas: canvas, info: info };
 }
 
-// 多方向合一（等价 create_action_sprite_sheet），directionFrames: Map<dir, frames[]>
-async function buildActionSheet(directionFrames, maxCols, optimize, padding) {
-  var dirs = Array.from(directionFrames.keys()).sort(dirSort);
-  var allImages = {}; // dir -> [{frame,bmp,w,h}]
-  var maxW = 0, maxH = 0, maxFrames = 0;
-  for (var i = 0; i < dirs.length; i++) {
-    var d = dirs[i];
-    var arr = directionFrames.get(d);
-    var imgs = [];
-    for (var j = 0; j < arr.length; j++) {
-      var bmp = await loadBitmap(arr[j].file);
-      imgs.push({ frame: arr[j], bmp: bmp, w: bmp.width, h: bmp.height });
-      maxW = Math.max(maxW, bmp.width);
-      maxH = Math.max(maxH, bmp.height);
-    }
-    allImages[d] = imgs;
-    maxFrames = Math.max(maxFrames, imgs.length);
-  }
-  var cols = optimize ? findOptimalColumns(maxFrames, maxCols) : Math.min(maxFrames, maxCols);
-  var dirRows = {}, totalRows = 0;
-  dirs.forEach(function (d) {
-    var r = Math.ceil(allImages[d].length / cols);
-    dirRows[d] = r; totalRows += r;
+// 把一组帧按指定字段（direction / action）聚合成有序块 [{key, frames}]
+function framesToBlocks(frames, field, orderFn) {
+  var map = new Map();
+  frames.forEach(function (f) {
+    var k = f[field] || 'default';
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(f);
   });
-  var cellW = maxW + padding, cellH = maxH + padding;
-  var sheetW = cols * cellW - padding, sheetH = totalRows * cellH - padding;
-  var canvas = document.createElement('canvas');
-  canvas.width = sheetW; canvas.height = sheetH;
-  var ctx = canvas.getContext('2d');
-  var frameData = [], animations = {};
-  var currentRow = 0;
-  dirs.forEach(function (d) {
-    var imgs = allImages[d];
-    var startIndex = frameData.length;
-    imgs.forEach(function (it, i) {
-      var col = i % cols, row = currentRow + Math.floor(i / cols);
-      var x = col * cellW, y = row * cellH;
-      var ox = x + Math.floor((maxW - it.w) / 2);
-      var oy = y + Math.floor((maxH - it.h) / 2);
-      ctx.drawImage(it.bmp, ox, oy);
-      frameData.push({
-        index: frameData.length,
-        frame: it.frame.frame, x: x, y: y, w: maxW, h: maxH, direction: d
-      });
-      if (it.bmp.close) it.bmp.close();
-    });
-    animations[d] = {
-      startFrame: startIndex, frameCount: imgs.length,
-      rowStart: currentRow, rowCount: dirRows[d]
-    };
-    currentRow += dirRows[d];
-  });
-  var totalCells = cols * totalRows;
-  var totalFrames = frameData.length;
-  var info = {
-    image: '',
-    cols: cols, rows: totalRows,
-    frameWidth: maxW, frameHeight: maxH,
-    sheetWidth: sheetW, sheetHeight: sheetH,
-    frameCount: totalFrames, blankCells: totalCells - totalFrames,
-    padding: padding, animations: animations, frames: frameData
-  };
-  return { canvas: canvas, info: info };
+  var keys = orderFn ? orderFn(Array.from(map.keys())) : Array.from(map.keys());
+  return keys.filter(function (k) { return map.has(k); }).map(function (k) { return { key: k, frames: map.get(k) }; });
 }
 
-// 按方向分组·多动作合一（actionFrames: Map<action, frames[]>，actionOrder 决定动作先后）
-async function buildDirectionSheet(actionFrames, actionOrder, maxCols, optimize, padding) {
-  // 合并动作顺序：用户拖拽顺序优先，未列出的新动作按默认规则排序追加
-  var allActions = Array.from(actionFrames.keys());
-  var ordered = [];
-  (actionOrder || []).forEach(function (a) {
-    if (actionFrames.has(a) && ordered.indexOf(a) < 0) ordered.push(a);
+// 纯布局计算：块横向流动排列，超出 maxCols 格换行，返回每块网格位置、总行数与最宽行占用列数
+function layoutBlocks(blocks, maxCols) {
+  var curCol = 0, curRow = 0, lineRows = 0, lineCols = 0;
+  var positions = new Map();
+  var rowsUsed = new Map(); // rowIndex -> 该行实际占用列数
+  blocks.forEach(function (b) {
+    if (curCol > 0 && curCol + b.cols > maxCols) {
+      rowsUsed.set(curRow, lineCols);
+      curCol = 0; curRow += lineRows; lineRows = 0; lineCols = 0;
+    }
+    positions.set(b.key, { col: curCol, row: curRow, cols: b.cols, rows: b.rows });
+    curCol += b.cols;
+    lineCols = Math.max(lineCols, curCol);
+    lineRows = Math.max(lineRows, b.rows);
   });
-  defaultActionOrder(allActions.filter(function (a) { return ordered.indexOf(a) < 0; }))
-    .forEach(function (a) { ordered.push(a); });
+  rowsUsed.set(curRow, lineCols);
+  var maxLineCols = 0;
+  rowsUsed.forEach(function (c) { if (c > maxLineCols) maxLineCols = c; });
+  return { positions: positions, totalRows: curRow + lineRows, maxLineCols: maxLineCols };
+}
 
-  var allImages = {}; // action -> [{frame,bmp,w,h}]
-  var maxW = 0, maxH = 0, maxFrames = 0;
-  for (var i = 0; i < ordered.length; i++) {
-    var a = ordered[i];
-    var arr = actionFrames.get(a).slice().sort(function (x, y) { return x.frame - y.frame; });
-    var imgs = [];
+// 分块流动排版合成（多方向合一 / 多动作合一通用）
+// blocks: [{key, frames}]，labelField: 'direction'（animations）或 'action'（actions）
+async function buildBlockSheet(blocks, maxCols, optimize, padding, labelField) {
+  var maxW = 0, maxH = 0;
+  var loaded = [];
+  // 1. 逐块加载位图，块内按自身帧数选择最优列数
+  for (var bi = 0; bi < blocks.length; bi++) {
+    var arr = blocks[bi].frames.slice().sort(function (a, b) { return a.frame - b.frame; });
+    var items = [];
     for (var j = 0; j < arr.length; j++) {
       var bmp = await loadBitmap(arr[j].file);
-      imgs.push({ frame: arr[j], bmp: bmp, w: bmp.width, h: bmp.height });
+      items.push({ frame: arr[j], bmp: bmp, w: bmp.width, h: bmp.height });
       maxW = Math.max(maxW, bmp.width);
       maxH = Math.max(maxH, bmp.height);
     }
-    allImages[a] = imgs;
-    maxFrames = Math.max(maxFrames, imgs.length);
+    var n = items.length;
+    var cols = optimize ? findOptimalColumns(n, maxCols) : Math.min(n, maxCols);
+    if (cols < 1) cols = 1;
+    loaded.push({ key: blocks[bi].key, items: items, cols: cols, rows: Math.ceil(n / cols) });
   }
-  var cols = optimize ? findOptimalColumns(maxFrames, maxCols) : Math.min(maxFrames, maxCols);
-  var actRows = {}, totalRows = 0;
-  ordered.forEach(function (a) {
-    var r = Math.ceil(allImages[a].length / cols);
-    actRows[a] = r; totalRows += r;
-  });
   var cellW = maxW + padding, cellH = maxH + padding;
-  var sheetW = cols * cellW - padding, sheetH = totalRows * cellH - padding;
+  // 2. 流动布局
+  var layout = layoutBlocks(loaded, maxCols);
+  var totalRows = layout.totalRows;
+  // 画布宽度收缩到实际最宽的那一行，避免右侧空出整格空白
+  var sheetW = layout.maxLineCols * cellW - padding;
+  var sheetH = totalRows * cellH - padding;
+  // 3. 绘制
   var canvas = document.createElement('canvas');
-  canvas.width = sheetW; canvas.height = sheetH;
+  canvas.width = Math.max(1, sheetW); canvas.height = Math.max(1, sheetH);
   var ctx = canvas.getContext('2d');
-  var frameData = [], actions = {};
-  var currentRow = 0;
-  ordered.forEach(function (a) {
-    var imgs = allImages[a];
+  var frameData = [], blocksInfo = {}, totalBlank = 0, frameCount = 0;
+  loaded.forEach(function (b) {
+    var pos = layout.positions.get(b.key);
     var startIndex = frameData.length;
-    imgs.forEach(function (it, i) {
-      var col = i % cols, row = currentRow + Math.floor(i / cols);
-      var x = col * cellW, y = row * cellH;
+    b.items.forEach(function (it, i) {
+      var col = i % b.cols, row = Math.floor(i / b.cols);
+      var x = pos.col * cellW + col * cellW, y = pos.row * cellH + row * cellH;
       var ox = x + Math.floor((maxW - it.w) / 2);
       var oy = y + Math.floor((maxH - it.h) / 2);
       ctx.drawImage(it.bmp, ox, oy);
-      frameData.push({
-        index: frameData.length,
-        frame: it.frame.frame, x: x, y: y, w: maxW, h: maxH, action: a
-      });
-      if (it.bmp.close) it.bmp.close();
+      var rec = { index: frameData.length, frame: it.frame.frame, x: x, y: y, w: maxW, h: maxH };
+      rec[labelField] = b.key;
+      frameData.push(rec);
     });
-    actions[a] = {
-      startFrame: startIndex, frameCount: imgs.length,
-      rowStart: currentRow, rowCount: actRows[a]
+    blocksInfo[b.key] = {
+      startFrame: startIndex, frameCount: b.items.length,
+      x: pos.col * cellW, y: pos.row * cellH, cols: b.cols, rows: b.rows
     };
-    currentRow += actRows[a];
+    totalBlank += b.cols * b.rows - b.items.length;
+    frameCount += b.items.length;
   });
-  var totalCells = cols * totalRows;
-  var totalFrames = frameData.length;
   var info = {
     image: '',
-    cols: cols, rows: totalRows,
+    cols: layout.maxLineCols, rows: totalRows,
     frameWidth: maxW, frameHeight: maxH,
-    sheetWidth: sheetW, sheetHeight: sheetH,
-    frameCount: totalFrames, blankCells: totalCells - totalFrames,
-    padding: padding, actions: actions, frames: frameData
+    sheetWidth: Math.max(1, sheetW), sheetHeight: Math.max(1, sheetH),
+    frameCount: frameCount, blankCells: totalBlank,
+    padding: padding, frames: frameData
   };
+  info[labelField === 'direction' ? 'animations' : 'actions'] = blocksInfo;
   return { canvas: canvas, info: info };
 }
 
@@ -1226,157 +1201,97 @@ function logLine(msg, cls) {
 /* ============================================================
    预览布局（等价 preview_layout）
    ============================================================ */
-function previewItems(groups, mode, maxCols, optimize) {
-  var items = [];
-  Array.from(groups.keys()).sort().forEach(function (key) {
-    var frames = groups.get(key);
-    var n = frames.length;
-    var item = { name: key, frames: n };
-    if (mode === 'action') {
-      var dirCounts = new Map();
-      frames.forEach(function (f) { var d = f.direction || 'default'; dirCounts.set(d, (dirCounts.get(d) || 0) + 1); });
-      var maxN = 0;
-      dirCounts.forEach(function (c) { maxN = Math.max(maxN, c); });
-      var c = optimize ? findOptimalColumns(maxN, maxCols) : Math.min(maxN, maxCols);
-      var dirs = [];
-      var totalRows = 0;
-      Array.from(dirCounts.entries()).sort(function (a, b) { return dirSort(a[0], b[0]); })
-        .forEach(function (entry) {
-          var d = entry[0], cnt = entry[1];
-          var r = Math.ceil(cnt / c);
-          dirs.push({ dir: d, count: cnt, cols: c, rows: r });
-          totalRows += r;
-        });
-      var blanks = c * totalRows - n;
-      item.kind = 'action'; item.cols = c; item.rows = totalRows;
-      item.blankCells = blanks; item.dirs = dirs;
-    } else if (mode === 'direction') {
-      var actCounts = new Map();
-      frames.forEach(function (f) { var an = f.action || 'default'; actCounts.set(an, (actCounts.get(an) || 0) + 1); });
-      var maxNA = 0;
-      actCounts.forEach(function (c) { maxNA = Math.max(maxNA, c); });
-      var cA = optimize ? findOptimalColumns(maxNA, maxCols) : Math.min(maxNA, maxCols);
-      var acts = [];
-      var totalRowsA = 0;
-      mergeActionOrder(Array.from(actCounts.keys())).forEach(function (a) {
-        var cnt = actCounts.get(a);
-        var r = Math.ceil(cnt / cA);
-        acts.push({ action: a, count: cnt, cols: cA, rows: r });
-        totalRowsA += r;
-      });
-      var blanksA = cA * totalRowsA - n;
-      item.kind = 'direction'; item.cols = cA; item.rows = totalRowsA;
-      item.blankCells = blanksA; item.acts = acts;
-    } else {
-      var c2 = optimize ? findOptimalColumns(n, maxCols) : Math.min(n, maxCols);
-      var r2 = Math.ceil(n / c2);
-      var blanks2 = c2 * r2 - n;
-      var grid = [];
-      for (var ri = 0; ri < r2; ri++) {
-        var rowA = [];
-        for (var ci = 0; ci < c2; ci++) rowA.push(ri * c2 + ci < n ? 1 : 0);
-        grid.push(rowA);
-      }
-      item.kind = 'grid'; item.cols = c2; item.rows = r2;
-      item.blankCells = blanks2; item.grid = grid;
-    }
-    items.push(item);
-  });
-  return items;
+// 防抖调度预览（参数连续输入时只在停顿后重绘一次）
+var previewTimer = null;
+function schedulePreview() {
+  if (previewTimer) clearTimeout(previewTimer);
+  previewTimer = setTimeout(function () { doPreview(); }, 180);
 }
 
-function renderPreview(items) {
+// 真实预览渲染：直接绘制合成后的精灵图缩略图（所见即所得）
+function renderPreviewReal(results) {
   var box = $('results');
-  if (!items.length) { box.innerHTML = '<div class="empty-tip">没有可预览的分组</div>'; return; }
-  var html = '<div class="res-title">布局预览 <span class="cnt">' + items.length + ' 个分组</span></div>';
-  html += '<div class="preview-list">';
-  items.forEach(function (it) {
-    var badge = it.blankCells === 0
+  if (!results.length) { box.innerHTML = '<div class="empty-tip">没有可预览的分组</div>'; return; }
+  var html = '<div class="res-title">布局预览 · 导出效果 <span class="cnt">' + results.length + ' 个分组 · 调整参数自动刷新</span></div>';
+  html += '<div class="preview-list preview-list-real">';
+  results.forEach(function (r) {
+    var badge = r.info.blankCells === 0
       ? '<span class="badge ok">0 空白</span>'
-      : '<span class="badge warn">' + it.blankCells + ' 空白格</span>';
-    html += '<div class="preview-card">';
-    html += '<div class="preview-head"><span class="gname" title="' + esc(it.name) + '">' + esc(applyRename(it.name)) + '</span>' +
-            '<span class="gmeta">' + it.frames + ' 帧 · ' + it.cols + '列 × ' + it.rows + '行</span>' + badge + '</div>';
-    html += '<div class="preview-body">';
-    if (it.kind === 'grid') {
-      html += miniGrid(it.grid, it.cols);
-    } else {
-      var lines = it.kind === 'action' ? it.dirs : it.acts;
-      var nameKey = it.kind === 'action' ? 'dir' : 'action';
-      html += '<div>';
-      lines.forEach(function (d) {
-        html += '<div class="dir-line"><span class="dname">' + esc(d[nameKey]) + '</span>' +
-                d.count + ' 帧 → ' + d.cols + '列 × ' + d.rows + '行</div>';
-      });
-      html += '</div>';
-    }
-    html += '</div></div>';
+      : '<span class="badge warn">' + r.info.blankCells + ' 空白格</span>';
+    var blockMeta = '';
+    if (r.info.animations) blockMeta = ' · ' + Object.keys(r.info.animations).length + ' 个方向块';
+    if (r.info.actions) blockMeta = ' · ' + Object.keys(r.info.actions).length + ' 个动作块';
+    html += '<div class="preview-card preview-card-real">';
+    html += '<div class="preview-head"><span class="gname" title="' + esc(r.outBase) + '">' + esc(r.outBase) + '.png</span>' +
+            '<span class="gmeta">' + r.info.frameCount + ' 帧' + blockMeta + '</span>' + badge + '</div>';
+    html += '<div class="preview-canvas"><img src="' + thumbDataUrl(r.canvas, 640) + '" alt="' + esc(r.outBase) + '"></div>';
+    html += '<div class="preview-meta">' + r.info.sheetWidth + ' × ' + r.info.sheetHeight + ' px · 宽 ' +
+            r.info.cols + ' 格 × ' + r.info.rows + ' 行' + (r.info.padding ? ' · 间距 ' + r.info.padding + 'px' : '') + '</div>';
+    html += '</div>';
   });
   html += '</div>';
   box.innerHTML = html;
 }
 
-function miniGrid(grid, cols) {
-  var html = '<div class="mini-grid" style="grid-template-columns:repeat(' + cols + ',12px)">';
-  grid.forEach(function (rowA) {
-    rowA.forEach(function (cell) {
-      html += cell ? '<div class="cell-fill"></div>' : '<div class="cell-empty"></div>';
-    });
-  });
-  return html + '</div>';
-}
-
 /* ============================================================
    生成（等价 generate_all）
    ============================================================ */
-async function doPreview() {
-  if (state.busy || !state.groups || !state.groups.size) return;
-  clearResults();
-  logLine('— 预览布局 —');
-  try {
-    var maxCols = parseInt($('max-cols').value, 10) || 5;
-    var mode = $('mode').value;
-    var optimize = $('opt-cols').checked;
-    var items = previewItems(state.groups, mode, maxCols, optimize);
-    renderPreview(items);
-    logLine('预览 ' + items.length + ' 个分组完成。', 'ln-ok');
-  } catch (e) {
-    logLine('预览失败：' + (e && e.message ? e.message : e), 'ln-err');
-  }
-}
-
-// 公共：生成全部精灵图（不输出），返回 [{key, canvas, info}]
-async function runGenerate() {
+/* ============================================================
+   生成（等价 generate_all）
+   ============================================================ */
+// 公共：按当前参数合成全部精灵图（不输出），返回 [{key, outBase, canvas, info}]
+async function buildAllSheets() {
   var maxCols = parseInt($('max-cols').value, 10) || 5;
   var mode = $('mode').value;
   var optimize = $('opt-cols').checked;
   var padding = parseInt($('padding').value, 10) || 0;
   var keys = Array.from(state.groups.keys()).sort();
   var results = [];
-  logLine('发现 ' + keys.length + ' 个分组');
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     var frames = state.groups.get(key);
     var built;
     if (mode === 'action') {
-      var dirFrames = new Map();
-      frames.forEach(function (f) { var d = f.direction || 'default'; if (!dirFrames.has(d)) dirFrames.set(d, []); dirFrames.get(d).push(f); });
-      built = await buildActionSheet(dirFrames, maxCols, optimize, padding);
+      var dirBlocks = framesToBlocks(frames, 'direction', function (ks) { return ks.slice().sort(dirSort); });
+      built = await buildBlockSheet(dirBlocks, maxCols, optimize, padding, 'direction');
     } else if (mode === 'direction') {
-      var actFrames = new Map();
-      frames.forEach(function (f) { var an = f.action || 'default'; if (!actFrames.has(an)) actFrames.set(an, []); actFrames.get(an).push(f); });
-      built = await buildDirectionSheet(actFrames, actionOrder, maxCols, optimize, padding);
+      var actBlocks = framesToBlocks(frames, 'action', mergeActionOrder);
+      built = await buildBlockSheet(actBlocks, maxCols, optimize, padding, 'action');
     } else {
       built = await buildSheet(frames, maxCols, optimize, padding);
     }
     var outBase = applyRename(key);
     built.info.image = outBase + '.png';
-    var status = built.info.blankCells === 0 ? '0 空白' : built.info.blankCells + ' 空白格';
-    var label = outBase === key ? key : key + ' → ' + outBase;
-    logLine('  ' + label + ': ' + built.info.frameCount + '帧 → ' + built.info.cols + '列×' + built.info.rows + '行, ' +
-            built.info.sheetWidth + '×' + built.info.sheetHeight + 'px, ' + status);
     results.push({ key: key, outBase: outBase, canvas: built.canvas, info: built.info });
   }
+  return results;
+}
+
+var previewSeq = 0;
+async function doPreview() {
+  if (state.busy || !state.groups || !state.groups.size) return;
+  var seq = ++previewSeq;
+  clearResults();
+  try {
+    var results = await buildAllSheets();
+    if (seq !== previewSeq) return; // 期间又触发了更新的预览，丢弃过期结果
+    renderPreviewReal(results);
+    logLine('预览已刷新：' + results.length + ' 个分组（缩略图即导出效果）。', 'ln-ok');
+  } catch (e) {
+    if (seq === previewSeq) logLine('预览失败：' + (e && e.message ? e.message : e), 'ln-err');
+  }
+}
+
+// 导出用：合成全部精灵图并输出分组日志
+async function runGenerate() {
+  var results = await buildAllSheets();
+  logLine('发现 ' + results.length + ' 个分组');
+  results.forEach(function (r) {
+    var status = r.info.blankCells === 0 ? '0 空白' : r.info.blankCells + ' 空白格';
+    var label = r.outBase === r.key ? r.key : r.key + ' → ' + r.outBase;
+    logLine('  ' + label + ': ' + r.info.frameCount + '帧 → ' +
+            r.info.sheetWidth + '×' + r.info.sheetHeight + 'px, ' + status);
+  });
   return results;
 }
 
@@ -1610,7 +1525,7 @@ function renderSheets(results, outDesc) {
     html += '<div class="sheet-thumb"><img src="' + thumbDataUrl(r.canvas) + '" alt="' + esc(ob) + '"></div>';
     html += '<div class="sheet-info">';
     html += '<div class="sheet-title">' + esc(ob) + '.png ' + badge + '</div>';
-    html += '<div class="sheet-meta">' + r.info.frameCount + ' 帧' + animMeta + ' · ' + r.info.cols + '列×' + r.info.rows + '行 · ' +
+    html += '<div class="sheet-meta">' + r.info.frameCount + ' 帧' + animMeta + ' · 宽' + r.info.cols + '格×' + r.info.rows + '行 · ' +
             '<b>' + r.info.sheetWidth + '×' + r.info.sheetHeight + '</b> px' +
             (r.info.padding ? ' · 间距 ' + r.info.padding : '') + '</div>';
     html += '<div class="sheet-actions">' +
@@ -1644,6 +1559,9 @@ $('dir-style').addEventListener('change', reparseAll);
 $('dir-aliases').addEventListener('input', reparseAll);
 // 词表就绪后再做首次重命名预览（避免初始化时序导致未定义调用）
 updateRenamePreview();
+// 合成参数变化时防抖实时刷新预览（所见即所得）
+['max-cols', 'padding'].forEach(function (id) { $(id).addEventListener('input', schedulePreview); });
+$('opt-cols').addEventListener('change', schedulePreview);
 
 if (!window.showDirectoryPicker) {
   logLine('提示：当前浏览器不支持直接选择文件夹，请用「选择文件或文件夹」输入、用「下载 ZIP 包」导出。建议使用 Chrome / Edge。', 'ln-warn');
