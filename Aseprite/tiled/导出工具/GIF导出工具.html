@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIF 导出工具</title>
+<style>
+  :root {
+    --border: #3b2f2f; --panel: #fff8ef; --accent: #e8783a; --accent-dark: #b85a24;
+    --text: #3b2f2f; --muted: #8a7a6a; --bg: #f2e8d8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: repeating-conic-gradient(var(--bg) 0% 25%, #efe4d2 0% 50%) 0 0 / 24px 24px;
+    color: var(--text); padding: 14px; min-height: 100vh;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+    padding: 11px 16px; background: var(--panel);
+    border: 3px solid var(--border); box-shadow: 4px 4px 0 rgba(59,47,47,.25);
+  }
+  header h1 { font-size: 20px; font-weight: 900; white-space: nowrap; }
+  header .sub { color: var(--muted); font-size: 12px; margin-right: auto; }
+  header select { width: 170px; }
+  .panel {
+    background: var(--panel); border: 3px solid var(--border);
+    box-shadow: 3px 3px 0 rgba(59,47,47,.22); padding: 12px; margin-bottom: 14px;
+  }
+  .panel h2 {
+    font-size: 13px; font-weight: 800; margin-bottom: 9px; padding-bottom: 6px;
+    border-bottom: 2px dashed var(--border); letter-spacing: 1px;
+  }
+  .layout { display: grid; grid-template-columns: 360px 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+  label.field { display: block; margin-bottom: 8px; font-size: 12px; }
+  label.field .lbl { display: block; margin-bottom: 3px; color: var(--muted); font-weight: 700; }
+  select, input[type=number], input[type=text] {
+    width: 100%; padding: 5px 8px; border: 2px solid var(--border); border-radius: 0;
+    background: #fff; font-size: 13px; color: var(--text); outline: none;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+  .btn {
+    padding: 7px 12px; border: 2px solid var(--border); border-radius: 0;
+    background: #fff; color: var(--text); font-size: 12px; font-weight: 700;
+    cursor: pointer; box-shadow: 2px 2px 0 rgba(59,47,47,.3);
+    transition: transform .05s, box-shadow .05s;
+  }
+  .btn:hover { background: #f0e4d2; }
+  .btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 rgba(59,47,47,.3); }
+  .btn:disabled { background: #d8ccbd; cursor: wait; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-sm { padding: 3px 8px; font-size: 11px; box-shadow: 1px 1px 0 rgba(59,47,47,.3); }
+  .btn-danger { color: #c0392b; }
+  /* 地图信息 */
+  .big { font-size: 22px; font-weight: 900; color: var(--accent-dark); margin: 2px 0; }
+  .dim { color: var(--muted); font-size: 12px; }
+  .anim-list { max-height: 80px; overflow: auto; margin-top: 4px; font-size: 11px; color: var(--muted); line-height: 1.6; }
+  /* 图层 */
+  .layer-list { max-height: 148px; overflow: auto; }
+  .layer-list label {
+    display: flex; align-items: center; gap: 7px; padding: 3px 2px;
+    font-size: 12px; cursor: pointer; border-bottom: 1px dashed #e5d9c6;
+  }
+  .layer-list input { width: 14px; height: 14px; accent-color: var(--accent); }
+  /* 导出设置（左列③） */
+  .radio-row { display: flex; gap: 6px; margin-bottom: 8px; }
+  .radio-row label {
+    flex: 1; text-align: center; padding: 5px 0; cursor: pointer;
+    border: 2px solid var(--border); font-size: 12px; font-weight: 700; background: #fff;
+  }
+  .radio-row input { display: none; }
+  .radio-row input:checked + span { color: #fff; background: var(--accent); }
+  .radio-row span { display: block; padding: 2px 0; }
+  .mini2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .out-hint { font-size: 11px; color: var(--muted); margin-top: 2px; word-break: break-all; }
+  .export-btn { width: 100%; padding: 11px 0; font-size: 15px; letter-spacing: 3px; margin-top: 6px; }
+  /* 导出列表（右列⑤） */
+  .task-bar { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+  .task-list { max-height: 180px; overflow: auto; }
+  .task-item {
+    display: flex; align-items: center; gap: 7px; padding: 6px 8px;
+    border: 2px solid var(--border); background: #fff; margin-bottom: 5px;
+    cursor: pointer; user-select: none;
+  }
+  .task-item.selected { border-color: var(--accent); background: #fdf0e0; box-shadow: inset 0 0 0 1px var(--accent); }
+  .task-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .task-item .tinfo { flex: 1; min-width: 0; }
+  .task-item .tname { font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  .task-item .tag { font-size: 10px; padding: 1px 4px; border: 1px solid var(--border); background: #f2e8d8; font-weight: 700; white-space: nowrap; }
+  .task-item .tout { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .task-item .tstate { font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .tstate.ok { color: #2e7d32; } .tstate.fail { color: #c0392b; }
+  #resultList { font-size: 11px; line-height: 1.7; max-height: 110px; overflow: auto; margin-top: 8px; border-top: 2px dashed #e5d9c6; padding-top: 6px; }
+  /* 预览 */
+  #previewArea {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    min-height: 280px; justify-content: center; padding: 6px;
+  }
+  #previewImg {
+    max-width: 100%; max-height: 360px; image-rendering: pixelated;
+    border: 2px solid var(--border);
+    background: repeating-conic-gradient(#fff 0% 25%, #f0e8da 0% 50%) 0 0 / 16px 16px;
+  }
+  .placeholder { color: var(--muted); font-size: 12px; text-align: center; }
+  .preview-btns { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
+  #previewStatus { min-height: 16px; font-size: 12px; text-align: center; }
+  .loading { color: var(--accent-dark); font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🖼 GIF 导出工具</h1>
+    <span class="sub">自动算帧数 · 多任务导出 · 自动预览</span>
+    <label class="field" style="margin:0">
+      <span class="lbl" style="display:none">地图</span>
+      <select id="mapSel"></select>
+    </label>
+  </header>
+
+  <div class="layout">
+    <!-- ===== 左列：① 选择地图 ② 图层 ③ 导出设置 ===== -->
+    <div>
+      <div class="panel">
+        <h2>① 选择地图</h2>
+        <div id="animCard"><div class="dim">加载中…</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>② 图层（勾选显示）</h2>
+        <div id="layerList" class="layer-list"><div class="dim">加载中…</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>③ 导出设置</h2>
+        <div id="editArea"><div class="placeholder">请先在右侧导出列表选择任务</div></div>
+        <button class="btn btn-primary export-btn" id="exportBtn">开 始 导 出</button>
+        <div id="loading" class="loading" style="display:none;text-align:center;margin-top:6px">导出中，请稍候…</div>
+      </div>
+    </div>
+
+    <!-- ===== 右列：④ 预览 ⑤ 导出列表 ===== -->
+    <div>
+      <div class="panel">
+        <h2>④ 预览（第 0 帧 · 改动自动刷新）</h2>
+        <div class="preview-btns">
+          <button class="btn btn-sm" id="btnStatic">手动刷新</button>
+        </div>
+        <div id="previewArea">
+          <div class="placeholder" id="placeholder">选择地图后自动预览</div>
+          <img id="previewImg" alt="预览" style="display:none">
+        </div>
+        <div id="previewStatus" class="dim"></div>
+      </div>
+
+      <div class="panel">
+        <h2>⑤ 导出列表</h2>
+        <div class="task-bar">
+          <button class="btn btn-sm" id="addThree">＋ 三件套</button>
+          <button class="btn btn-sm" id="addTask">＋ 自定义</button>
+          <span style="flex:1"></span>
+          <button class="btn btn-sm btn-danger" id="delTask">✕ 删除选中</button>
+        </div>
+        <div class="task-list" id="taskList">
+          <div class="placeholder">还没有任务，点上面的按钮添加</div>
+        </div>
+        <div id="resultList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const mapSel = $("mapSel"), animCard = $("animCard"), layerList = $("layerList");
+const taskList = $("taskList"), editArea = $("editArea");
+const previewImg = $("previewImg"), placeholder = $("placeholder"), previewStatus = $("previewStatus");
+const exportBtn = $("exportBtn"), loading = $("loading"), resultList = $("resultList");
+
+let mapName = "", mapInfo = null;
+let tasks = [], selectedId = null, uidSeed = 1;
+
+const hiddenLayers = () => [...document.querySelectorAll("#layerList input:not(:checked)")].map(i => parseInt(i.dataset.idx));
+const selTask = () => tasks.find(t => t.id === selectedId);
+const selBg = () => { const t = selTask(); return t ? t.bg : "lightblue"; };
+
+// ---------- 输出文件名（与后端一致） ----------
+function outFileName(t) {
+  const stem = t.out_stem || (t.mode === "gif" ? "动画" : "单帧");
+  return `${mapName}_${stem}.${t.mode === "gif" ? "gif" : "png"}`;
+}
+
+// ---------- 任务 ----------
+function newTask(kind) {
+  const base = { id: "t" + (uidSeed++), name: "新任务", mode: "gif", frames: 0,
+                 frame_ms: 100, scale: 4, bg: "lightblue", out_stem: "", enabled: true };
+  if (kind === "big")   return { ...base, name: "大图", scale: 4, mode: "gif", out_stem: "大图" };
+  if (kind === "small") return { ...base, name: "小图", scale: 1, mode: "gif", out_stem: "小图" };
+  if (kind === "png")   return { ...base, name: "静态", scale: 4, mode: "png", out_stem: "静态" };
+  return base;
+}
+$("addThree").addEventListener("click", () => {
+  tasks.push(newTask("big"), newTask("small"), newTask("png"));
+  renderTasks(); selectTask(tasks[0].id);
+});
+$("addTask").addEventListener("click", () => {
+  tasks.push(newTask("custom")); renderTasks(); selectTask(tasks[tasks.length - 1].id);
+});
+$("delTask").addEventListener("click", () => {
+  if (!selectedId) return;
+  tasks = tasks.filter(x => x.id !== selectedId);
+  selectedId = null; renderTasks(); renderEdit();
+});
+
+function renderTasks() {
+  taskList.innerHTML = "";
+  tasks.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "task-item" + (t.id === selectedId ? " selected" : "");
+    const state = t.state ? (t.state.ok
+      ? `<span class="tstate ok">✓ ${t.state.frames > 1 ? t.state.frames + "帧" : "PNG"}</span>`
+      : `<span class="tstate fail">✕</span>`) : "";
+    div.innerHTML = `
+      <input type="checkbox" ${t.enabled ? "checked" : ""} data-id="${t.id}">
+      <div class="tinfo">
+        <div class="tname">${t.name} <span class="tag">${t.mode === "gif" ? "GIF" : "PNG"} ${t.scale}x</span></div>
+        <div class="tout">${outFileName(t)}</div>
+      </div>
+      ${state}
+      <button class="btn btn-sm btn-danger" data-del="${t.id}">✕</button>`;
+    div.querySelector("input").addEventListener("change", e => {
+      tasks.find(x => x.id === e.target.dataset.id).enabled = e.target.checked;
+    });
+    div.querySelector("[data-del]").addEventListener("click", e => {
+      e.stopPropagation();
+      tasks = tasks.filter(x => x.id !== e.target.dataset.del);
+      if (selectedId === e.target.dataset.del) { selectedId = null; renderEdit(); }
+      renderTasks();
+    });
+    div.addEventListener("click", () => selectTask(t.id));
+    taskList.appendChild(div);
+  });
+  if (!tasks.length) taskList.innerHTML = '<div class="placeholder">还没有任务，点上面的按钮添加</div>';
+}
+
+function selectTask(id) { selectedId = id; renderTasks(); renderEdit(); refreshAll(); }
+
+// ---------- ③ 导出设置（选中任务的参数） ----------
+function renderEdit() {
+  const t = selTask();
+  if (!t) { editArea.innerHTML = '<div class="placeholder">请先在右侧导出列表选择任务</div>'; return; }
+  const auto = t.frames === 0;
+  editArea.innerHTML = `
+    <div class="mini2">
+      <label class="field"><span class="lbl">任务名</span>
+        <input type="text" id="eName" value="${t.name}"></label>
+      <label class="field"><span class="lbl">输出名（留空自动）</span>
+        <input type="text" id="eOut" value="${t.out_stem}" placeholder="自动"></label>
+    </div>
+    <div class="out-hint">输出文件：<b>${outFileName(t)}</b></div>
+    <div class="radio-row" style="margin-top:8px">
+      <label><input type="radio" name="eMode" value="gif" ${t.mode === "gif" ? "checked" : ""}><span>动画 GIF</span></label>
+      <label><input type="radio" name="eMode" value="png" ${t.mode === "png" ? "checked" : ""}><span>单帧 PNG</span></label>
+    </div>
+    <div class="mini2" id="eGifRow">
+      <label class="field"><span class="lbl">帧数</span>
+        <select id="eFramesMode">
+          <option value="auto" ${auto ? "selected" : ""}>自动（${mapInfo ? mapInfo.auto_frames : "?"}帧）</option>
+          <option value="manual" ${!auto ? "selected" : ""}>手动指定</option>
+        </select></label>
+      <label class="field"><span class="lbl">帧间隔 ms</span>
+        <input type="number" id="eMs" value="${t.frame_ms}" min="10" step="10"></label>
+    </div>
+    <div id="eManualWrap" style="display:${(!auto && t.mode === "gif") ? "" : "none"}">
+      <label class="field"><span class="lbl">手动帧数</span>
+        <input type="number" id="eFrames" value="${t.frames || 56}" min="1" step="1"></label>
+    </div>
+    <div class="mini2">
+      <label class="field"><span class="lbl">背景色</span>
+        <select id="eBg">
+          <option value="lightblue" ${t.bg === "lightblue" ? "selected" : ""}>浅蓝（商店规格）</option>
+          <option value="white" ${t.bg === "white" ? "selected" : ""}>纯白</option>
+          <option value="transparent" ${t.bg === "transparent" ? "selected" : ""}>透明</option>
+        </select></label>
+      <label class="field"><span class="lbl">缩放倍数</span>
+        <select id="eScale">${[1,2,3,4,6,8].map(s => `<option value="${s}" ${t.scale === s ? "selected" : ""}>${s}x</option>`).join("")}</select></label>
+    </div>`;
+  const sync = () => {
+    const tk = selTask(); if (!tk) return;
+    tk.name = $("eName").value || "未命名";
+    tk.out_stem = $("eOut").value.trim();
+    tk.mode = document.querySelector("input[name=eMode]:checked").value;
+    tk.frame_ms = parseInt($("eMs").value) || 100;
+    tk.scale = parseInt($("eScale").value) || 1;
+    tk.bg = $("eBg").value;
+    const autoMode = $("eFramesMode").value === "auto";
+    tk.frames = autoMode ? 0 : (parseInt($("eFrames").value) || 56);
+    $("eManualWrap").style.display = (tk.mode === "gif" && !autoMode) ? "" : "none";
+    $("eGifRow").style.display = tk.mode === "gif" ? "" : "none";
+    renderTasks(); refreshAll();
+  };
+  ["eName","eOut","eMs","eScale","eBg","eFramesMode","eFrames"].forEach(id => $(id).addEventListener("change", sync));
+  document.querySelectorAll("input[name=eMode]").forEach(r => r.addEventListener("change", sync));
+  if (t.mode !== "gif") $("eGifRow").style.display = "none";
+}
+
+// ---------- 地图 ----------
+fetch("/api/maps").then(r => r.json()).then(d => {
+  mapSel.innerHTML = d.maps.map(m => `<option>${m}</option>`).join("");
+  if (d.maps.length) {
+    loadInfo(d.maps[0]);
+    // 三件套默认启用（打开即有三件套任务）
+    if (!tasks.length) { tasks.push(newTask("big"), newTask("small"), newTask("png")); }
+    renderTasks(); selectTask(tasks[0].id);
+  }
+});
+mapSel.addEventListener("change", () => { loadInfo(mapSel.value); refreshAll(); renderTasks(); });
+
+function loadInfo(name) {
+  mapName = name;
+  animCard.innerHTML = '<div class="dim">加载中…</div>';
+  layerList.innerHTML = '<div class="dim">加载中…</div>';
+  fetch("/api/info?map=" + encodeURIComponent(name)).then(r => r.json()).then(info => {
+    mapInfo = info;
+    let html = `<div class="dim">${info.map_w}×${info.map_h} 格 · 瓦片 ${info.tile_w}×${info.tile_h}</div>`;
+    if (info.animations.length) {
+      html += `<div class="big">${info.auto_frames} 帧</div>`;
+      html += `<div class="dim">自动循环 ≈ ${(info.auto_frames * 0.1).toFixed(1)}s（100ms/帧）</div>`;
+      html += `<div class="anim-list">${info.animations.length} 个动画：<br>` +
+        info.animations.slice(0, 12).map(a => `· ${a.tileset} 瓦片${a.tile}：${a.frames}帧×${a.duration}ms`).join("<br>") + `</div>`;
+    } else {
+      html += `<div class="dim">无动画，导出单帧即可</div>`;
+    }
+    animCard.innerHTML = html;
+    layerList.innerHTML = "";
+    info.layers.forEach(l => {
+      const div = document.createElement("label");
+      const tag = l.type === "object" ? '<span class="tag" style="font-size:9px;padding:0 3px;border:1px solid #3b2f2f;background:#f2e8d8">对象</span>' : "";
+      div.innerHTML = `<input type="checkbox" checked data-idx="${l.index}"><span>${l.name}</span>${tag}`;
+      div.querySelector("input").addEventListener("change", refreshAll);
+      layerList.appendChild(div);
+    });
+  });
+}
+
+// ---------- 预览（第 0 帧 · 改动自动刷新） ----------
+let autoTimer = null;
+function refreshAll() {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(refreshStatic, 500);
+}
+
+function refreshStatic() {
+  if (!mapName) return;
+  fetch(`/api/preview?map=${encodeURIComponent(mapName)}&frame=0&scale=2&bg=${selBg()}&hidden=${encodeURIComponent(hiddenLayers().join(","))}`)
+    .then(r => r.blob()).then(b => {
+      placeholder.style.display = "none";
+      previewImg.src = URL.createObjectURL(b);
+      previewImg.style.display = "block";
+      previewStatus.textContent = "第 0 帧预览（自动尺寸，≤512px）";
+    }).catch(() => previewStatus.textContent = "预览失败");
+}
+$("btnStatic").addEventListener("click", refreshStatic);
+
+// ---------- 批量导出 ----------
+exportBtn.addEventListener("click", () => {
+  const active = tasks.filter(t => t.enabled);
+  if (!mapName || !active.length) { resultList.innerHTML = '<span class="fail">请先添加并勾选任务</span>'; return; }
+  resultList.innerHTML = "";
+  tasks.forEach(t => delete t.state);
+  renderTasks();
+  loading.style.display = "block"; exportBtn.disabled = true;
+  fetch("/api/export-batch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ map: mapName, tasks: active }),
+  }).then(r => r.json()).then(d => {
+    loading.style.display = "none"; exportBtn.disabled = false;
+    const rows = (d.results || []).map((r, i) => {
+      const t = active[i]; const fname = outFileName(t);
+      if (!r.ok) {
+        if (t) t.state = { ok: false };
+        return `<div class="fail">✕ ${fname}：${r.error}</div>`;
+      }
+      if (t) t.state = { ok: true, frames: r.frames };
+      const extra = r.frames > 1 ? `（${r.frames}帧 · ${r.seconds}s）` : "";
+      return `<div class="ok">✓ ${fname} ${extra}<br><span class="dim">&nbsp;&nbsp;${r.path}</span></div>`;
+    }).join("");
+    renderTasks();
+    resultList.innerHTML = rows || '<span class="dim">没有导出的任务</span>';
+  }).catch(e => {
+    loading.style.display = "none"; exportBtn.disabled = false;
+    resultList.innerHTML = `<span class="fail">请求失败：${e}</span>`;
+  });
+});
+</script>
+</body>
+</html>
