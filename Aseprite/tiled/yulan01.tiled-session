@@ -1,5 +1,5 @@
 {
-    "activeFile": "预览02.tmx",
+    "activeFile": "预览01.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -171,7 +171,8 @@
             "scaleInEditor": 3
         },
         "soil_texture_01.tsj": {
-            "dynamicWrapping": false
+            "dynamicWrapping": false,
+            "scaleInDock": 1
         },
         "stone_01.tsj": {
             "dynamicWrapping": true,
@@ -214,11 +215,11 @@
                 12,
                 13
             ],
-            "scale": 1.5,
+            "scale": 3,
             "selectedLayer": 12,
             "viewCenter": {
-                "x": 184,
-                "y": 151.99999999999997
+                "x": 162.5,
+                "y": 138.66666666666666
             }
         },
         "预览02.tmx": {
@@ -246,8 +247,8 @@
     "recentFiles": [
         "map01.tmx",
         "map01_预览.tmx",
-        "预览01.tmx",
         "预览02.tmx",
+        "预览01.tmx",
         "girl_run.tsj",
         "girl_walk.tsj",
         "girl_idle.tsj",
