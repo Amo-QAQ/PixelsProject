@@ -4,9 +4,11 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 
 TILED_DIR = r"E:\My_work\PixelsProject\Aseprite\tiled"
+OUTPUT_DIR = os.path.join(TILED_DIR, "GIF")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 TMX_PATH = os.path.join(TILED_DIR, "预览01.tmx")
-OUTPUT_GIF = os.path.join(TILED_DIR, "预览01.gif")
-OUTPUT_GIF_SMALL = os.path.join(TILED_DIR, "预览01_小.gif")
+OUTPUT_GIF = os.path.join(OUTPUT_DIR, "预览01.gif")
+OUTPUT_GIF_SMALL = os.path.join(OUTPUT_DIR, "预览01_小.gif")
 
 tree = ET.parse(TMX_PATH)
 root = tree.getroot()
@@ -250,7 +252,7 @@ small_frames[0].save(
 print(f"Saved: {OUTPUT_GIF_SMALL}")
 
 # Save static PNG (4x)
-static_png = os.path.join(TILED_DIR, "预览01.png")
+static_png = os.path.join(OUTPUT_DIR, "预览01.png")
 frames[0].save(static_png)
 print(f"Saved: {static_png}")
 print("Done!")

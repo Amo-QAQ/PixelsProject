@@ -5,11 +5,13 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 
 TILED_DIR = r"E:\My_work\PixelsProject\Aseprite\tiled"
+OUTPUT_DIR = os.path.join(TILED_DIR, "GIF")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 TMX_PATH = os.path.join(TILED_DIR, "map01_预览.tmx")
-OUTPUT_GIF = os.path.join(TILED_DIR, "map01_预览.gif")
-OUTPUT_GIF_SMALL = os.path.join(TILED_DIR, "map01_预览_小.gif")
+OUTPUT_GIF = os.path.join(OUTPUT_DIR, "map01_预览.gif")
+OUTPUT_GIF_SMALL = os.path.join(OUTPUT_DIR, "map01_预览_小.gif")
 TITLE_PATH = r"E:\My_work\PixelsProject\Aseprite\备份\标题.png"
-OUT_STATIC = os.path.join(TILED_DIR, "map01_预览.png")
+OUT_STATIC = os.path.join(OUTPUT_DIR, "map01_预览.png")
 
 # Title placement (matching the old export):
 # 4x big frame: title block was at (28,28)-(977,524) in 1792x1472, height 497.

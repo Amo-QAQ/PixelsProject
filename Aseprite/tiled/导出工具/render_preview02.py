@@ -5,10 +5,12 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 
 TILED_DIR = r"E:\My_work\PixelsProject\Aseprite\tiled"
+OUTPUT_DIR = os.path.join(TILED_DIR, "GIF")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 TMX_PATH = os.path.join(TILED_DIR, "预览02.tmx")
-OUTPUT_GIF = os.path.join(TILED_DIR, "预览02.gif")
-OUTPUT_GIF_SMALL = os.path.join(TILED_DIR, "预览02_小.gif")
-OUTPUT_PNG = os.path.join(TILED_DIR, "预览02.png")
+OUTPUT_GIF = os.path.join(OUTPUT_DIR, "预览02.gif")
+OUTPUT_GIF_SMALL = os.path.join(OUTPUT_DIR, "预览02_小.gif")
+OUTPUT_PNG = os.path.join(OUTPUT_DIR, "预览02.png")
 
 tree = ET.parse(TMX_PATH)
 root = tree.getroot()
@@ -167,9 +169,15 @@ def render_frame(anim_frame=0):
                 tile_img = get_tile_image(ts_idx, local_id, anim_frame)
                 if tile_img:
                     px = col_idx * TILE_W
-                    # Spritesheet tiles (16x16 terrain, 48x48 chars): top-left aligned on grid cell (Tiled default)
-                    py = row_idx * TILE_H
-                    canvas.paste(tile_img, (px, py), tile_img)
+                    # Tiled renders tile-layer tiles bottom-aligned to the grid cell:
+                    # py = row*TILE_H + TILE_H - tile_h (top-left only when tile_h == TILE_H).
+                    py = row_idx * TILE_H + TILE_H - tile_img.height
+                    # Composite per tile with proper alpha blending so that
+                    # semi-transparent overlaps between tiles (e.g. characters
+                    # in the same layer) match Tiled/Qt exactly.
+                    overlay = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+                    overlay.paste(tile_img, (px, py))
+                    canvas = Image.alpha_composite(canvas, overlay)
     return canvas
 
 SCALE = 4
