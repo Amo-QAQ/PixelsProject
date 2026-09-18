@@ -32,8 +32,13 @@
     font-size: 13px; font-weight: 800; margin-bottom: 9px; padding-bottom: 6px;
     border-bottom: 2px dashed var(--border); letter-spacing: 1px;
   }
-  .layout { display: grid; grid-template-columns: 360px 1fr; gap: 14px; align-items: start; }
-  @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+  .layout { display: grid; grid-template-columns: 360px 1fr; grid-template-rows: auto auto auto; gap: 14px; align-items: stretch; }
+  .p1 { grid-column: 1; grid-row: 1; }
+  .p2 { grid-column: 1; grid-row: 2; }
+  .p3 { grid-column: 1; grid-row: 3; }
+  .p4 { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; }
+  .p5 { grid-column: 2; grid-row: 3; display: flex; flex-direction: column; }
+  @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } .p1,.p2,.p3,.p4,.p5 { grid-column: auto; grid-row: auto; } }
   label.field { display: block; margin-bottom: 8px; font-size: 12px; }
   label.field .lbl { display: block; margin-bottom: 3px; color: var(--muted); font-weight: 700; }
   select, input[type=number], input[type=text] {
@@ -79,7 +84,7 @@
   .export-btn { width: 100%; padding: 11px 0; font-size: 15px; letter-spacing: 3px; margin-top: 6px; }
   /* 导出列表（右列⑤） */
   .task-bar { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
-  .task-list { max-height: 180px; overflow: auto; }
+  .task-list { max-height: 320px; overflow: auto; flex: 1; }
   .task-item {
     display: flex; align-items: center; gap: 7px; padding: 6px 8px;
     border: 2px solid var(--border); background: #fff; margin-bottom: 5px;
@@ -97,7 +102,7 @@
   /* 预览 */
   #previewArea {
     display: flex; flex-direction: column; align-items: center; gap: 8px;
-    min-height: 280px; justify-content: center; padding: 6px;
+    min-height: 280px; flex: 1; justify-content: center; padding: 6px;
   }
   #previewImg {
     max-width: 100%; max-height: 360px; image-rendering: pixelated;
@@ -105,6 +110,9 @@
     background: repeating-conic-gradient(#fff 0% 25%, #f0e8da 0% 50%) 0 0 / 16px 16px;
   }
   .placeholder { color: var(--muted); font-size: 12px; text-align: center; }
+  .dir-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .dir-row input { flex: 1; min-width: 0; }
+  .dir-info { font-size: 11px; color: var(--muted); word-break: break-all; margin-bottom: 6px; }
   .preview-btns { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
   #previewStatus { min-height: 16px; font-size: 12px; text-align: center; }
   .loading { color: var(--accent-dark); font-weight: 800; }
@@ -122,60 +130,71 @@
   </header>
 
   <div class="layout">
-    <!-- ===== 左列：① 选择地图 ② 图层 ③ 导出设置 ===== -->
-    <div>
-      <div class="panel">
-        <h2>① 选择地图</h2>
-        <div id="animCard"><div class="dim">加载中…</div></div>
+    <!-- 左列：① 选择地图 ② 图层 ③ 导出设置；右列：④ 预览（跨①②两行）⑤ 导出列表（与③对齐） -->
+    <div class="panel p1">
+      <h2>① 选择地图</h2>
+      <div class="dir-row">
+        <input id="dirInput" type="text" placeholder="地图文件夹路径（含 .tmx）" />
+        <button id="dirBtn" type="button">切换</button>
       </div>
-
-      <div class="panel">
-        <h2>② 图层（勾选显示）</h2>
-        <div id="layerList" class="layer-list"><div class="dim">加载中…</div></div>
-      </div>
-
-      <div class="panel">
-        <h2>③ 导出设置</h2>
-        <div id="editArea"><div class="placeholder">请先在右侧导出列表选择任务</div></div>
-        <button class="btn btn-primary export-btn" id="exportBtn">开 始 导 出</button>
-        <div id="loading" class="loading" style="display:none;text-align:center;margin-top:6px">导出中，请稍候…</div>
-      </div>
+      <div id="dirInfo" class="dir-info"></div>
+      <div id="animCard"><div class="dim">加载中…</div></div>
     </div>
 
-    <!-- ===== 右列：④ 预览 ⑤ 导出列表 ===== -->
-    <div>
-      <div class="panel">
-        <h2>④ 预览（第 0 帧 · 改动自动刷新）</h2>
-        <div class="preview-btns">
-          <button class="btn btn-sm" id="btnStatic">手动刷新</button>
-        </div>
-        <div id="previewArea">
-          <div class="placeholder" id="placeholder">选择地图后自动预览</div>
-          <img id="previewImg" alt="预览" style="display:none">
-        </div>
-        <div id="previewStatus" class="dim"></div>
-      </div>
+    <div class="panel p2">
+      <h2>② 图层（勾选显示）</h2>
+      <div id="layerList" class="layer-list"><div class="dim">加载中…</div></div>
+    </div>
 
-      <div class="panel">
-        <h2>⑤ 导出列表</h2>
-        <div class="task-bar">
-          <button class="btn btn-sm" id="addThree">＋ 三件套</button>
-          <button class="btn btn-sm" id="addTask">＋ 自定义</button>
-          <span style="flex:1"></span>
-          <button class="btn btn-sm btn-danger" id="delTask">✕ 删除选中</button>
-        </div>
-        <div class="task-list" id="taskList">
-          <div class="placeholder">还没有任务，点上面的按钮添加</div>
-        </div>
-        <div id="resultList"></div>
+    <div class="panel p3">
+      <h2>③ 导出设置</h2>
+      <div id="editArea"><div class="placeholder">请先在右侧导出列表选择任务</div></div>
+      <button class="btn btn-primary export-btn" id="exportBtn">开 始 导 出</button>
+      <div id="loading" class="loading" style="display:none;text-align:center;margin-top:6px">导出中，请稍候…</div>
+    </div>
+
+    <div class="panel p4">
+      <h2>④ 预览（第 0 帧 · 改动自动刷新）</h2>
+      <div class="preview-btns">
+        <button class="btn btn-sm" id="btnStatic">手动刷新</button>
       </div>
+      <div id="previewArea">
+        <div class="placeholder" id="placeholder">选择地图后自动预览</div>
+        <img id="previewImg" alt="预览" style="display:none">
+      </div>
+      <div id="previewStatus" class="dim"></div>
+    </div>
+
+    <div class="panel p5">
+      <h2>⑤ 导出列表</h2>
+      <div class="task-bar">
+        <button class="btn btn-sm" id="addThree">＋ 三件套</button>
+        <button class="btn btn-sm" id="addTask">＋ 自定义</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-sm btn-danger" id="delTask">✕ 删除选中</button>
+      </div>
+      <div class="task-list" id="taskList">
+        <div class="placeholder">还没有任务，点上面的按钮添加</div>
+      </div>
+      <div id="resultList"></div>
     </div>
   </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+// ---- 防呆：必须通过 http://127.0.0.1:8765 访问（file:// 打开时所有接口都会失败） ----
+if (location.protocol !== "http:" && location.protocol !== "https:") {
+  document.body.innerHTML =
+    '<div style="padding:40px;font-family:sans-serif;line-height:2">' +
+    '<h2>请不要直接双击打开本文件</h2>' +
+    '<p>请先双击 <b>启动GIF工具.bat</b>，再使用它自动打开的网页（http://127.0.0.1:8765）。</p>' +
+    '<p>直接以文件方式打开时，工具无法连接后端服务。</p></div>';
+  throw new Error("file:// 打开，已阻止");
+}
+
 const mapSel = $("mapSel"), animCard = $("animCard"), layerList = $("layerList");
+const dirInput = $("dirInput"), dirBtn = $("dirBtn"), dirInfo = $("dirInfo");
 const taskList = $("taskList"), editArea = $("editArea");
 const previewImg = $("previewImg"), placeholder = $("placeholder"), previewStatus = $("previewStatus");
 const exportBtn = $("exportBtn"), loading = $("loading"), resultList = $("resultList");
@@ -309,6 +328,8 @@ function renderEdit() {
 
 // ---------- 地图 ----------
 fetch("/api/maps").then(r => r.json()).then(d => {
+  dirInfo.textContent = "当前目录：" + (d.dir || "");
+  dirInput.value = d.dir || "";
   mapSel.innerHTML = d.maps.map(m => `<option>${m}</option>`).join("");
   if (d.maps.length) {
     loadInfo(d.maps[0]);
@@ -317,6 +338,32 @@ fetch("/api/maps").then(r => r.json()).then(d => {
     renderTasks(); selectTask(tasks[0].id);
   }
 });
+dirBtn.onclick = () => {
+  const path = dirInput.value.trim();
+  if (!path) { dirInfo.textContent = "请输入文件夹路径"; return; }
+  dirBtn.disabled = true; dirInfo.textContent = "切换中…";
+  fetch("/api/set-dir", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({path})})
+    .then(r => r.json())
+    .then(d => {
+      dirBtn.disabled = false;
+      if (d.ok) {
+        dirInfo.textContent = "已切换：" + d.dir + "（" + d.tmx_count + " 个地图）";
+        dirInput.value = d.dir;
+        mapSel.innerHTML = d.maps.map(m => `<option>${m}</option>`).join("");
+        if (d.maps.length) {
+          loadInfo(d.maps[0]);
+          if (!tasks.length) { tasks.push(newTask("big"), newTask("small"), newTask("png")); }
+          renderTasks(); selectTask(tasks[0].id);
+        } else {
+          animCard.innerHTML = '<div class="dim">该文件夹没有 .tmx 地图</div>';
+          layerList.innerHTML = ""; renderTasks();
+        }
+      } else {
+        dirInfo.textContent = "切换失败：" + (d.error || "未知错误");
+      }
+    })
+    .catch(e => { dirBtn.disabled = false; dirInfo.textContent = "切换失败：" + e; });
+};
 mapSel.addEventListener("change", () => { loadInfo(mapSel.value); refreshAll(); renderTasks(); });
 
 function loadInfo(name) {

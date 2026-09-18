@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="16" height="6" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="14">
+ <tileset firstgid="1" source="soil_island.tsj"/>
+ <tileset firstgid="46" source="grass_01.tsj"/>
+ <tileset firstgid="121" source="soil_field.tsj"/>
+ <tileset firstgid="171" source="grass_01_island.tsj"/>
+ <tileset firstgid="196" source="soil.tsj"/>
+ <tileset firstgid="261" source="soil_shadow.tsj"/>
+ <tileset firstgid="326" source="box.tsj"/>
+ <tileset firstgid="329" source="soil_texture_01.tsj"/>
+ <tileset firstgid="344" source="girl_hoe.tsj"/>
+ <tileset firstgid="376" source="fence.tsj"/>
+ <tileset firstgid="396" source="Crops.tsj"/>
+ <tileset firstgid="428" source="soil_field_watering.tsj"/>
+ <tileset firstgid="478" source="stone_01.tsj"/>
+ <tileset firstgid="515" source="grass_decoration.tsj"/>
+ <layer id="1" name="tu" width="16" height="6">
+  <data encoding="csv">
+261,262,263,11,11,11,11,11,11,11,11,11,11,11,11,11,
+274,275,276,121,122,122,122,122,122,123,11,11,287,274,275,11,
+11,275,276,131,132,132,132,132,132,146,122,122,123,287,288,11,
+11,288,289,141,142,142,137,132,132,132,132,132,146,123,210,210,
+11,11,303,151,152,153,141,142,142,142,137,132,132,146,122,122,
+0,0,0,0,210,210,210,210,210,210,141,142,142,142,142,142
+</data>
+ </layer>
+ <layer id="7" name="jiaoshui" width="16" height="6">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,428,430,0,432,460,0,0,0,0,0,0,0,0,
+0,0,0,448,450,0,451,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="2" name="cao" width="16" height="6">
+  <data encoding="csv">
+0,65,77,77,77,77,77,77,77,77,67,177,177,177,62,177,
+47,83,0,0,0,0,0,0,0,0,76,77,77,77,67,177,
+62,63,0,0,0,0,0,0,0,0,0,0,0,0,61,177,
+62,63,0,0,0,0,0,0,0,0,0,0,0,0,181,182,
+62,81,47,47,47,173,0,0,0,0,0,0,0,0,0,0,
+62,62,62,62,62,81,47,47,47,48,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="8" name="zhuangshi" width="16" height="6">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,545,0,0,0,544,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,518,0,0,0,
+544,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+524,0,0,0,0,0,0,0,0,0,0,0,0,0,535,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,515,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="6" name="zuowu" width="16" height="6">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,417,0,419,416,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,417,0,0,0,416,0,417,0,0,0,
+0,0,0,0,0,0,0,0,419,0,0,417,0,419,416,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="3" name="daoju" width="16" height="6">
+  <data encoding="csv">
+0,0,376,377,378,376,377,378,0,0,0,0,0,0,0,0,
+481,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,508,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,326,488,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,394,376,377,378,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="4" name="juese" width="16" height="6">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,417,0,0,0,0,0,0,0,
+0,0,0,0,352,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,416,0,0,0,0,360,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,344,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="5" name="zhiwu">
+  <object id="3" gid="481" x="164.667" y="27" width="32" height="32"/>
+  <object id="4" gid="498" x="211.333" y="24.3333" width="32" height="48"/>
+  <object id="5" gid="500" x="236.667" y="34.3333" width="16" height="32"/>
+  <object id="7" gid="499" x="243.333" y="24.6667" width="16" height="48"/>
+  <object id="9" gid="494" x="8.5" y="52" width="16" height="16"/>
+  <object id="10" gid="496" x="24" y="93.5" width="16" height="16"/>
+  <object id="11" gid="493" x="15" y="84" width="16" height="16"/>
+  <object id="13" gid="495" x="2.5" y="89.5" width="16" height="16"/>
+ </objectgroup>
+</map>

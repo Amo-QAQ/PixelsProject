@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="16" height="6" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="50">
+ <tileset firstgid="1" source="grass_01_island.tsj"/>
+ <tileset firstgid="26" source="stone_01.tsj"/>
+ <tileset firstgid="67" source="girl_chop.tsj"/>
+ <tileset firstgid="99" source="grass_02.tsj"/>
+ <tileset firstgid="174" source="grass_02_shadow.tsj"/>
+ <tileset firstgid="224" source="grass_01_shadow.tsj"/>
+ <tileset firstgid="274" source="grass_decoration.tsj"/>
+ <layer id="1" name="cao" width="16" height="6">
+  <data encoding="csv">
+224,225,225,225,225,7,7,7,7,7,7,7,7,7,7,7,
+234,235,235,235,7,7,7,7,7,7,7,7,7,7,7,7,
+234,235,235,7,7,7,7,7,7,7,7,7,7,7,7,7,
+234,235,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+7,7,7,7,7,7,7,7,7,7,235,235,235,235,236,7,
+7,7,7,7,7,7,7,7,7,245,245,245,245,245,246,7
+</data>
+ </layer>
+ <layer id="7" name="图块层 4" width="16" height="6">
+  <data encoding="csv">
+0,0,0,114,115,184,185,185,186,115,115,184,185,185,185,185,
+100,100,100,135,174,200,185,185,199,175,175,200,189,195,195,195,
+115,174,175,175,200,185,185,185,185,185,185,185,199,176,119,130,
+115,184,175,185,185,185,185,185,189,195,195,195,195,196,116,0,
+115,194,190,185,185,185,185,185,186,207,130,130,130,130,131,0,
+115,115,194,195,195,195,195,195,196,116,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="2" name="tree" width="16" height="6">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,305,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,66,0,0,0,0,0,28,0,0,0,0,0,
+0,0,0,0,0,28,0,0,66,0,0,0,0,0,0,0,
+57,0,290,0,299,0,283,0,0,0,0,0,292,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="8" name="stone">
+  <object id="6" gid="26" x="17.5" y="62" width="16" height="16"/>
+  <object id="8" gid="27" x="217.5" y="26" width="16" height="16"/>
+  <object id="10" gid="56" x="120" y="82" width="16" height="16"/>
+  <object id="13" gid="51" x="176" y="58.5" width="32" height="48"/>
+  <object id="14" gid="63" x="223" y="123.5" width="48" height="64"/>
+  <object id="15" gid="63" x="198" y="124" width="48" height="64"/>
+  <object id="16" gid="63" x="169.5" y="125" width="48" height="64"/>
+  <object id="17" gid="63" x="142.5" y="126" width="48" height="64"/>
+  <object id="18" gid="63" x="118" y="127.5" width="48" height="64"/>
+  <object id="19" gid="63" x="90" y="128" width="48" height="64"/>
+  <object id="20" gid="63" x="62" y="129" width="48" height="64"/>
+  <object id="21" gid="63" x="34.5" y="130" width="48" height="64"/>
+  <object id="22" gid="63" x="6" y="130.5" width="48" height="64"/>
+  <object id="23" gid="63" x="-24" y="131" width="48" height="64"/>
+  <object id="24" gid="63" x="-25.3333" y="107.333" width="48" height="64"/>
+  <object id="25" gid="63" x="-26.6667" y="79.3333" width="48" height="64"/>
+  <object id="26" gid="63" x="-26.4167" y="54.25" width="48" height="64"/>
+  <object id="27" gid="63" x="-26.6667" y="29.8333" width="48" height="64"/>
+  <object id="28" gid="63" x="227.333" y="106" width="48" height="64"/>
+  <object id="29" gid="63" x="227.333" y="76" width="48" height="64"/>
+  <object id="30" gid="63" x="228.667" y="55.3333" width="48" height="64"/>
+  <object id="31" gid="63" x="228.667" y="27.3333" width="48" height="64"/>
+  <object id="34" gid="63" x="198.667" y="15.3333" width="48" height="64"/>
+  <object id="35" gid="63" x="168.667" y="15.3333" width="48" height="64"/>
+  <object id="36" gid="63" x="137.333" y="15.3333" width="48" height="64"/>
+  <object id="37" gid="63" x="104" y="15.3333" width="48" height="64"/>
+  <object id="39" gid="63" x="75.3333" y="16.6667" width="48" height="64"/>
+  <object id="40" gid="63" x="44.6667" y="16" width="48" height="64"/>
+  <object id="41" gid="63" x="18" y="16" width="48" height="64"/>
+  <object id="42" gid="63" x="-12.6667" y="17.3333" width="48" height="64"/>
+  <object id="43" gid="63" x="92" y="51.3333" width="48" height="64"/>
+  <object id="47" gid="65" x="45.5" y="93" width="32" height="32"/>
+  <object id="48" gid="33" x="142" y="36.5" width="16" height="16"/>
+  <object id="49" gid="36" x="212" y="78" width="16" height="16"/>
+ </objectgroup>
+ <objectgroup id="5" name="juese">
+  <object id="1" gid="83" x="107.667" y="61.6667" width="48" height="48"/>
+  <object id="2" gid="75" x="18.6667" y="71.6667" width="48" height="48"/>
+  <object id="12" gid="67" x="169.5" y="79" width="48" height="48"/>
+ </objectgroup>
+ <layer id="6" name="tree 50%" width="16" height="6" opacity="0.5">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,51,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>

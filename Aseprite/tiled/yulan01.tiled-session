@@ -1,5 +1,6 @@
 {
-    "activeFile": "预览01.tmx",
+    "activeFile": "pre05.tmx",
+    "automapping.whileDrawing": true,
     "expandedProjectPaths": [
         "."
     ],
@@ -26,6 +27,16 @@
             "dynamicWrapping": false,
             "scaleInDock": 3,
             "scaleInEditor": 3
+        },
+        "girl_chop.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "girl_hoe.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "girl_idle.tsj": {
             "dynamicWrapping": false,
@@ -70,7 +81,13 @@
             "dynamicWrapping": true,
             "scaleInDock": 1
         },
+        "girl_water.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "grass_01.tsj": {
+            "dynamicWrapping": false,
             "scaleInDock": 1.5,
             "scaleInEditor": 3
         },
@@ -114,11 +131,19 @@
             "expandedObjectLayers": [
                 10
             ],
-            "scale": 1,
+            "scale": 3,
             "selectedLayer": 13,
             "viewCenter": {
                 "x": 640,
                 "y": 640
+            }
+        },
+        "map01_pre.tmx": {
+            "scale": 1.2871651785714284,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 225.3013092863956,
+                "y": 112.26220410994539
             }
         },
         "map01_预览.tmx": {
@@ -141,6 +166,46 @@
             "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
+        },
+        "pre01.tmx": {
+            "scale": 1.5669836956521739,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 185.06893262811064,
+                "y": 93.49171941385586
+            }
+        },
+        "pre02.tmx": {
+            "scale": 2.347596153846154,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 103.93610485357364,
+                "y": 103.93610485357362
+            }
+        },
+        "pre03.tmx": {
+            "scale": 2,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 120.75,
+                "y": 26
+            }
+        },
+        "pre04.tmx": {
+            "scale": 3,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 122.16666666666666,
+                "y": 35.33333333333333
+            }
+        },
+        "pre05.tmx": {
+            "scale": 2,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 115,
+                "y": 31.25
+            }
         },
         "seed.tsj": {
             "dynamicWrapping": true,
@@ -177,7 +242,7 @@
         "stone_01.tsj": {
             "dynamicWrapping": true,
             "scaleInDock": 1,
-            "scaleInEditor": 1
+            "scaleInEditor": 1.5
         },
         "water-ani - 02.tsj": {
             "scaleInDock": 1,
@@ -212,14 +277,14 @@
         },
         "预览01.tmx": {
             "expandedObjectLayers": [
-                12,
-                13
+                13,
+                12
             ],
             "scale": 3,
             "selectedLayer": 12,
             "viewCenter": {
-                "x": 162.5,
-                "y": 138.66666666666666
+                "x": 159.33333333333331,
+                "y": 99.33333333333333
             }
         },
         "预览02.tmx": {
@@ -231,37 +296,41 @@
             }
         }
     },
-    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Terrain/Tilesets/Soil",
-    "map.height": 20,
+    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Objects/Nature",
+    "map.height": 6,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
     "map.tileWidth": 16,
-    "map.width": 20,
+    "map.width": 16,
     "openFiles": [
         "map01.tmx",
-        "map01_预览.tmx",
-        "预览01.tmx",
-        "预览02.tmx"
+        "pre02.tmx",
+        "girl_idle.tsj",
+        "pre03.tmx",
+        "girl_water.tsj",
+        "pre04.tmx",
+        "pre05.tmx",
+        "stone_01.tsj"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
         "map01.tmx",
-        "map01_预览.tmx",
-        "预览02.tmx",
-        "预览01.tmx",
-        "girl_run.tsj",
-        "girl_walk.tsj",
+        "pre02.tmx",
         "girl_idle.tsj",
+        "pre03.tmx",
+        "girl_water.tsj",
+        "pre04.tmx",
         "stone_01.tsj",
-        "box.tsj",
-        "seed.tsj",
-        "soil.tsj",
-        "Crops.tsj"
+        "pre05.tmx",
+        "girl_chop.tsj",
+        "girl_hoe.tsj",
+        "girl_run.tsj",
+        "girl_walk.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {
-        "height": 16,
-        "width": 16
+        "height": 48,
+        "width": 48
     },
     "tileset.type": 0
 }

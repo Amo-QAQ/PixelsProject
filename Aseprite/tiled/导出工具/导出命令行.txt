@@ -1,1 +1,0 @@
-"C:\Program Files\Tiled\tmxrasterizer.exe" --no-smoothing "E:\My_work\PixelsProject\Aseprite\tiled\预览02.tmx" "E:\My_work\PixelsProject\Aseprite\tiled\_临时\test_ref.png"

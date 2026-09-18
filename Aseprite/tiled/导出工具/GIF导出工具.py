@@ -28,9 +28,31 @@ from urllib.parse import urlparse, parse_qs
 from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))      # 导出工具文件夹
-TILED_DIR = os.path.dirname(BASE_DIR)                      # tiled 文件夹
-GIF_DIR = os.path.join(TILED_DIR, "GIF")                   # 交付产物
-TEMP_DIR = os.path.join(TILED_DIR, "_临时")                # 临时文件
+CONFIG_PATH = os.path.join(BASE_DIR, "config.json")        # 记录上次选择的工作目录
+DEFAULT_TILED_DIR = os.path.dirname(BASE_DIR)              # 默认 tiled 文件夹
+
+
+def _load_work_dir():
+    """启动时读取上次保存的工作目录；没有或失效则用默认 tiled 文件夹"""
+    try:
+        with io.open(CONFIG_PATH, encoding="utf-8") as f:
+            d = json.load(f).get("tiled_dir")
+        if d and os.path.isdir(d):
+            return d
+    except Exception:
+        pass
+    return DEFAULT_TILED_DIR
+
+
+TILED_DIR = _load_work_dir()                               # 当前工作目录(地图文件夹)，可切换
+
+
+def get_gif_dir():
+    return os.path.join(TILED_DIR, "GIF")
+
+
+def get_temp_dir():
+    return os.path.join(TILED_DIR, "_临时")
 PORT = 8765
 DEFAULT_FRAME_MS = 100
 SCALES = [1, 2, 3, 4, 5, 6, 8]
@@ -131,11 +153,39 @@ def parse_layers(root):
     return layers
 
 
-def compute_cycle(tilesets, frame_ms=DEFAULT_FRAME_MS):
-    """各动画帧数集合 -> 循环帧数（LCM）。时长统一按 frame_ms 推进。"""
+def collect_used_gids(layers):
+    """收集地图实际绘制用到的 gid（瓦片层 + 对象层，去翻转标志位）"""
+    used = set()
+    for lyr in layers:
+        if lyr["type"] == "tile":
+            for row in lyr["tiles"]:
+                for g in row:
+                    if g:
+                        used.add(g & 0x1FFFFFFF)
+        else:
+            for o in lyr["objects"]:
+                used.add(o["gid"] & 0x1FFFFFFF)
+    return used
+
+
+def used_animations(tilesets, used_gids):
+    """只保留地图实际用到（gid 出现在图层/对象层）的动画定义"""
+    out = []
+    for ts in tilesets:
+        for tid, frames in ts["animations"].items():
+            if (ts["firstgid"] + tid) in used_gids:
+                out.append((ts, tid, frames))
+    return out
+
+
+def compute_cycle(tilesets, frame_ms=DEFAULT_FRAME_MS, used_gids=None):
+    """各动画帧数集合 -> 循环帧数（LCM）。时长统一按 frame_ms 推进。
+    used_gids 提供时只统计实际用到的动画。"""
     anim_lengths = set()
     for ts in tilesets:
-        for _, frames in ts["animations"].items():
+        for tid, frames in ts["animations"].items():
+            if used_gids is not None and (ts["firstgid"] + tid) not in used_gids:
+                continue
             anim_lengths.add(len(frames))
     total = 1
     for n in anim_lengths:
@@ -254,7 +304,7 @@ def export(tmx_name, mode, frames, frame_ms, scale, hidden_layers, bg=DEFAULT_BG
     if mode == "png":
         frame = render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, 0, hidden_layers, bg_rgba)
         out_name = (f"{tmx_name}_{out_stem}" if out_stem else f"{tmx_name}_单帧") + ".png"
-        out_path = os.path.join(GIF_DIR, out_name)
+        out_path = os.path.join(get_gif_dir(), out_name)
         if scale > 1:
             frame = frame.resize((frame.width * scale, frame.height * scale), Image.NEAREST)
         frame.save(out_path)
@@ -263,7 +313,7 @@ def export(tmx_name, mode, frames, frame_ms, scale, hidden_layers, bg=DEFAULT_BG
     # GIF 模式
     frame_count = frames if frames and frames > 0 else auto_frames
     out_name = (f"{tmx_name}_{out_stem}" if out_stem else f"{tmx_name}_动画") + ".gif"
-    out_path = os.path.join(GIF_DIR, out_name)
+    out_path = os.path.join(get_gif_dir(), out_name)
     imgs = []
     for i in range(frame_count):
         f = render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, i, hidden_layers, bg_rgba)
@@ -290,21 +340,21 @@ def map_info(tmx_name):
     tile_w, tile_h = int(root.get("tilewidth")), int(root.get("tileheight"))
     tilesets = load_tilesets(root, tile_w, tile_h)
     layers = parse_layers(root)
+    used_gids = collect_used_gids(layers)
     animations = []
-    for ts in tilesets:
-        for tid, frames in ts["animations"].items():
-            animations.append({
-                "tileset": ts["name"],
-                "tile": tid,
-                "frames": len(frames),
-                "duration": frames[0].get("duration", DEFAULT_FRAME_MS),
-            })
+    for ts, tid, frames in used_animations(tilesets, used_gids):
+        animations.append({
+            "tileset": ts["name"],
+            "tile": tid,
+            "frames": len(frames),
+            "duration": frames[0].get("duration", DEFAULT_FRAME_MS),
+        })
     return {
         "layers": [{"name": l["name"], "visible": l["visible"],
                     "type": l["type"], "index": i}
                    for i, l in enumerate(layers)],
         "animations": animations,
-        "auto_frames": compute_cycle(tilesets),
+        "auto_frames": compute_cycle(tilesets, used_gids=used_gids),
         "map_w": int(root.get("width")), "map_h": int(root.get("height")),
         "tile_w": tile_w, "tile_h": tile_h,
     }
@@ -373,7 +423,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(404, "界面文件缺失: GIF导出工具.html")
             return
         if u.path == "/api/maps":
-            self._send(200, json.dumps({"maps": list_maps()}, ensure_ascii=False))
+            self._send(200, json.dumps({"maps": list_maps(), "dir": TILED_DIR}, ensure_ascii=False))
             return
         if u.path == "/api/info":
             qs = parse_qs(u.query)
@@ -418,7 +468,7 @@ class Handler(BaseHTTPRequestHandler):
                 if base_side * scale > 512:
                     scale = 512 / base_side
                 imgs = [render_preview(name, i, scale, bg, hidden) for i in range(auto)]
-                out = os.path.join(TEMP_DIR, f"_preview_{name}.gif")
+                out = os.path.join(get_temp_dir(), f"_preview_{name}.gif")
                 if bg == "transparent":
                     prepared = [_to_transparent_palette(f) for f in imgs]
                 else:
@@ -433,7 +483,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if u.path.startswith("/files/"):
             rel = u.path[len("/files/"):]
-            for d in (GIF_DIR, TEMP_DIR):
+            for d in (get_gif_dir(), get_temp_dir()):
                 p = os.path.join(d, os.path.basename(rel))
                 if os.path.exists(p):
                     ext = os.path.splitext(p)[1].lower()
@@ -447,14 +497,31 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urlparse(self.path)
-        if u.path not in ("/api/export", "/api/export-batch"):
+        if u.path not in ("/api/export", "/api/export-batch", "/api/set-dir"):
             self._send(404, "Not Found", "text/plain")
             return
         try:
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length).decode("utf-8"))
-            os.makedirs(GIF_DIR, exist_ok=True)
-            os.makedirs(TEMP_DIR, exist_ok=True)
+            if u.path == "/api/set-dir":
+                path = str(body.get("path", "")).strip().strip('"').strip()
+                if not path or not os.path.isdir(path):
+                    self._send(400, json.dumps({"ok": False, "error": "目录不存在: " + path}, ensure_ascii=False))
+                    return
+                tmx_count = len([f for f in os.listdir(path) if f.endswith(".tmx")])
+                global TILED_DIR
+                TILED_DIR = path
+                try:
+                    with io.open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                        json.dump({"tiled_dir": path}, f, ensure_ascii=False)
+                except Exception:
+                    pass
+                self._send(200, json.dumps(
+                    {"ok": True, "maps": list_maps(), "dir": TILED_DIR,
+                     "tmx_count": tmx_count}, ensure_ascii=False))
+                return
+            os.makedirs(get_gif_dir(), exist_ok=True)
+            os.makedirs(get_temp_dir(), exist_ok=True)
             if u.path == "/api/export-batch":
                 results = export_batch(body["map"], body.get("tasks", []))
                 self._send(200, json.dumps({"ok": True, "results": results}, ensure_ascii=False))
@@ -476,8 +543,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    os.makedirs(GIF_DIR, exist_ok=True)
-    os.makedirs(TEMP_DIR, exist_ok=True)
+    os.makedirs(get_gif_dir(), exist_ok=True)
+    os.makedirs(get_temp_dir(), exist_ok=True)
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     print("GIF 导出工具已启动：http://127.0.0.1:%d" % PORT)
     print("按 Ctrl+C 停止")
