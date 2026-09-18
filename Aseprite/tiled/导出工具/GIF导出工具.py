@@ -133,7 +133,8 @@ def parse_layers(root):
                 if row:
                     tiles.append([int(x.strip()) for x in row.split(",")])
             layers.append({"type": "tile", "name": child.get("name"),
-                           "visible": visible, "tiles": tiles})
+                           "visible": visible, "tiles": tiles,
+                           "opacity": float(child.get("opacity", 1.0))})
         elif child.tag == "objectgroup":
             visible = child.get("visible", "1") != "0"
             draworder = child.get("draworder", "topdown")  # Tiled 默认 topdown(y升序)
@@ -149,7 +150,8 @@ def parse_layers(root):
             if draworder == "topdown":
                 objs.sort(key=lambda o: o["y"])  # y 小的先画，y 大的盖上面(官方行为)
             layers.append({"type": "object", "name": child.get("name"),
-                           "visible": visible, "draworder": draworder, "objects": objs})
+                           "visible": visible, "draworder": draworder, "objects": objs,
+                           "opacity": float(child.get("opacity", 1.0))})
     return layers
 
 
@@ -217,6 +219,7 @@ def render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, anim_frame=0,
     for idx, layer in enumerate(layers):
         if not layer["visible"] or idx in hidden_layers:
             continue
+        op = layer.get("opacity", 1.0)
         if layer["type"] == "object":
             # 图块对象层：官方行为 = 瓦片缩放到对象宽高 + 底部对齐（对象 y 是瓦片底边）
             for obj in layer["objects"]:
@@ -231,6 +234,9 @@ def render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, anim_frame=0,
                 tile_img = _tile_image(tilesets[ts_idx], local_id, anim_frame)
                 if not tile_img:
                     continue
+                if op < 1.0:
+                    a = tile_img.getchannel("A").point(lambda v: int(v * op))
+                    tile_img.putalpha(a)
                 ow = int(obj.get("width") or tile_img.width)
                 oh = int(obj.get("height") or tile_img.height)
                 if (ow, oh) != tile_img.size:
@@ -262,6 +268,9 @@ def render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, anim_frame=0,
                 tile_img = _tile_image(tilesets[ts_idx], local_id, anim_frame)
                 if not tile_img:
                     continue
+                if op < 1.0:
+                    a = tile_img.getchannel("A").point(lambda v: int(v * op))
+                    tile_img.putalpha(a)
                 px = col_idx * tile_w
                 py = row_idx * tile_h + tile_h - tile_img.height  # 底边贴格底
                 w, h = tile_img.size

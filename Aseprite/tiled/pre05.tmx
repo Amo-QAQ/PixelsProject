@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="16" height="6" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="50">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="16" height="6" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="52">
  <tileset firstgid="1" source="grass_01_island.tsj"/>
  <tileset firstgid="26" source="stone_01.tsj"/>
  <tileset firstgid="67" source="girl_chop.tsj"/>
@@ -22,7 +22,7 @@
 0,0,0,114,115,184,185,185,186,115,115,184,185,185,185,185,
 100,100,100,135,174,200,185,185,199,175,175,200,189,195,195,195,
 115,174,175,175,200,185,185,185,185,185,185,185,199,176,119,130,
-115,184,175,185,185,185,185,185,189,195,195,195,195,196,116,0,
+115,184,185,185,185,185,185,185,189,195,195,195,195,196,116,0,
 115,194,190,185,185,185,185,185,186,207,130,130,130,130,131,0,
 115,115,194,195,195,195,195,195,196,116,0,0,0,0,0,0
 </data>
@@ -63,8 +63,8 @@
   <object id="34" gid="63" x="198.667" y="15.3333" width="48" height="64"/>
   <object id="35" gid="63" x="168.667" y="15.3333" width="48" height="64"/>
   <object id="36" gid="63" x="137.333" y="15.3333" width="48" height="64"/>
-  <object id="37" gid="63" x="104" y="15.3333" width="48" height="64"/>
-  <object id="39" gid="63" x="75.3333" y="16.6667" width="48" height="64"/>
+  <object id="37" gid="63" x="106.86" y="15.0155" width="48" height="64"/>
+  <object id="39" gid="63" x="76.9222" y="16.0311" width="48" height="64"/>
   <object id="40" gid="63" x="44.6667" y="16" width="48" height="64"/>
   <object id="41" gid="63" x="18" y="16" width="48" height="64"/>
   <object id="42" gid="63" x="-12.6667" y="17.3333" width="48" height="64"/>
@@ -74,9 +74,9 @@
   <object id="49" gid="36" x="212" y="78" width="16" height="16"/>
  </objectgroup>
  <objectgroup id="5" name="juese">
-  <object id="1" gid="83" x="107.667" y="61.6667" width="48" height="48"/>
+  <object id="1" gid="83" x="114.023" y="60.3956" width="48" height="48"/>
   <object id="2" gid="75" x="18.6667" y="71.6667" width="48" height="48"/>
-  <object id="12" gid="67" x="169.5" y="79" width="48" height="48"/>
+  <object id="12" gid="67" x="173.631" y="82.8133" width="48" height="48"/>
  </objectgroup>
  <layer id="6" name="tree 50%" width="16" height="6" opacity="0.5">
   <data encoding="csv">
