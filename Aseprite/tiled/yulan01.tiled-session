@@ -1,5 +1,5 @@
 {
-    "activeFile": "pre05.tmx",
+    "activeFile": "pre06.tmx",
     "automapping.whileDrawing": true,
     "expandedProjectPaths": [
         "."
@@ -58,6 +58,11 @@
             "dynamicWrapping": true,
             "scaleInDock": 1
         },
+        "girl_mine.tsj": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "girl_run.tsj": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -102,12 +107,14 @@
             "scaleInEditor": 3
         },
         "grass_02.tsj": {
+            "dynamicWrapping": false,
             "scaleInDock": 1
         },
         "grass_02_island.tsj": {
             "scaleInDock": 1
         },
         "grass_02_shadow.tsj": {
+            "dynamicWrapping": false,
             "scaleInDock": 1
         },
         "grass_03_island.tsj": {
@@ -135,7 +142,7 @@
             "selectedLayer": 13,
             "viewCenter": {
                 "x": 640,
-                "y": 640
+                "y": 639.8333333333333
             }
         },
         "map01_pre.tmx": {
@@ -171,40 +178,51 @@
             "scale": 1.5669836956521739,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 185.06893262811064,
-                "y": 93.49171941385586
+                "x": 183.79259516170987,
+                "y": 151.56507413509058
             }
         },
         "pre02.tmx": {
             "scale": 2.347596153846154,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 103.93610485357364,
-                "y": 103.93610485357362
+                "x": 103.93610485357362,
+                "y": 104.1490886749949
             }
         },
         "pre03.tmx": {
             "scale": 2,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 120.75,
-                "y": 26
+                "x": 128,
+                "y": 47.75
             }
         },
         "pre04.tmx": {
             "scale": 3,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 122.16666666666666,
-                "y": 35.33333333333333
+                "x": 128,
+                "y": 47.83333333333333
             }
         },
         "pre05.tmx": {
             "scale": 2,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 115,
-                "y": 31.25
+                "x": 128,
+                "y": 47.75
+            }
+        },
+        "pre06.tmx": {
+            "expandedObjectLayers": [
+                4
+            ],
+            "scale": 3,
+            "selectedLayer": 9,
+            "viewCenter": {
+                "x": 119,
+                "y": 67.5
             }
         },
         "seed.tsj": {
@@ -264,6 +282,7 @@
             "scaleInEditor": 3
         },
         "water_decoration.tsj": {
+            "dynamicWrapping": false,
             "scaleInDock": 1
         },
         "water_island_ani.tsj": {
@@ -296,7 +315,7 @@
             }
         }
     },
-    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Objects/Nature",
+    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Characters/girl/combined",
     "map.height": 6,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
@@ -310,7 +329,10 @@
         "girl_water.tsj",
         "pre04.tmx",
         "pre05.tmx",
-        "stone_01.tsj"
+        "stone_01.tsj",
+        "pre06.tmx",
+        "girl_mine.tsj",
+        "pre01.tmx"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
@@ -320,12 +342,12 @@
         "pre03.tmx",
         "girl_water.tsj",
         "pre04.tmx",
-        "stone_01.tsj",
         "pre05.tmx",
-        "girl_chop.tsj",
-        "girl_hoe.tsj",
-        "girl_run.tsj",
-        "girl_walk.tsj"
+        "stone_01.tsj",
+        "pre01.tmx",
+        "girl_mine.tsj",
+        "pre06.tmx",
+        "girl_chop.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {

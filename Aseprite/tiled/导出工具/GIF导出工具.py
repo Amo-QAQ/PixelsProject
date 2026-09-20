@@ -134,7 +134,9 @@ def parse_layers(root):
                     tiles.append([int(x.strip()) for x in row.split(",")])
             layers.append({"type": "tile", "name": child.get("name"),
                            "visible": visible, "tiles": tiles,
-                           "opacity": float(child.get("opacity", 1.0))})
+                           "opacity": float(child.get("opacity", 1.0)),
+                           "offsetx": float(child.get("offsetx", 0)),
+                           "offsety": float(child.get("offsety", 0))})
         elif child.tag == "objectgroup":
             visible = child.get("visible", "1") != "0"
             draworder = child.get("draworder", "topdown")  # Tiled 默认 topdown(y升序)
@@ -151,7 +153,9 @@ def parse_layers(root):
                 objs.sort(key=lambda o: o["y"])  # y 小的先画，y 大的盖上面(官方行为)
             layers.append({"type": "object", "name": child.get("name"),
                            "visible": visible, "draworder": draworder, "objects": objs,
-                           "opacity": float(child.get("opacity", 1.0))})
+                           "opacity": float(child.get("opacity", 1.0)),
+                           "offsetx": float(child.get("offsetx", 0)),
+                           "offsety": float(child.get("offsety", 0))})
     return layers
 
 
@@ -220,6 +224,8 @@ def render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, anim_frame=0,
         if not layer["visible"] or idx in hidden_layers:
             continue
         op = layer.get("opacity", 1.0)
+        ox = layer.get("offsetx", 0)
+        oy = layer.get("offsety", 0)
         if layer["type"] == "object":
             # 图块对象层：官方行为 = 瓦片缩放到对象宽高 + 底部对齐（对象 y 是瓦片底边）
             for obj in layer["objects"]:
@@ -241,8 +247,8 @@ def render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, anim_frame=0,
                 oh = int(obj.get("height") or tile_img.height)
                 if (ow, oh) != tile_img.size:
                     tile_img = tile_img.resize((ow, oh), Image.NEAREST)
-                px = int(obj["x"] + 0.5)          # 四舍五入(官方行为，round 是银行家舍入)
-                py = int(obj["y"] + 0.5) - oh   # bottom 对齐：顶边 = y - 高度
+                px = int(obj["x"] + ox + 0.5)     # 四舍五入(官方行为，round 是银行家舍入)
+                py = int(obj["y"] + oy + 0.5) - oh  # bottom 对齐：顶边 = y - 高度
                 w, h = tile_img.size
                 x0, y0 = max(px, 0), max(py, 0)
                 x1, y1 = min(px + w, canvas.width), min(py + h, canvas.height)
@@ -271,8 +277,8 @@ def render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, anim_frame=0,
                 if op < 1.0:
                     a = tile_img.getchannel("A").point(lambda v: int(v * op))
                     tile_img.putalpha(a)
-                px = col_idx * tile_w
-                py = row_idx * tile_h + tile_h - tile_img.height  # 底边贴格底
+                px = int(col_idx * tile_w + ox)
+                py = int(row_idx * tile_h + tile_h - tile_img.height + oy)  # 底边贴格底
                 w, h = tile_img.size
                 # 局部混合：只处理瓦片覆盖区域（越界部分与 paste 裁剪等价）
                 x0, y0 = max(px, 0), max(py, 0)
@@ -308,7 +314,8 @@ def export(tmx_name, mode, frames, frame_ms, scale, hidden_layers, bg=DEFAULT_BG
     tile_w, tile_h = int(root.get("tilewidth")), int(root.get("tileheight"))
     tilesets = load_tilesets(root, tile_w, tile_h)
     layers = parse_layers(root)
-    auto_frames = compute_cycle(tilesets, frame_ms)
+    used_gids = collect_used_gids(layers)
+    auto_frames = compute_cycle(tilesets, frame_ms, used_gids=used_gids)
     bg_rgba = BG_MAP.get(bg, BG_MAP[DEFAULT_BG])
     if mode == "png":
         frame = render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, 0, hidden_layers, bg_rgba)
