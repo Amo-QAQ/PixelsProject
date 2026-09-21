@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIF 编辑器</title>
+<style>
+:root{--bg:#f5f6f8;--bg2:#f8f9fa;--bg3:#eff1f3;--text:#1a1a2e;--text2:#555;--text3:#999;--border:#ddd;--border2:#bbb;--blue:#2563eb;--blue-hi:#1d4ed8;--green:#16a34a;--green-hi:#15803d;--red:#dc2626;--amber:#f59e0b;--radius:10px;--rs:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg3);color:var(--text);padding:14px;line-height:1.45;font-size:14px;}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+h1{font-size:20px;font-weight:700;}
+.sub{color:var(--text2);font-size:13px;margin-top:2px;}
+.card{background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);padding:12px 16px;margin-bottom:12px;}
+.card h2{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;margin-right:6px;}
+.h2-right{font-weight:400;font-size:12px;color:var(--text2);}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:11px;color:var(--text2);font-weight:600;}
+input[type=number]{width:70px;padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+input[type=text]{padding:5px 8px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+input[type=color]{width:36px;height:28px;padding:2px;border:1px solid var(--border);border-radius:var(--rs);background:#fff;cursor:pointer;}
+button{padding:6px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--bg);font-size:12px;cursor:pointer;transition:all .15s;font-weight:500;}
+button:hover{background:var(--bg2);border-color:var(--text2);}
+button.pri{background:var(--blue);color:#fff;border-color:var(--blue);}
+button.pri:hover{background:var(--blue-hi);}
+button.ok{background:var(--green);color:#fff;border-color:var(--green);}
+button.ok:hover{background:var(--green-hi);}
+button.dan{color:var(--red);border-color:#fecaca;}
+button.dan:hover{background:#fef2f2;}
+button.sm{padding:4px 9px;font-size:11px;}
+button:disabled{opacity:.5;cursor:not-allowed;}
+.toolbar label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-weight:500;font-size:12px;}
+.toolbar label input{accent-color:var(--blue);}
+
+.layout{display:grid;grid-template-columns:330px 1fr;gap:14px;align-items:start;}
+@media (max-width:960px){.layout{grid-template-columns:1fr;}}
+
+.drop-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:22px;text-align:center;color:var(--text2);cursor:pointer;transition:all .2s;background:var(--bg2);}
+.drop-zone:hover,.drop-zone.act{border-color:var(--blue);background:#eff6ff;}
+.dz-main{font-size:14px;margin-bottom:4px;}
+.dz-main b{color:var(--blue);}
+.dz-sub{font-size:12px;color:var(--text3);}
+.info-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);font-size:12px;color:var(--text2);min-height:34px;}
+.info-bar .cnt{color:var(--blue);font-weight:700;}
+.sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
+
+/* 预览区 */
+.preview-card{display:flex;flex-direction:column;}
+.preview-wrap{position:relative;flex:1;min-height:320px;display:flex;align-items:center;justify-content:center;
+  background:repeating-conic-gradient(#e9eaee 0% 25%, #fdfdfd 0% 50%) 0 0/16px 16px;
+  border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;}
+#previewCanvas{image-rendering:pixelated;box-shadow:0 2px 10px rgba(0,0,0,.12);max-width:100%;max-height:56vh;cursor:default;}
+#previewCanvas.hovering{cursor:move;}
+.playbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.playbar .frame-info{font-size:12px;color:var(--text2);font-family:monospace;}
+
+/* 时间线 */
+.tl-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:12px;color:var(--text2);}
+.tl-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;min-height:118px;}
+.tl-empty{color:var(--text3);font-size:13px;padding:20px;text-align:center;}
+.tl-card{position:relative;flex:0 0 96px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:5px;cursor:grab;transition:border-color .15s, box-shadow .15s;}
+.tl-card:active{cursor:grabbing;}
+.tl-card img{width:100%;height:72px;object-fit:contain;image-rendering:pixelated;background:repeating-conic-gradient(#eceef1 0% 25%, #fff 0% 50%) 0 0/10px 10px;border-radius:3px;display:block;}
+.tl-card.on{border-color:var(--amber);box-shadow:0 0 0 2px rgba(245,158,11,.25);}
+.tl-card .idx{position:absolute;top:5px;left:5px;font-size:10px;font-family:monospace;color:#fff;background:rgba(0,0,0,.5);padding:0 4px;border-radius:3px;line-height:14px;}
+.tl-card .del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(255,255,255,.95);color:var(--red);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;}
+.tl-card .del:hover{background:var(--red);color:#fff;}
+.tl-card.dragging{opacity:.4;}
+.tl-card.drag-before{border-left:3px solid var(--blue);}
+.tl-card.drag-after{border-right:3px solid var(--blue);}
+.tl-delay{width:100%;margin-top:4px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;font-size:11px;text-align:center;}
+
+/* 叠加层列表 */
+.ov-list{display:flex;flex-direction:column;gap:6px;}
+.ov-row{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;flex-wrap:wrap;}
+.ov-row input[type=text]{width:110px;font-size:12px;padding:4px 6px;}
+.ov-row input[type=number]{width:52px;font-size:12px;padding:4px 5px;}
+.ov-row .x{width:62px;}
+.ov-thumb{width:44px;height:32px;object-fit:contain;image-rendering:pixelated;background:repeating-conic-gradient(#eceef1 0% 25%, #fff 0% 50%) 0 0/8px 8px;border-radius:3px;border:1px solid var(--border);}
+.hint{font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* 导出 */
+#progressBar{width:100%;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;display:none;margin-top:10px;}
+#progressBar .fill{height:100%;background:linear-gradient(90deg,var(--green),#22c55e);width:0;transition:width .15s;}
+#logArea{font-family:monospace;font-size:11px;color:var(--text2);max-height:110px;overflow-y:auto;background:var(--bg3);padding:8px;border-radius:var(--rs);margin-top:8px;display:none;}
+.log-ok{color:var(--green);} .log-err{color:var(--red);} .log-info{color:var(--blue);}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎞️ GIF 编辑器</h1>
+    <p class="sub">本地纯处理 · 拆帧编辑 / 调整大小 / 添加文本 / 添加图片 · 无上传 · 双击画布可拖动文本与图片层</p>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- ============ 左列 ============ -->
+  <div>
+    <!-- 1. 导入 -->
+    <div class="card">
+      <h2><span><span class="step-num">1</span>导入素材</span><span class="h2-right">图片 / GIF / ZIP</span></h2>
+      <div class="drop-zone" id="dropZone">
+        <p class="dz-main">拖拽文件到这里，或 <b>点击选择</b></p>
+        <p class="dz-sub">PNG/JPG/WebP · .gif 自动拆帧 · .zip 自动解压排序 · 可多次追加</p>
+      </div>
+      <input type="file" id="fileInput" multiple accept="image/*,.gif,.zip" style="display:none;">
+      <div class="info-bar" id="infoBar">
+        <span class="cnt">未导入</span>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <div class="field"><label>全局延迟(ms)</label><input type="number" id="globalDelay" value="100" min="1" step="10"></div>
+        <button class="sm" id="applyDelay">应用到全部帧</button>
+      </div>
+    </div>
+
+    <!-- 2. 画面大小 -->
+    <div class="card">
+      <h2><span><span class="step-num">2</span>调整大小</span><span class="h2-right">输出尺寸</span></h2>
+      <div class="row">
+        <div class="field"><label>宽</label><input type="number" id="outW" min="1" max="2000"></div>
+        <div class="field"><label>高</label><input type="number" id="outH" min="1" max="2000"></div>
+        <button class="sm" id="lockAspectBtn">🔒 锁定比例</button>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <span style="font-size:11px;color:var(--text2);font-weight:600;">预设:</span>
+        <button class="sm" data-scale="0.25">25%</button>
+        <button class="sm" data-scale="0.5">50%</button>
+        <button class="sm" data-scale="1">100%</button>
+        <button class="sm" data-scale="2">200%</button>
+      </div>
+    </div>
+
+    <!-- 3. 文本层 -->
+    <div class="card">
+      <h2><span><span class="step-num">3</span>添加文本</span><span class="h2-right">可拖拽</span></h2>
+      <div class="ov-list" id="textList"></div>
+      <button class="sm pri" id="addText" style="margin-top:8px;">＋ 添加文本</button>
+      <p class="hint">文本可直接在预览画布上拖动；字号/颜色/位置也可在此修改。</p>
+    </div>
+
+    <!-- 4. 图片层 -->
+    <div class="card">
+      <h2><span><span class="step-num">4</span>添加图片</span><span class="h2-right">可拖拽</span></h2>
+      <div class="ov-list" id="imgOvList"></div>
+      <button class="sm pri" id="addImgOv">＋ 叠加图片(PNG)</button>
+      <input type="file" id="imgOvInput" accept="image/*" style="display:none;">
+      <p class="hint">建议用带透明通道的 PNG；叠加层位于所有帧之上。</p>
+    </div>
+
+    <!-- 5. 导出 -->
+    <div class="card">
+      <h2><span><span class="step-num">5</span>导出 GIF</span></h2>
+      <div class="row">
+        <div class="field" style="flex:1;"><label>文件名</label><input type="text" id="outName" value="output" style="width:100%;"></div>
+        <div class="field"><label>循环</label>
+          <select id="loopCount" style="padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;background:#fff;">
+            <option value="0">无限循环</option>
+            <option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option>
+          </select>
+        </div>
+      </div>
+      <button class="ok" id="exportBtn" style="margin-top:10px;width:100%;padding:10px;font-size:13px;">导出 GIF</button>
+      <div id="progressBar"><div class="fill"></div></div>
+      <div id="logArea"></div>
+    </div>
+  </div>
+
+  <!-- ============ 右列 ============ -->
+  <div>
+    <div class="card preview-card">
+      <h2><span><span class="step-num">▶</span>实时预览</span><span class="h2-right">所见即所得</span></h2>
+      <div class="preview-wrap" id="previewWrap">
+        <canvas id="previewCanvas" width="160" height="120"></canvas>
+      </div>
+      <div class="playbar">
+        <button class="sm" id="prevBtn">⏮</button>
+        <button class="sm pri" id="playBtn">⏸ 暂停</button>
+        <button class="sm" id="nextBtn">⏭</button>
+        <span class="frame-info" id="frameInfo">0 / 0</span>
+        <span class="sep" style="width:1px;height:18px;background:var(--border);"></span>
+        <button class="sm" id="undoBtn">↶ 撤销</button>
+        <button class="sm" id="redoBtn">↷ 重做</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tl-toolbar">
+        <b style="font-size:13px;">帧时间线</b>
+        <span>拖拽排序 · 点选（Shift 多选）· 每帧延迟可单独改</span>
+        <span style="margin-left:auto;display:flex;gap:6px;">
+          <button class="sm" id="dupSelected">复制选中</button>
+          <button class="sm dan" id="delSelected">删除选中</button>
+          <button class="sm" id="clearAll">清空全部</button>
+        </span>
+      </div>
+      <div class="tl-strip" id="tlStrip">
+        <div class="tl-empty" style="flex:1;">导入素材后，帧会出现在这里</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== gifenc GIF 编码库（内联，IIFE 挂到 window.gifenc） ===== -->
+<script>
+(function(){
+  var exports = {};
+var __defProp = Object.defineProperty;
+var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {get: all[name], enumerable: true});
+};
+
+// src/index.js
+__markAsModule(exports);
+__export(exports, {
+  GIFEncoder: () => GIFEncoder,
+  applyPalette: () => applyPalette,
+  default: () => src_default,
+  nearestColor: () => nearestColor,
+  nearestColorIndex: () => nearestColorIndex,
+  nearestColorIndexWithDistance: () => nearestColorIndexWithDistance,
+  prequantize: () => prequantize,
+  quantize: () => quantize,
+  snapColorsToPalette: () => snapColorsToPalette
+});
+
+// src/constants.js
+var constants_default = {
+  signature: "GIF",
+  version: "89a",
+  trailer: 59,
+  extensionIntroducer: 33,
+  applicationExtensionLabel: 255,
+  graphicControlExtensionLabel: 249,
+  imageSeparator: 44,
+  signatureSize: 3,
+  versionSize: 3,
+  globalColorTableFlagMask: 128,
+  colorResolutionMask: 112,
+  sortFlagMask: 8,
+  globalColorTableSizeMask: 7,
+  applicationIdentifierSize: 8,
+  applicationAuthCodeSize: 3,
+  disposalMethodMask: 28,
+  userInputFlagMask: 2,
+  transparentColorFlagMask: 1,
+  localColorTableFlagMask: 128,
+  interlaceFlagMask: 64,
+  idSortFlagMask: 32,
+  localColorTableSizeMask: 7
+};
+
+// src/stream.js
+function createStream(initialCapacity = 256) {
+  let cursor = 0;
+  let contents = new Uint8Array(initialCapacity);
+  return {
+    get buffer() {
+      return contents.buffer;
+    },
+    reset() {
+      cursor = 0;
+    },
+    bytesView() {
+      return contents.subarray(0, cursor);
+    },
+    bytes() {
+      return contents.slice(0, cursor);
+    },
+    writeByte(byte) {
+      expand(cursor + 1);
+      contents[cursor] = byte;
+      cursor++;
+    },
+    writeBytes(data, offset = 0, byteLength = data.length) {
+      expand(cursor + byteLength);
+      for (let i = 0; i < byteLength; i++) {
+        contents[cursor++] = data[i + offset];
+      }
+    },
+    writeBytesView(data, offset = 0, byteLength = data.byteLength) {
+      expand(cursor + byteLength);
+      contents.set(data.subarray(offset, offset + byteLength), cursor);
+      cursor += byteLength;
+    }
+  };
+  function expand(newCapacity) {
+    var prevCapacity = contents.length;
+    if (prevCapacity >= newCapacity)
+      return;
+    var CAPACITY_DOUBLING_MAX = 1024 * 1024;
+    newCapacity = Math.max(newCapacity, prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2 : 1.125) >>> 0);
+    if (prevCapacity != 0)
+      newCapacity = Math.max(newCapacity, 256);
+    const oldContents = contents;
+    contents = new Uint8Array(newCapacity);
+    if (cursor > 0)
+      contents.set(oldContents.subarray(0, cursor), 0);
+  }
+}
+
+// src/lzwEncode.js
+var BITS = 12;
+var DEFAULT_HSIZE = 5003;
+var MASKS = [
+  0,
+  1,
+  3,
+  7,
+  15,
+  31,
+  63,
+  127,
+  255,
+  511,
+  1023,
+  2047,
+  4095,
+  8191,
+  16383,
+  32767,
+  65535
+];
+function lzwEncode(width, height, pixels, colorDepth, outStream = createStream(512), accum = new Uint8Array(256), htab = new Int32Array(DEFAULT_HSIZE), codetab = new Int32Array(DEFAULT_HSIZE)) {
+  const hsize = htab.length;
+  const initCodeSize = Math.max(2, colorDepth);
+  accum.fill(0);
+  codetab.fill(0);
+  htab.fill(-1);
+  let cur_accum = 0;
+  let cur_bits = 0;
+  const init_bits = initCodeSize + 1;
+  const g_init_bits = init_bits;
+  let clear_flg = false;
+  let n_bits = g_init_bits;
+  let maxcode = (1 << n_bits) - 1;
+  const ClearCode = 1 << init_bits - 1;
+  const EOFCode = ClearCode + 1;
+  let free_ent = ClearCode + 2;
+  let a_count = 0;
+  let ent = pixels[0];
+  let hshift = 0;
+  for (let fcode = hsize; fcode < 65536; fcode *= 2) {
+    ++hshift;
+  }
+  hshift = 8 - hshift;
+  outStream.writeByte(initCodeSize);
+  output(ClearCode);
+  const length = pixels.length;
+  for (let idx = 1; idx < length; idx++) {
+    next_block: {
+      const c = pixels[idx];
+      const fcode = (c << BITS) + ent;
+      let i = c << hshift ^ ent;
+      if (htab[i] === fcode) {
+        ent = codetab[i];
+        break next_block;
+      }
+      const disp = i === 0 ? 1 : hsize - i;
+      while (htab[i] >= 0) {
+        i -= disp;
+        if (i < 0)
+          i += hsize;
+        if (htab[i] === fcode) {
+          ent = codetab[i];
+          break next_block;
+        }
+      }
+      output(ent);
+      ent = c;
+      if (free_ent < 1 << BITS) {
+        codetab[i] = free_ent++;
+        htab[i] = fcode;
+      } else {
+        htab.fill(-1);
+        free_ent = ClearCode + 2;
+        clear_flg = true;
+        output(ClearCode);
+      }
+    }
+  }
+  output(ent);
+  output(EOFCode);
+  outStream.writeByte(0);
+  return outStream.bytesView();
+  function output(code) {
+    cur_accum &= MASKS[cur_bits];
+    if (cur_bits > 0)
+      cur_accum |= code << cur_bits;
+    else
+      cur_accum = code;
+    cur_bits += n_bits;
+    while (cur_bits >= 8) {
+      accum[a_count++] = cur_accum & 255;
+      if (a_count >= 254) {
+        outStream.writeByte(a_count);
+        outStream.writeBytesView(accum, 0, a_count);
+        a_count = 0;
+      }
+      cur_accum >>= 8;
+      cur_bits -= 8;
+    }
+    if (free_ent > maxcode || clear_flg) {
+      if (clear_flg) {
+        n_bits = g_init_bits;
+        maxcode = (1 << n_bits) - 1;
+        clear_flg = false;
+      } else {
+        ++n_bits;
+        maxcode = n_bits === BITS ? 1 << n_bits : (1 << n_bits) - 1;
+      }
+    }
+    if (code == EOFCode) {
+      while (cur_bits > 0) {
+        accum[a_count++] = cur_accum & 255;
+        if (a_count >= 254) {
+          outStream.writeByte(a_count);
+          outStream.writeBytesView(accum, 0, a_count);
+          a_count = 0;
+        }
+        cur_accum >>= 8;
+        cur_bits -= 8;
+      }
+      if (a_count > 0) {
+        outStream.writeByte(a_count);
+        outStream.writeBytesView(accum, 0, a_count);
+        a_count = 0;
+      }
+    }
+  }
+}
+var lzwEncode_default = lzwEncode;
+
+// src/rgb-packing.js
+function rgb888_to_rgb565(r, g, b) {
+  return r << 8 & 63488 | g << 2 & 992 | b >> 3;
+}
+function rgba8888_to_rgba4444(r, g, b, a) {
+  return r >> 4 | g & 240 | (b & 240) << 4 | (a & 240) << 8;
+}
+function rgb888_to_rgb444(r, g, b) {
+  return r >> 4 << 8 | g & 240 | b >> 4;
+}
+
+// src/pnnquant2.js
+function clamp(value, min, max) {
+  return value < min ? min : value > max ? max : value;
+}
+function sqr(value) {
+  return value * value;
+}
+function find_nn(bins, idx, hasAlpha) {
+  var nn = 0;
+  var err = 1e100;
+  const bin1 = bins[idx];
+  const n1 = bin1.cnt;
+  const wa = bin1.ac;
+  const wr = bin1.rc;
+  const wg = bin1.gc;
+  const wb = bin1.bc;
+  for (var i = bin1.fw; i != 0; i = bins[i].fw) {
+    const bin = bins[i];
+    const n2 = bin.cnt;
+    const nerr2 = n1 * n2 / (n1 + n2);
+    if (nerr2 >= err)
+      continue;
+    var nerr = 0;
+    if (hasAlpha) {
+      nerr += nerr2 * sqr(bin.ac - wa);
+      if (nerr >= err)
+        continue;
+    }
+    nerr += nerr2 * sqr(bin.rc - wr);
+    if (nerr >= err)
+      continue;
+    nerr += nerr2 * sqr(bin.gc - wg);
+    if (nerr >= err)
+      continue;
+    nerr += nerr2 * sqr(bin.bc - wb);
+    if (nerr >= err)
+      continue;
+    err = nerr;
+    nn = i;
+  }
+  bin1.err = err;
+  bin1.nn = nn;
+}
+function create_bin() {
+  return {
+    ac: 0,
+    rc: 0,
+    gc: 0,
+    bc: 0,
+    cnt: 0,
+    nn: 0,
+    fw: 0,
+    bk: 0,
+    tm: 0,
+    mtm: 0,
+    err: 0
+  };
+}
+function create_bin_list(data, format) {
+  const bincount = format === "rgb444" ? 4096 : 65536;
+  const bins = new Array(bincount);
+  const size = data.length;
+  if (format === "rgba4444") {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const a = color >> 24 & 255;
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgba8888_to_rgba4444(r, g, b, a);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.ac += a;
+      bin.cnt++;
+    }
+  } else if (format === "rgb444") {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgb888_to_rgb444(r, g, b);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.cnt++;
+    }
+  } else {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgb888_to_rgb565(r, g, b);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.cnt++;
+    }
+  }
+  return bins;
+}
+function quantize(rgba, maxColors, opts = {}) {
+  const {
+    format = "rgb565",
+    clearAlpha = true,
+    clearAlphaColor = 0,
+    clearAlphaThreshold = 0,
+    oneBitAlpha = false
+  } = opts;
+  if (!rgba || !rgba.buffer) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (!(rgba instanceof Uint8Array) && !(rgba instanceof Uint8ClampedArray)) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  const data = new Uint32Array(rgba.buffer);
+  let useSqrt = opts.useSqrt !== false;
+  const hasAlpha = format === "rgba4444";
+  const bins = create_bin_list(data, format);
+  const bincount = bins.length;
+  const bincountMinusOne = bincount - 1;
+  const heap = new Uint32Array(bincount + 1);
+  var maxbins = 0;
+  for (var i = 0; i < bincount; ++i) {
+    const bin = bins[i];
+    if (bin != null) {
+      var d = 1 / bin.cnt;
+      if (hasAlpha)
+        bin.ac *= d;
+      bin.rc *= d;
+      bin.gc *= d;
+      bin.bc *= d;
+      bins[maxbins++] = bin;
+    }
+  }
+  if (sqr(maxColors) / maxbins < 0.022) {
+    useSqrt = false;
+  }
+  var i = 0;
+  for (; i < maxbins - 1; ++i) {
+    bins[i].fw = i + 1;
+    bins[i + 1].bk = i;
+    if (useSqrt)
+      bins[i].cnt = Math.sqrt(bins[i].cnt);
+  }
+  if (useSqrt)
+    bins[i].cnt = Math.sqrt(bins[i].cnt);
+  var h, l, l2;
+  for (i = 0; i < maxbins; ++i) {
+    find_nn(bins, i, false);
+    var err = bins[i].err;
+    for (l = ++heap[0]; l > 1; l = l2) {
+      l2 = l >> 1;
+      if (bins[h = heap[l2]].err <= err)
+        break;
+      heap[l] = h;
+    }
+    heap[l] = i;
+  }
+  var extbins = maxbins - maxColors;
+  for (i = 0; i < extbins; ) {
+    var tb;
+    for (; ; ) {
+      var b1 = heap[1];
+      tb = bins[b1];
+      if (tb.tm >= tb.mtm && bins[tb.nn].mtm <= tb.tm)
+        break;
+      if (tb.mtm == bincountMinusOne)
+        b1 = heap[1] = heap[heap[0]--];
+      else {
+        find_nn(bins, b1, false);
+        tb.tm = i;
+      }
+      var err = bins[b1].err;
+      for (l = 1; (l2 = l + l) <= heap[0]; l = l2) {
+        if (l2 < heap[0] && bins[heap[l2]].err > bins[heap[l2 + 1]].err)
+          l2++;
+        if (err <= bins[h = heap[l2]].err)
+          break;
+        heap[l] = h;
+      }
+      heap[l] = b1;
+    }
+    var nb = bins[tb.nn];
+    var n1 = tb.cnt;
+    var n2 = nb.cnt;
+    var d = 1 / (n1 + n2);
+    if (hasAlpha)
+      tb.ac = d * (n1 * tb.ac + n2 * nb.ac);
+    tb.rc = d * (n1 * tb.rc + n2 * nb.rc);
+    tb.gc = d * (n1 * tb.gc + n2 * nb.gc);
+    tb.bc = d * (n1 * tb.bc + n2 * nb.bc);
+    tb.cnt += nb.cnt;
+    tb.mtm = ++i;
+    bins[nb.bk].fw = nb.fw;
+    bins[nb.fw].bk = nb.bk;
+    nb.mtm = bincountMinusOne;
+  }
+  let palette = [];
+  var k = 0;
+  for (i = 0; ; ++k) {
+    let r = clamp(Math.round(bins[i].rc), 0, 255);
+    let g = clamp(Math.round(bins[i].gc), 0, 255);
+    let b = clamp(Math.round(bins[i].bc), 0, 255);
+    let a = 255;
+    if (hasAlpha) {
+      a = clamp(Math.round(bins[i].ac), 0, 255);
+      if (oneBitAlpha) {
+        const threshold = typeof oneBitAlpha === "number" ? oneBitAlpha : 127;
+        a = a <= threshold ? 0 : 255;
+      }
+      if (clearAlpha && a <= clearAlphaThreshold) {
+        r = g = b = clearAlphaColor;
+        a = 0;
+      }
+    }
+    const color = hasAlpha ? [r, g, b, a] : [r, g, b];
+    const exists = existsInPalette(palette, color);
+    if (!exists)
+      palette.push(color);
+    if ((i = bins[i].fw) == 0)
+      break;
+  }
+  return palette;
+}
+function existsInPalette(palette, color) {
+  for (let i = 0; i < palette.length; i++) {
+    const p = palette[i];
+    let matchesRGB = p[0] === color[0] && p[1] === color[1] && p[2] === color[2];
+    let matchesAlpha = p.length >= 4 && color.length >= 4 ? p[3] === color[3] : true;
+    if (matchesRGB && matchesAlpha)
+      return true;
+  }
+  return false;
+}
+
+// src/color.js
+function euclideanDistanceSquared(a, b) {
+  var sum = 0;
+  var n;
+  for (n = 0; n < a.length; n++) {
+    const dx = a[n] - b[n];
+    sum += dx * dx;
+  }
+  return sum;
+}
+
+// src/palettize.js
+function roundStep(byte, step) {
+  return step > 1 ? Math.round(byte / step) * step : byte;
+}
+function prequantize(rgba, {roundRGB = 5, roundAlpha = 10, oneBitAlpha = null} = {}) {
+  const data = new Uint32Array(rgba.buffer);
+  for (let i = 0; i < data.length; i++) {
+    const color = data[i];
+    let a = color >> 24 & 255;
+    let b = color >> 16 & 255;
+    let g = color >> 8 & 255;
+    let r = color & 255;
+    a = roundStep(a, roundAlpha);
+    if (oneBitAlpha) {
+      const threshold = typeof oneBitAlpha === "number" ? oneBitAlpha : 127;
+      a = a <= threshold ? 0 : 255;
+    }
+    r = roundStep(r, roundRGB);
+    g = roundStep(g, roundRGB);
+    b = roundStep(b, roundRGB);
+    data[i] = a << 24 | b << 16 | g << 8 | r << 0;
+  }
+}
+function applyPalette(rgba, palette, format = "rgb565") {
+  if (!rgba || !rgba.buffer) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (!(rgba instanceof Uint8Array) && !(rgba instanceof Uint8ClampedArray)) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (palette.length > 256) {
+    throw new Error("applyPalette() only works with 256 colors or less");
+  }
+  const data = new Uint32Array(rgba.buffer);
+  const length = data.length;
+  const bincount = format === "rgb444" ? 4096 : 65536;
+  const index = new Uint8Array(length);
+  const cache = new Array(bincount);
+  const hasAlpha = format === "rgba4444";
+  if (format === "rgba4444") {
+    for (let i = 0; i < length; i++) {
+      const color = data[i];
+      const a = color >> 24 & 255;
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const key = rgba8888_to_rgba4444(r, g, b, a);
+      const idx = key in cache ? cache[key] : cache[key] = nearestColorIndexRGBA(r, g, b, a, palette);
+      index[i] = idx;
+    }
+  } else {
+    const rgb888_to_key = format === "rgb444" ? rgb888_to_rgb444 : rgb888_to_rgb565;
+    for (let i = 0; i < length; i++) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const key = rgb888_to_key(r, g, b);
+      const idx = key in cache ? cache[key] : cache[key] = nearestColorIndexRGB(r, g, b, palette);
+      index[i] = idx;
+    }
+  }
+  return index;
+}
+function nearestColorIndexRGBA(r, g, b, a, palette) {
+  let k = 0;
+  let mindist = 1e100;
+  for (let i = 0; i < palette.length; i++) {
+    const px2 = palette[i];
+    const a2 = px2[3];
+    let curdist = sqr2(a2 - a);
+    if (curdist > mindist)
+      continue;
+    const r2 = px2[0];
+    curdist += sqr2(r2 - r);
+    if (curdist > mindist)
+      continue;
+    const g2 = px2[1];
+    curdist += sqr2(g2 - g);
+    if (curdist > mindist)
+      continue;
+    const b2 = px2[2];
+    curdist += sqr2(b2 - b);
+    if (curdist > mindist)
+      continue;
+    mindist = curdist;
+    k = i;
+  }
+  return k;
+}
+function nearestColorIndexRGB(r, g, b, palette) {
+  let k = 0;
+  let mindist = 1e100;
+  for (let i = 0; i < palette.length; i++) {
+    const px2 = palette[i];
+    const r2 = px2[0];
+    let curdist = sqr2(r2 - r);
+    if (curdist > mindist)
+      continue;
+    const g2 = px2[1];
+    curdist += sqr2(g2 - g);
+    if (curdist > mindist)
+      continue;
+    const b2 = px2[2];
+    curdist += sqr2(b2 - b);
+    if (curdist > mindist)
+      continue;
+    mindist = curdist;
+    k = i;
+  }
+  return k;
+}
+function snapColorsToPalette(palette, knownColors, threshold = 5) {
+  if (!palette.length || !knownColors.length)
+    return;
+  const paletteRGB = palette.map((p) => p.slice(0, 3));
+  const thresholdSq = threshold * threshold;
+  const dim = palette[0].length;
+  for (let i = 0; i < knownColors.length; i++) {
+    let color = knownColors[i];
+    if (color.length < dim) {
+      color = [color[0], color[1], color[2], 255];
+    } else if (color.length > dim) {
+      color = color.slice(0, 3);
+    } else {
+      color = color.slice();
+    }
+    const r = nearestColorIndexWithDistance(paletteRGB, color.slice(0, 3), euclideanDistanceSquared);
+    const idx = r[0];
+    const distanceSq = r[1];
+    if (distanceSq > 0 && distanceSq <= thresholdSq) {
+      palette[idx] = color;
+    }
+  }
+}
+function sqr2(a) {
+  return a * a;
+}
+function nearestColorIndex(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  let minDist = Infinity;
+  let minDistIndex = -1;
+  for (let j = 0; j < colors.length; j++) {
+    const paletteColor = colors[j];
+    const dist = distanceFn(pixel, paletteColor);
+    if (dist < minDist) {
+      minDist = dist;
+      minDistIndex = j;
+    }
+  }
+  return minDistIndex;
+}
+function nearestColorIndexWithDistance(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  let minDist = Infinity;
+  let minDistIndex = -1;
+  for (let j = 0; j < colors.length; j++) {
+    const paletteColor = colors[j];
+    const dist = distanceFn(pixel, paletteColor);
+    if (dist < minDist) {
+      minDist = dist;
+      minDistIndex = j;
+    }
+  }
+  return [minDistIndex, minDist];
+}
+function nearestColor(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  return colors[nearestColorIndex(colors, pixel, distanceFn)];
+}
+
+// src/index.js
+function GIFEncoder(opt = {}) {
+  const {initialCapacity = 4096, auto = true} = opt;
+  const stream = createStream(initialCapacity);
+  const HSIZE = 5003;
+  const accum = new Uint8Array(256);
+  const htab = new Int32Array(HSIZE);
+  const codetab = new Int32Array(HSIZE);
+  let hasInit = false;
+  return {
+    reset() {
+      stream.reset();
+      hasInit = false;
+    },
+    finish() {
+      stream.writeByte(constants_default.trailer);
+    },
+    bytes() {
+      return stream.bytes();
+    },
+    bytesView() {
+      return stream.bytesView();
+    },
+    get buffer() {
+      return stream.buffer;
+    },
+    get stream() {
+      return stream;
+    },
+    writeHeader,
+    writeFrame(index, width, height, opts = {}) {
+      const {
+        transparent = false,
+        transparentIndex = 0,
+        delay = 0,
+        palette = null,
+        repeat = 0,
+        colorDepth = 8,
+        dispose = -1
+      } = opts;
+      let first = false;
+      if (auto) {
+        if (!hasInit) {
+          first = true;
+          writeHeader();
+          hasInit = true;
+        }
+      } else {
+        first = Boolean(opts.first);
+      }
+      width = Math.max(0, Math.floor(width));
+      height = Math.max(0, Math.floor(height));
+      if (first) {
+        if (!palette) {
+          throw new Error("First frame must include a { palette } option");
+        }
+        encodeLogicalScreenDescriptor(stream, width, height, palette, colorDepth);
+        encodeColorTable(stream, palette);
+        if (repeat >= 0) {
+          encodeNetscapeExt(stream, repeat);
+        }
+      }
+      const delayTime = Math.round(delay / 10);
+      encodeGraphicControlExt(stream, dispose, delayTime, transparent, transparentIndex);
+      const useLocalColorTable = Boolean(palette) && !first;
+      encodeImageDescriptor(stream, width, height, useLocalColorTable ? palette : null);
+      if (useLocalColorTable)
+        encodeColorTable(stream, palette);
+      encodePixels(stream, index, width, height, colorDepth, accum, htab, codetab);
+    }
+  };
+  function writeHeader() {
+    writeUTFBytes(stream, "GIF89a");
+  }
+}
+function encodeGraphicControlExt(stream, dispose, delay, transparent, transparentIndex) {
+  stream.writeByte(33);
+  stream.writeByte(249);
+  stream.writeByte(4);
+  if (transparentIndex < 0) {
+    transparentIndex = 0;
+    transparent = false;
+  }
+  var transp, disp;
+  if (!transparent) {
+    transp = 0;
+    disp = 0;
+  } else {
+    transp = 1;
+    disp = 2;
+  }
+  if (dispose >= 0) {
+    disp = dispose & 7;
+  }
+  disp <<= 2;
+  const userInput = 0;
+  stream.writeByte(0 | disp | userInput | transp);
+  writeUInt16(stream, delay);
+  stream.writeByte(transparentIndex || 0);
+  stream.writeByte(0);
+}
+function encodeLogicalScreenDescriptor(stream, width, height, palette, colorDepth = 8) {
+  const globalColorTableFlag = 1;
+  const sortFlag = 0;
+  const globalColorTableSize = colorTableSize(palette.length) - 1;
+  const fields = globalColorTableFlag << 7 | colorDepth - 1 << 4 | sortFlag << 3 | globalColorTableSize;
+  const backgroundColorIndex = 0;
+  const pixelAspectRatio = 0;
+  writeUInt16(stream, width);
+  writeUInt16(stream, height);
+  stream.writeBytes([fields, backgroundColorIndex, pixelAspectRatio]);
+}
+function encodeNetscapeExt(stream, repeat) {
+  stream.writeByte(33);
+  stream.writeByte(255);
+  stream.writeByte(11);
+  writeUTFBytes(stream, "NETSCAPE2.0");
+  stream.writeByte(3);
+  stream.writeByte(1);
+  writeUInt16(stream, repeat);
+  stream.writeByte(0);
+}
+function encodeColorTable(stream, palette) {
+  const colorTableLength = 1 << colorTableSize(palette.length);
+  for (let i = 0; i < colorTableLength; i++) {
+    let color = [0, 0, 0];
+    if (i < palette.length) {
+      color = palette[i];
+    }
+    stream.writeByte(color[0]);
+    stream.writeByte(color[1]);
+    stream.writeByte(color[2]);
+  }
+}
+function encodeImageDescriptor(stream, width, height, localPalette) {
+  stream.writeByte(44);
+  writeUInt16(stream, 0);
+  writeUInt16(stream, 0);
+  writeUInt16(stream, width);
+  writeUInt16(stream, height);
+  if (localPalette) {
+    const interlace = 0;
+    const sorted = 0;
+    const palSize = colorTableSize(localPalette.length) - 1;
+    stream.writeByte(128 | interlace | sorted | 0 | palSize);
+  } else {
+    stream.writeByte(0);
+  }
+}
+function encodePixels(stream, index, width, height, colorDepth = 8, accum, htab, codetab) {
+  lzwEncode_default(width, height, index, colorDepth, stream, accum, htab, codetab);
+}
+function writeUInt16(stream, short) {
+  stream.writeByte(short & 255);
+  stream.writeByte(short >> 8 & 255);
+}
+function writeUTFBytes(stream, text) {
+  for (var i = 0; i < text.length; i++) {
+    stream.writeByte(text.charCodeAt(i));
+  }
+}
+function colorTableSize(length) {
+  return Math.max(Math.ceil(Math.log2(length)), 1);
+}
+var src_default = GIFEncoder;
+//# sourceMappingURL=gifenc.js.map
+
+  window.gifenc = exports;
+})();
+</script>
+
+<!-- ===== 自研 GIF 解码器（无依赖，拆帧+保留延迟+处理 disposal） ===== -->
+<script>
+window.GifDecoder = (function(){
+  function lzwDecode(minCodeSize, data, pixelCount) {
+    var MAX_STACK_SIZE = 4096, nullCode = -1, npix = pixelCount;
+    var available, clear, code_mask, code_size, end_of_information, in_code, old_code, bits, code, i, datum, data_size, first, top, bi, pi;
+    var dstPixels = new Array(pixelCount), prefix = new Array(MAX_STACK_SIZE), suffix = new Array(MAX_STACK_SIZE), pixelStack = new Array(MAX_STACK_SIZE + 1);
+    data_size = minCodeSize;
+    clear = 1 << data_size;
+    end_of_information = clear + 1;
+    available = clear + 2;
+    old_code = nullCode;
+    code_size = data_size + 1;
+    code_mask = (1 << code_size) - 1;
+    for(code = 0; code < clear; code++){ prefix[code] = 0; suffix[code] = code; }
+    datum = bits = top = pi = bi = 0;
+    for(i = 0; i < npix;){
+      if(top === 0){
+        if(bits < code_size){ datum += data[bi] << bits; bits += 8; bi++; continue; }
+        code = datum & code_mask;
+        datum >>= code_size;
+        bits -= code_size;
+        if(code > available || code === end_of_information) break;
+        if(code === clear){
+          code_size = data_size + 1;
+          code_mask = (1 << code_size) - 1;
+          available = clear + 2;
+          old_code = nullCode;
+          continue;
+        }
+        if(old_code === nullCode){ pixelStack[top++] = suffix[code]; old_code = code; first = code; continue; }
+        in_code = code;
+        if(code === available){ pixelStack[top++] = first; code = old_code; }
+        while(code > clear){ pixelStack[top++] = suffix[code]; code = prefix[code]; }
+        first = suffix[code] & 0xff;
+        pixelStack[top++] = first;
+        if(available < MAX_STACK_SIZE){
+          prefix[available] = old_code;
+          suffix[available] = first;
+          available++;
+          if((available & code_mask) === 0 && available < MAX_STACK_SIZE){ code_size++; code_mask += available; }
+        }
+        old_code = in_code;
+      }
+      top--;
+      dstPixels[pi++] = pixelStack[top];
+      i++;
+    }
+    for(i = pi; i < npix; i++) dstPixels[i] = 0;
+    return dstPixels;
+  }
+  function deinterlace(pixels, width){
+    var newPixels = new Array(pixels.length), rows = pixels.length / width;
+    var offsets = [0, 4, 2, 1], steps = [8, 8, 4, 2], fromRow = 0, pass, toRow;
+    function cpRow(toRow, fromRow){
+      var fromPixels = pixels.slice(fromRow * width, (fromRow + 1) * width);
+      for(var k = 0; k < width; k++) newPixels[toRow * width + k] = fromPixels[k];
+    }
+    for(pass = 0; pass < 4; pass++){
+      for(toRow = offsets[pass]; toRow < rows; toRow += steps[pass]){ cpRow(toRow, fromRow); fromRow++; }
+    }
+    return newPixels;
+  }
+  function parse(bytes){
+    var p = 0;
+    function u16(){ var v = bytes[p] | (bytes[p+1] << 8); p += 2; return v; }
+    p = 6;
+    var w = u16(), h = u16();
+    var packed = bytes[p++]; p++; p++;
+    var gct = null;
+    if(packed & 0x80){
+      var gsize = 2 ** ((packed & 7) + 1);
+      gct = new Array(gsize);
+      for(var gi = 0; gi < gsize; gi++){ gct[gi] = [bytes[p], bytes[p+1], bytes[p+2]]; p += 3; }
+    }
+    var frames = [], gce = null;
+    while(p < bytes.length){
+      var b = bytes[p++];
+      if(b === 0x3b) break;
+      if(b === 0x21){
+        var label = bytes[p++];
+        if(label === 0xf9){
+          bytes[p++];
+          var fields = bytes[p++];
+          var delay = u16();
+          var tIdx = bytes[p++];
+          p++;
+          gce = { delay: Math.max(2, (delay || 10) * 10),
+                  disposal: (fields >> 2) & 0x7,
+                  transparent: (fields & 1) ? tIdx : null };
+        } else {
+          var sz = bytes[p++];
+          while(sz){ p += sz; sz = bytes[p++]; }
+        }
+      } else if(b === 0x2c){
+        var left = u16(), top = u16(), iw = u16(), ih = u16();
+        var ip = bytes[p++];
+        var lct = null, interlaced = false;
+        if(ip & 0x80){
+          var lsize = 2 ** ((ip & 7) + 1);
+          lct = new Array(lsize);
+          for(var li = 0; li < lsize; li++){ lct[li] = [bytes[p], bytes[p+1], bytes[p+2]]; p += 3; }
+        }
+        if(ip & 0x40) interlaced = true;
+        var minCode = bytes[p++];
+        var blocks = [], bsz = bytes[p++], totalLen = 0;
+        while(bsz){ blocks.push(bytes.subarray(p, p + bsz)); totalLen += bsz; p += bsz; bsz = bytes[p++]; }
+        var flat = new Uint8Array(totalLen), off = 0;
+        for(var bi = 0; bi < blocks.length; bi++){ flat.set(blocks[bi], off); off += blocks[bi].length; }
+        var pixels = lzwDecode(minCode, flat, iw * ih);
+        if(interlaced) pixels = deinterlace(pixels, iw);
+        var ct = lct || gct;
+        var transIdx = gce && gce.transparent !== null ? gce.transparent : null;
+        var patch = new Uint8ClampedArray(iw * ih * 4);
+        for(var i = 0; i < pixels.length; i++){
+          var ci = pixels[i];
+          var c = (ct && ct[ci]) || [0, 0, 0];
+          var o = i * 4;
+          patch[o] = c[0]; patch[o+1] = c[1]; patch[o+2] = c[2];
+          patch[o+3] = (transIdx !== null && ci === transIdx) ? 0 : 255;
+        }
+        frames.push({ patch: patch, dims: {top: top, left: left, width: iw, height: ih},
+                      delay: gce ? gce.delay : 100, disposal: gce ? gce.disposal : 0 });
+        gce = null;
+      }
+    }
+    return { w: w, h: h, frames: frames };
+  }
+  function toCanvases(bytes){
+    var parsed = parse(bytes);
+    var w = parsed.w, h = parsed.h, frames = parsed.frames;
+    var work = document.createElement("canvas");
+    work.width = w; work.height = h;
+    var wctx = work.getContext("2d", {willReadFrequently: true});
+    var stateBefore = null;
+    var out = [];
+    for(var i = 0; i < frames.length; i++){
+      var f = frames[i];
+      if(i > 0){
+        var prev = frames[i-1];
+        if(prev.disposal === 2){
+          wctx.clearRect(prev.dims.left, prev.dims.top, prev.dims.width, prev.dims.height);
+        } else if(prev.disposal === 3 && stateBefore){
+          wctx.putImageData(stateBefore, 0, 0);
+        }
+      }
+      var snapBefore = wctx.getImageData(0, 0, w, h);
+      var imgData = new ImageData(f.patch, f.dims.width, f.dims.height);
+      wctx.putImageData(imgData, f.dims.left, f.dims.top);
+      var c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(work, 0, 0);
+      out.push({ canvas: c, delay: f.delay });
+      stateBefore = snapBefore;
+    }
+    return out;
+  }
+  return { toCanvases: toCanvases };
+})();
+</script>
+
+<script>
+(function(){
+"use strict";
+/* ================= 状态 ================= */
+var frames = [];        // {id, img, delay, name, thumb}
+var texts = [];         // {id, text, x, y, size, color}
+var imgOvs = [];        // {id, img, x, y, scale}
+var outW = 320, outH = 240;
+var ratio = outW / outH;
+var lockAspect = true;
+var playing = true;
+var cur = 0;            // 当前帧下标
+var selected = new Set(); // 选中帧 id
+var uid = 1;
+var timer = null;
+var hist = [], future = [];
+var dragState = null;   // 画布上拖叠加层
+var lastShiftSelected = null;
+
+var $ = function(id){ return document.getElementById(id); };
+var canvas = $("previewCanvas"), ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+/* ================= 日志 ================= */
+function log(msg, cls){
+  var el = $("logArea");
+  el.style.display = "block";
+  var d = document.createElement("div");
+  d.className = cls || "log-info";
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ================= 历史 ================= */
+function snap(){
+  return {
+    order: frames.map(function(f){ return f.id; }),
+    delays: frames.map(function(f){ return f.delay; }),
+    texts: texts.map(function(t){ return {text:t.text, x:t.x, y:t.y, size:t.size, color:t.color}; }),
+    ov: imgOvs.map(function(o){ return {x:o.x, y:o.y, scale:o.scale}; })
+  };
+}
+function pushHist(){
+  hist.push(snap());
+  if(hist.length > 60) hist.shift();
+  future = [];
+}
+function restore(s){
+  var byId = {}; frames.forEach(function(f){ byId[f.id] = f; });
+  frames = s.order.map(function(id){ return byId[id]; });
+  frames.forEach(function(f,i){ f.delay = s.delays[i]; });
+  texts.forEach(function(t,i){ var s2 = s.texts[i]; if(s2){ t.text=s2.text; t.x=s2.x; t.y=s2.y; t.size=s2.size; t.color=s2.color; } });
+  imgOvs.forEach(function(o,i){ var s2 = s.ov[i]; if(s2){ o.x=s2.x; o.y=s2.y; o.scale=s2.scale; } });
+  if(cur >= frames.length) cur = 0;
+  selected.clear();
+  renderTimeline(); renderPreview(); renderTextList(); renderImgOvList();
+}
+function undo(){ if(!hist.length) return; future.push(snap()); restore(hist.pop()); }
+function redo(){ if(!future.length) return; hist.push(snap()); restore(future.pop()); }
+
+/* ================= 导入 ================= */
+$("dropZone").addEventListener("click", function(){ $("fileInput").click(); });
+var dz = $("dropZone");
+["dragover","dragenter"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add("act"); }); });
+["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove("act"); }); });
+dz.addEventListener("drop", function(e){
+  if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+});
+$("fileInput").addEventListener("change", function(e){
+  if(e.target.files.length) handleFiles(e.target.files);
+  e.target.value = "";
+});
+
+function handleFiles(fileList){
+  var files = Array.prototype.slice.call(fileList);
+  var gifs = [], zips = [], imgs = [];
+  files.forEach(function(f){
+    var ext = (f.name.split(".").pop()||"").toLowerCase();
+    if(ext === "gif") gifs.push(f);
+    else if(ext === "zip") zips.push(f);
+    else imgs.push(f);
+  });
+  var chain = Promise.resolve();
+  if(imgs.length) chain = chain.then(function(){ return addImagesDirect(imgs); });
+  gifs.forEach(function(f){ chain = chain.then(function(){ return addGif(f); }); });
+  zips.forEach(function(f){ chain = chain.then(function(){ return addZip(f); }); });
+  chain.then(function(){
+    log("导入完成：共 " + frames.length + " 帧", "log-ok");
+  }).catch(function(e){
+    log("导入失败：" + (e.message || e), "log-err");
+  });
+}
+
+function loadImageFromFile(file){
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){
+      var img = new Image();
+      img.onload = function(){ res(img); };
+      img.onerror = function(){ rej(new Error("图片读取失败: " + file.name)); };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+function loadImageFromDataUrl(dataUrl){
+  return new Promise(function(res, rej){
+    var img = new Image();
+    img.onload = function(){ res(img); };
+    img.onerror = function(){ rej(new Error("图片解析失败")); };
+    img.src = dataUrl;
+  });
+}
+function loadImageFromBlob(blob){
+  return new Promise(function(res, rej){
+    var img = new Image();
+    img.onload = function(){ res(img); };
+    img.onerror = function(){ rej(new Error("图片读取失败")); };
+    img.src = URL.createObjectURL(blob);
+  });
+}
+function ensureCanvasSize(img){
+  if(!frames.length){
+    outW = img.naturalWidth || img.width || outW;
+    outH = img.naturalHeight || img.height || outH;
+    ratio = outW / outH;
+    syncSizeInputs();
+  }
+}
+function pushFrame(img, delay, name){
+  ensureCanvasSize(img);
+  var f = {id: uid++, img: img, delay: delay, name: name || ("frame_" + frames.length),
+           natW: img.naturalWidth || img.width || outW,
+           natH: img.naturalHeight || img.height || outH};
+  frames.push(f);
+  selected.add(f.id);
+  return f;
+}
+function addImagesDirect(files){
+  pushHist();
+  return files.reduce(function(p, f){
+    return p.then(function(){
+      return loadImageFromFile(f).then(function(img){
+        var d = parseInt($("globalDelay").value, 10) || 100;
+        pushFrame(img, d, f.name);
+      });
+    });
+  }, Promise.resolve()).then(function(){ renderTimeline(); renderPreview(); updateInfo(); });
+}
+function postBinary(url, file){
+  return fetch(url, {method:"POST", headers:{"Content-Type":"application/octet-stream"}, body: file})
+    .then(function(r){ return r.json(); });
+}
+function addGif(file){
+  /* 浏览器内拆 GIF（自研解码器，见文件顶部 <script>） */
+  return file.arrayBuffer().then(function(buf){
+    var dec = window.GifDecoder.toCanvases(new Uint8Array(buf));
+    if(!dec.length) throw new Error("GIF 里没有可读帧");
+    pushHist();
+    dec.forEach(function(fr, i){
+      pushFrame(fr.canvas, fr.delay, "frame_" + i);
+    });
+    renderTimeline(); renderPreview(); updateInfo();
+  });
+}
+function addZip(file){
+  /* 浏览器内解 ZIP（deflate-raw 用 DecompressionStream） */
+  return file.arrayBuffer().then(function(buf){
+    return (async function(){
+    var dv = new DataView(buf);
+    var eocd = -1;
+    for(var i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65557); i--){
+      if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+    }
+    if(eocd < 0) throw new Error("不是 ZIP 文件");
+    var count = dv.getUint16(eocd + 10, true);
+    var cdOff = dv.getUint32(eocd + 16, true);
+    var entries = [];
+    var p = cdOff;
+    for(var n = 0; n < count; n++){
+      if(dv.getUint32(p, true) !== 0x02014b50) break;
+      entries.push({
+        method: dv.getUint16(p + 10, true),
+        compSize: dv.getUint32(p + 20, true),
+        nameLen: dv.getUint16(p + 28, true),
+        extraLen: dv.getUint16(p + 30, true),
+        commentLen: dv.getUint16(p + 32, true),
+        localOff: dv.getUint32(p + 42, true),
+        name: new TextDecoder().decode(new Uint8Array(buf, p + 46, dv.getUint16(p + 28, true)))
+      });
+      p += 46 + dv.getUint16(p + 28, true) + dv.getUint16(p + 30, true) + dv.getUint16(p + 32, true);
+    }
+    var exts = /\.(png|jpg|jpeg|webp|bmp|gif|tif|tiff)$/i;
+    var imgs = [];
+    for(var k = 0; k < entries.length; k++){
+      var e = entries[k];
+      if(!exts.test(e.name)) continue;
+      var lh = e.localOff;
+      if(dv.getUint32(lh, true) !== 0x04034b50) continue;
+      var lNameLen = dv.getUint16(lh + 26, true);
+      var lExtraLen = dv.getUint16(lh + 28, true);
+      var dataStart = lh + 30 + lNameLen + lExtraLen;
+      var comp = new Uint8Array(buf.slice(dataStart, dataStart + e.compSize));
+      var bytes = null;
+      if(e.method === 0) bytes = comp;
+      else if(e.method === 8){
+        var ds = new DecompressionStream("deflate-raw");
+        var resp = await new Response(new Blob([comp]).stream().pipeThrough(ds)).arrayBuffer();
+        bytes = new Uint8Array(resp);
+      } else continue;
+      var img = await loadImageFromBlob(new Blob([bytes], {type:"image/png"}));
+      imgs.push({name: e.name, img: img});
+    }
+    imgs.sort(function(a,b){ return a.name.localeCompare(b.name, undefined, {sensitivity:"base"}); });
+    pushHist();
+    var d = parseInt($("globalDelay").value, 10) || 100;
+    imgs.forEach(function(x){ pushFrame(x.img, d, x.name); });
+    renderTimeline(); renderPreview(); updateInfo();
+    })();
+  });
+}
+
+/* ================= 信息栏 ================= */
+function updateInfo(){
+  var bar = $("infoBar");
+  if(!frames.length){ bar.innerHTML = '<span class="cnt">未导入</span>'; return; }
+  bar.innerHTML =
+    '<span class="cnt">' + frames.length + ' 帧</span>' +
+    '<span>' + outW + ' × ' + outH + '</span>' +
+    '<span>选中 ' + selected.size + ' 帧</span>' +
+    '<span class="sep"></span><span>' + frames[0].name + ' …</span>';
+}
+
+/* ================= 预览渲染 ================= */
+function renderFrameOnto(c, f){
+  c.getContext("2d").imageSmoothingEnabled = false;
+  c.getContext("2d").drawImage(f.img, 0, 0, outW, outH);
+  imgOvs.forEach(function(o){
+    var w = o.img.naturalWidth * o.scale, h = o.img.naturalHeight * o.scale;
+    c.getContext("2d").drawImage(o.img, o.x, o.y, w, h);
+  });
+  texts.forEach(function(t){
+    c.getContext("2d").font = t.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+    c.getContext("2d").fillStyle = t.color;
+    c.getContext("2d").textBaseline = "top";
+    c.getContext("2d").fillText(t.text, t.x, t.y);
+  });
+}
+function renderPreview(){
+  canvas.width = outW; canvas.height = outH;
+  if(!frames.length){
+    ctx.clearRect(0,0,outW,outH);
+    $("frameInfo").textContent = "0 / 0";
+    return;
+  }
+  if(cur >= frames.length) cur = 0;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(frames[cur].img, 0, 0, outW, outH);
+  imgOvs.forEach(function(o){
+    ctx.drawImage(o.img, o.x, o.y, o.img.naturalWidth * o.scale, o.img.naturalHeight * o.scale);
+  });
+  texts.forEach(function(t){
+    ctx.font = t.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+    ctx.fillStyle = t.color;
+    ctx.textBaseline = "top";
+    ctx.fillText(t.text, t.x, t.y);
+  });
+  $("frameInfo").textContent = (cur + 1) + " / " + frames.length;
+}
+/* 播放 */
+function stopPlay(){ if(timer){ clearTimeout(timer); timer = null; } }
+function playTick(){
+  renderPreview();
+  var delay = (frames[cur] && frames[cur].delay) || 100;
+  cur = (cur + 1) % frames.length;
+  timer = setTimeout(playTick, delay);
+}
+function setPlaying(on){
+  playing = on;
+  $("playBtn").textContent = on ? "⏸ 暂停" : "▶ 播放";
+  stopPlay();
+  if(on && frames.length) timer = setTimeout(playTick, frames[cur] ? frames[cur].delay : 100);
+}
+$("playBtn").onclick = function(){ setPlaying(!playing); };
+$("prevBtn").onclick = function(){ setPlaying(false); cur = (cur - 1 + frames.length) % frames.length; renderPreview(); };
+$("nextBtn").onclick = function(){ setPlaying(false); cur = (cur + 1) % frames.length; renderPreview(); };
+
+/* ================= 时间线 ================= */
+function thumbData(f){
+  var c = document.createElement("canvas");
+  var sc = Math.min(80 / f.natW, 80 / f.natH, 1);
+  c.width = Math.max(1, Math.round(f.natW * sc));
+  c.height = Math.max(1, Math.round(f.natH * sc));
+  c.getContext("2d").imageSmoothingEnabled = false;
+  c.getContext("2d").drawImage(f.img, 0, 0, c.width, c.height);
+  return c.toDataURL();
+}
+function renderTimeline(){
+  var strip = $("tlStrip");
+  strip.innerHTML = "";
+  if(!frames.length){
+    strip.innerHTML = '<div class="tl-empty" style="flex:1;">导入素材后，帧会出现在这里</div>';
+    return;
+  }
+  frames.forEach(function(f, i){
+    var card = document.createElement("div");
+    card.className = "tl-card" + (selected.has(f.id) ? " on" : "");
+    card.draggable = true;
+    card.dataset.id = f.id;
+    card.innerHTML =
+      '<span class="idx">' + (i+1) + '</span>' +
+      '<button class="del" title="删除">×</button>' +
+      '<img src="' + thumbData(f) + '" alt="">' +
+      '<input type="number" class="tl-delay" value="' + f.delay + '" min="2" step="10" title="帧延迟 ms">';
+    card.querySelector(".del").onclick = function(e){
+      e.stopPropagation();
+      pushHist();
+      frames = frames.filter(function(x){ return x.id !== f.id; });
+      selected.delete(f.id);
+      renderTimeline(); renderPreview(); updateInfo();
+    };
+    card.querySelector("img").onclick = function(){
+      setPlaying(false); cur = i; renderPreview();
+    };
+    card.addEventListener("click", function(e){
+      if(e.shiftKey && lastShiftSelected !== null){
+        var a = frames.findIndex(function(x){ return x.id === lastShiftSelected; });
+        var b = i;
+        var lo = Math.min(a,b), hi = Math.max(a,b);
+        for(var k = lo; k <= hi; k++) selected.add(frames[k].id);
+      } else {
+        if(!e.shiftKey && !e.ctrlKey) selected.clear();
+        selected.add(f.id);
+        lastShiftSelected = f.id;
+      }
+      renderTimeline(); updateInfo();
+    });
+    card.querySelector(".tl-delay").addEventListener("change", function(){
+      pushHist();
+      f.delay = Math.max(2, parseInt(this.value, 10) || 100);
+      renderPreview();
+    });
+    /* 拖拽排序 */
+    card.addEventListener("dragstart", function(){ card.classList.add("dragging"); });
+    card.addEventListener("dragend", function(){ card.classList.remove("dragging"); clearMarkers(); });
+    card.addEventListener("dragover", function(e){
+      e.preventDefault();
+      clearMarkers();
+      var rect = card.getBoundingClientRect();
+      if(e.clientX - rect.left < rect.width/2) card.classList.add("drag-before");
+      else card.classList.add("drag-after");
+    });
+    card.addEventListener("drop", function(e){
+      e.preventDefault();
+      clearMarkers();
+      var from = findDragId();
+      if(from === null) return;
+      var rect = card.getBoundingClientRect();
+      var before = e.clientX - rect.left < rect.width/2;
+      /* 整块移动：拖的是多选组中的一员且多选>1，则连同其他选中帧一起移动 */
+      var ids;
+      if(selected.size > 1 && selected.has(from)){
+        ids = frames.filter(function(x){ return selected.has(x.id); }).map(function(x){ return x.id; });
+      } else {
+        if(from === f.id) return;
+        ids = [from];
+      }
+      pushHist();
+      var idSet = {};
+      ids.forEach(function(id){ idSet[id] = true; });
+      var moving = frames.filter(function(x){ return idSet[x.id]; });
+      var rest = frames.filter(function(x){ return !idSet[x.id]; });
+      var ti = rest.findIndex(function(x){ return x.id === f.id; });
+      if(ti < 0) ti = rest.length;
+      if(!before) ti++;
+      frames = rest.slice(0, ti).concat(moving).concat(rest.slice(ti));
+      renderTimeline(); renderPreview();
+      dragId = null;
+    });
+    strip.appendChild(card);
+  });
+}
+var dragId = null;
+document.addEventListener("dragstart", function(e){
+  var c = e.target.closest && e.target.closest(".tl-card");
+  if(c) dragId = parseInt(c.dataset.id, 10);
+});
+function findDragId(){ return dragId; }
+function clearMarkers(){
+  document.querySelectorAll(".drag-before,.drag-after").forEach(function(el){
+    el.classList.remove("drag-before","drag-after");
+  });
+}
+/* 批量操作 */
+$("delSelected").onclick = function(){
+  if(!selected.size) return;
+  pushHist();
+  frames = frames.filter(function(f){ return !selected.has(f.id); });
+  selected.clear();
+  renderTimeline(); renderPreview(); updateInfo();
+};
+$("dupSelected").onclick = function(){
+  if(!selected.size) return;
+  pushHist();
+  var copy = [];
+  frames.forEach(function(f){
+    if(selected.has(f.id)) copy.push({id: uid++, img: f.img, delay: f.delay, name: f.name});
+  });
+  frames = frames.concat(copy);
+  selected.clear();
+  renderTimeline(); renderPreview(); updateInfo();
+};
+$("clearAll").onclick = function(){
+  if(!frames.length) return;
+  pushHist();
+  frames = []; selected.clear(); cur = 0;
+  renderTimeline(); renderPreview(); updateInfo();
+};
+$("applyDelay").onclick = function(){
+  var d = Math.max(2, parseInt($("globalDelay").value, 10) || 100);
+  pushHist();
+  frames.forEach(function(f){ f.delay = d; });
+  renderTimeline(); renderPreview();
+};
+
+/* ================= 大小 ================= */
+function syncSizeInputs(){
+  $("outW").value = outW;
+  $("outH").value = outH;
+}
+function setOutSize(w, h){
+  outW = Math.max(1, Math.round(w));
+  outH = Math.max(1, Math.round(h));
+  ratio = outW / outH;
+  syncSizeInputs(); renderPreview(); updateInfo();
+}
+$("outW").addEventListener("change", function(){
+  var w = parseInt(this.value, 10) || outW;
+  if(lockAspect) setOutSize(w, w / ratio);
+  else { outW = w; syncSizeInputs(); renderPreview(); }
+});
+$("outH").addEventListener("change", function(){
+  var h = parseInt(this.value, 10) || outH;
+  if(lockAspect) setOutSize(h * ratio, h);
+  else { outH = h; syncSizeInputs(); renderPreview(); }
+});
+$("lockAspectBtn").onclick = function(){
+  lockAspect = !lockAspect;
+  this.textContent = lockAspect ? "🔒 锁定比例" : "🔓 解锁比例";
+};
+document.querySelectorAll("[data-scale]").forEach(function(btn){
+  btn.onclick = function(){
+    var s = parseFloat(btn.dataset.scale);
+    if(frames.length){
+      var iw = frames[0].img.naturalWidth, ih = frames[0].img.naturalHeight;
+      setOutSize(iw * s, ih * s);
+    } else {
+      setOutSize(320 * s, 240 * s);
+    }
+  };
+});
+
+/* ================= 文本层 ================= */
+function renderTextList(){
+  var list = $("textList");
+  list.innerHTML = "";
+  texts.forEach(function(t, i){
+    var row = document.createElement("div");
+    row.className = "ov-row";
+    row.innerHTML =
+      '<input type="text" class="t-text" value="' + t.text.replace(/"/g,"&quot;") + '" title="文字">' +
+      '<input type="number" class="t-size" value="' + t.size + '" min="8" max="300" style="width:56px;" title="字号">' +
+      '<input type="color" class="t-color" value="' + t.color + '" title="颜色">' +
+      '<input type="number" class="t-x" value="' + t.x + '" title="X">' +
+      '<input type="number" class="t-y" value="' + t.y + '" title="Y">' +
+      '<button class="sm dan t-del">删</button>';
+    row.querySelector(".t-text").oninput = function(){ t.text = this.value; renderPreview(); persist(); };
+    row.querySelector(".t-size").onchange = function(){ t.size = parseInt(this.value,10)||24; renderPreview(); persist(); };
+    row.querySelector(".t-color").onchange = function(){ t.color = this.value; renderPreview(); persist(); };
+    row.querySelector(".t-x").onchange = function(){ t.x = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".t-y").onchange = function(){ t.y = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".t-del").onclick = function(){ pushHist(); texts.splice(i,1); renderTextList(); renderPreview(); };
+    list.appendChild(row);
+  });
+}
+$("addText").onclick = function(){
+  pushHist();
+  texts.push({text:"新文字", x:20, y:20, size:24, color:"#1a1a2e"});
+  renderTextList(); renderPreview(); persist();
+};
+
+/* ================= 图片叠加层 ================= */
+function renderImgOvList(){
+  var list = $("imgOvList");
+  list.innerHTML = "";
+  imgOvs.forEach(function(o, i){
+    var row = document.createElement("div");
+    row.className = "ov-row";
+    var c = document.createElement("canvas");
+    var sc = Math.min(44 / o.img.naturalWidth, 32 / o.img.naturalHeight, 1);
+    c.width = Math.max(1, o.img.naturalWidth*sc);
+    c.height = Math.max(1, o.img.naturalHeight*sc);
+    c.getContext("2d").imageSmoothingEnabled = false;
+    c.getContext("2d").drawImage(o.img, 0, 0, c.width, c.height);
+    row.appendChild(c);
+    var pct = Math.round(o.scale*100);
+    row.insertAdjacentHTML("beforeend",
+      '<input type="number" class="o-x" value="' + o.x + '" title="X">' +
+      '<input type="number" class="o-y" value="' + o.y + '" title="Y">' +
+      '<input type="number" class="o-sc" value="' + pct + '" style="width:58px;" title="缩放%">' +
+      '<button class="sm dan o-del">删</button>');
+    row.querySelector(".o-x").onchange = function(){ o.x = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".o-y").onchange = function(){ o.y = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".o-sc").onchange = function(){ o.scale = (parseInt(this.value,10)||100)/100; renderPreview(); persist(); };
+    row.querySelector(".o-del").onclick = function(){ pushHist(); imgOvs.splice(i,1); renderImgOvList(); renderPreview(); };
+    list.appendChild(row);
+  });
+}
+$("addImgOv").onclick = function(){ $("imgOvInput").click(); };
+$("imgOvInput").addEventListener("change", function(e){
+  if(!e.target.files.length) return;
+  loadImageFromFile(e.target.files[0]).then(function(img){
+    pushHist();
+    imgOvs.push({img:img, x:0, y:0, scale:1});
+    renderImgOvList(); renderPreview();
+  }).catch(function(err){ log(err.message, "log-err"); });
+  e.target.value = "";
+});
+
+/* 画布上拖动叠加层 */
+function canvasCoords(e){
+  var rect = canvas.getBoundingClientRect();
+  var sx = outW / rect.width, sy = outH / rect.height;
+  return {x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy};
+}
+canvas.addEventListener("mousedown", function(e){
+  var p = canvasCoords(e);
+  /* 从上到下命中：后加的在上层 */
+  for(var i = imgOvs.length - 1; i >= 0; i--){
+    var o = imgOvs[i];
+    var w = o.img.naturalWidth * o.scale, h = o.img.naturalHeight * o.scale;
+    if(p.x >= o.x && p.x <= o.x + w && p.y >= o.y && p.y <= o.y + h){
+      dragState = {type:"img", idx:i, dx:p.x - o.x, dy:p.y - o.y};
+      return;
+    }
+  }
+  for(var j = texts.length - 1; j >= 0; j--){
+    var t = texts[j];
+    ctx.font = t.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+    var w = ctx.measureText(t.text).width, h = t.size;
+    if(p.x >= t.x && p.x <= t.x + w && p.y >= t.y && p.y <= t.y + h){
+      dragState = {type:"text", idx:j, dx:p.x - t.x, dy:p.y - t.y};
+      return;
+    }
+  }
+});
+window.addEventListener("mousemove", function(e){
+  if(!dragState) return;
+  var p = canvasCoords(e);
+  if(dragState.type === "img"){
+    var o = imgOvs[dragState.idx];
+    o.x = Math.round(p.x - dragState.dx);
+    o.y = Math.round(p.y - dragState.dy);
+  } else {
+    var t = texts[dragState.idx];
+    t.x = Math.round(p.x - dragState.dx);
+    t.y = Math.round(p.y - dragState.dy);
+  }
+  renderPreview();
+  renderTextListSync(); renderImgOvListSync();
+});
+window.addEventListener("mouseup", function(){
+  if(dragState){ pushHist(); dragState = null; persist(); }
+});
+/* 拖动时同步列表输入框（不重渲染整个列表，避免丢失焦点） */
+function renderTextListSync(){
+  var rows = $("textList").children;
+  texts.forEach(function(t,i){
+    if(rows[i]){
+      rows[i].querySelector(".t-x").value = t.x;
+      rows[i].querySelector(".t-y").value = t.y;
+    }
+  });
+}
+function renderImgOvListSync(){
+  var rows = $("imgOvList").children;
+  imgOvs.forEach(function(o,i){
+    if(rows[i]){
+      rows[i].querySelector(".o-x").value = o.x;
+      rows[i].querySelector(".o-y").value = o.y;
+    }
+  });
+}
+
+/* ================= 撤销/重做按钮 & 快捷键 ================= */
+$("undoBtn").onclick = undo;
+$("redoBtn").onclick = redo;
+window.addEventListener("keydown", function(e){
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey){ e.preventDefault(); undo(); }
+  else if((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))){ e.preventDefault(); redo(); }
+  else if(e.key === "Delete"){
+    if(selected.size && ["INPUT","TEXTAREA"].indexOf(document.activeElement.tagName) < 0){
+      $("delSelected").click();
+    }
+  }
+});
+
+/* ================= 会话设置持久化 ================= */
+function persist(){
+  try{
+    localStorage.setItem("gifEditor.settings", JSON.stringify({
+      delay: $("globalDelay").value,
+      outW: outW, outH: outH, loop: $("loopCount").value,
+      texts: texts, ovMeta: imgOvs.map(function(o){ return {x:o.x,y:o.y,scale:o.scale}; })
+    }));
+  }catch(e){}
+}
+function restoreSettings(){
+  try{
+    var s = JSON.parse(localStorage.getItem("gifEditor.settings") || "null");
+    if(!s) return;
+    $("globalDelay").value = s.delay || 100;
+    outW = s.outW || 320; outH = s.outH || 240; ratio = outW/outH;
+    syncSizeInputs();
+    $("loopCount").value = s.loop || 0;
+  }catch(e){}
+}
+
+/* ================= 导出（gifenc 本地编码） ================= */
+$("exportBtn").onclick = function(){
+  if(!frames.length){ log("没有帧可导出", "log-err"); return; }
+  setPlaying(false);
+  var bar = $("progressBar"); bar.style.display = "block";
+  var fill = bar.querySelector(".fill");
+  var cvs = document.createElement("canvas");
+  cvs.width = outW; cvs.height = outH;
+  var cctx = cvs.getContext("2d", {willReadFrequently: true});
+  cctx.imageSmoothingEnabled = false;
+  var ge = window.gifenc;
+  var gif = ge.GIFEncoder();
+  var loop = parseInt($("loopCount").value, 10) || 0;
+  var i = 0;
+  (function step(){
+    if(i >= frames.length){
+      gif.finish();
+      var bytes = gif.bytes();
+      var blob = new Blob([bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)], {type:"image/gif"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = ($("outName").value || "output") + ".gif";
+      document.body.appendChild(a); a.click(); a.remove();
+      log("导出完成：" + a.download + "（" + (blob.size/1024).toFixed(1) + " KB，" + frames.length + " 帧）", "log-ok");
+      return;
+    }
+    cctx.clearRect(0,0,outW,outH);
+    cctx.drawImage(frames[i].img, 0, 0, outW, outH);
+    imgOvs.forEach(function(o){
+      cctx.drawImage(o.img, o.x, o.y, o.img.naturalWidth*o.scale, o.img.naturalHeight*o.scale);
+    });
+    texts.forEach(function(t){
+      cctx.font = t.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+      cctx.fillStyle = t.color; cctx.textBaseline = "top";
+      cctx.fillText(t.text, t.x, t.y);
+    });
+    var imgData = cctx.getImageData(0,0,outW,outH);
+    var palette = ge.quantize(imgData.data, 256);
+    var index = ge.applyPalette(imgData.data, palette);
+    gif.writeFrame(index, outW, outH, {
+      palette: palette,
+      delay: Math.max(2, frames[i].delay),
+      repeat: i === 0 ? loop : -1,
+      transparent: true,
+      dispose: 2
+    });
+    i++;
+    fill.style.width = Math.round(i / frames.length * 100) + "%";
+    step();
+  })();
+};
+
+/* ================= 启动 ================= */
+restoreSettings();
+renderTimeline();
+renderPreview();
+renderTextList();
+renderImgOvList();
+setPlaying(true);
+})();
+</script>
+</body>
+</html>

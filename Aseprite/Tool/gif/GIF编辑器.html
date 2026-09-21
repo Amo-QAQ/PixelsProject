@@ -1,0 +1,2687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIF 编辑器</title>
+<style>
+:root{--bg:#f5f6f8;--bg2:#f8f9fa;--bg3:#eff1f3;--text:#1a1a2e;--text2:#555;--text3:#999;--border:#ddd;--border2:#bbb;--blue:#2563eb;--blue-hi:#1d4ed8;--green:#16a34a;--green-hi:#15803d;--red:#dc2626;--amber:#f59e0b;--radius:10px;--rs:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg3);color:var(--text);padding:14px;line-height:1.45;font-size:14px;user-select:none;-webkit-user-select:none;}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+h1{font-size:20px;font-weight:700;}
+.sub{color:var(--text2);font-size:13px;margin-top:2px;}
+.card{background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);padding:12px 16px;margin-bottom:12px;}
+.card h2{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;margin-right:6px;}
+.h2-right{font-weight:400;font-size:12px;color:var(--text2);}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:11px;color:var(--text2);font-weight:600;}
+input[type=number]{width:70px;padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+input[type=text]{padding:5px 8px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;}
+input[type=color]{width:36px;height:28px;padding:2px;border:1px solid var(--border);border-radius:var(--rs);background:#fff;cursor:pointer;}
+button{padding:6px 12px;border:1px solid var(--border2);border-radius:var(--rs);background:var(--bg);font-size:12px;cursor:pointer;transition:all .15s;font-weight:500;}
+button:hover{background:var(--bg2);border-color:var(--text2);}
+button.pri{background:var(--blue);color:#fff;border-color:var(--blue);}
+button.pri:hover{background:var(--blue-hi);}
+button.ok{background:var(--green);color:#fff;border-color:var(--green);}
+button.ok:hover{background:var(--green-hi);}
+button.dan{color:var(--red);border-color:#fecaca;}
+button.dan:hover{background:#fef2f2;}
+button.sm{padding:4px 9px;font-size:11px;}
+button:disabled{opacity:.5;cursor:not-allowed;}
+.toolbar label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-weight:500;font-size:12px;}
+.toolbar label input{accent-color:var(--blue);}
+
+.layout{display:grid;grid-template-columns:420px 1fr;gap:14px;align-items:stretch;}
+@media (max-width:960px){.layout{grid-template-columns:1fr;}}
+
+.drop-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:22px;text-align:center;color:var(--text2);cursor:pointer;transition:all .2s;background:var(--bg2);}
+.drop-zone:hover,.drop-zone.act{border-color:var(--blue);background:#eff6ff;}
+.dz-main{font-size:14px;margin-bottom:4px;}
+.dz-main b{color:var(--blue);}
+.dz-sub{font-size:12px;color:var(--text3);}
+.info-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);font-size:12px;color:var(--text2);min-height:34px;}
+.info-bar .cnt{color:var(--blue);font-weight:700;}
+.sep{width:1px;height:18px;background:var(--border);margin:0 2px;}
+
+/* 预览区 */
+.preview-card{display:flex;flex-direction:column;}
+.preview-wrap{position:relative;height:360px;display:flex;align-items:center;justify-content:center;
+  background:repeating-conic-gradient(#e9eaee 0% 25%, #fdfdfd 0% 50%) 0 0/16px 16px;
+  border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;}
+#previewCanvas{image-rendering:pixelated;box-shadow:0 2px 10px rgba(0,0,0,.12);max-width:100%;max-height:56vh;cursor:default;}
+#previewCanvas.hovering{cursor:move;}
+.playbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.playbar .frame-info{font-size:12px;color:var(--text2);font-family:monospace;}
+
+/* 时间线 */
+.right-col{display:flex;flex-direction:column;gap:14px;align-self:stretch;}
+.right-top{display:flex;gap:14px;align-items:flex-start;}
+.layer-sidebar{width:180px;min-width:180px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:8px;display:flex;flex-direction:column;}
+.layer-sidebar .layer-title{font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2);}
+#layerList{display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto;}
+.card.tl-card-wrap{display:flex;flex-direction:column;flex:1;min-height:400px;}
+.tl-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:12px;color:var(--text2);}
+.tl-strip{display:flex;flex-wrap:wrap;gap:8px 20px;overflow-y:auto;overflow-x:hidden;padding:20px 20px 30px;flex:1;align-content:flex-start;user-select:none;-webkit-user-select:none;}
+.tl-rubber{position:fixed;border:1px solid var(--blue);background:rgba(37,99,235,.12);pointer-events:none;z-index:9999;}
+.tl-empty{color:var(--text3);font-size:13px;padding:20px;text-align:center;}
+.tl-card{position:relative;flex:0 0 96px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:5px;cursor:grab;transition:border-color .15s, box-shadow .15s;user-select:none;-webkit-user-select:none;}
+.tl-card:active{cursor:grabbing;}
+.tl-card img{width:100%;height:72px;object-fit:contain;image-rendering:pixelated;background:repeating-conic-gradient(#eceef1 0% 25%, #fff 0% 50%) 0 0/10px 10px;border-radius:3px;display:block;}
+.tl-card.on{border-color:var(--amber);box-shadow:0 0 0 2px rgba(245,158,11,.25);}
+.tl-card.cur-playing{border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.3);}
+.tl-card img, .tl-card canvas { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+.tl-card .idx{position:absolute;top:5px;left:5px;font-size:10px;font-family:monospace;color:#fff;background:rgba(0,0,0,.5);padding:0 4px;border-radius:3px;line-height:14px;}
+.tl-card .del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(255,255,255,.95);color:var(--red);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;}
+.tl-card .del:hover{background:var(--red);color:#fff;}
+.tl-card.dragging{opacity:.4;}
+.tl-card.drag-before{border-left:3px solid var(--blue);}
+.tl-card.drag-after{border-right:3px solid var(--blue);}
+.tl-delay{width:48px;padding:2px 4px;font-size:11px;text-align:center;border:1px solid var(--border);border-radius:4px;margin:2px auto;display:block;}
+
+/* 叠加层列表 */
+.ov-list{display:flex;flex-direction:column;gap:6px;}
+.ov-row{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:6px 8px;flex-wrap:wrap;}
+.ov-row input[type=text]{width:110px;font-size:12px;padding:4px 6px;}
+.ov-row input[type=number]{width:52px;font-size:12px;padding:4px 5px;}
+.ov-row .x{width:62px;}
+.ov-col{flex-direction:column;align-items:stretch;gap:6px;}
+.scope-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.scope-row button{font-size:11px;padding:2px 8px;}
+.scope-row button.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.scope-tag{font-size:11px;color:var(--text3);margin-left:auto;}
+.ov-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.ov-line canvas{image-rendering:pixelated;}
+.xf-label{font-size:9px;color:var(--amber);font-family:monospace;margin-top:2px;white-space:nowrap;overflow:hidden;}
+.ov-badge{position:absolute;bottom:3px;right:3px;font-size:10px;line-height:14px;padding:0 3px;border-radius:3px;background:rgba(245,158,11,.95);color:#fff;font-weight:700;}
+.ov-thumb{width:44px;height:32px;object-fit:contain;image-rendering:pixelated;background:repeating-conic-gradient(#eceef1 0% 25%, #fff 0% 50%) 0 0/8px 8px;border-radius:3px;border:1px solid var(--border);}
+.hint{font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* 导出 */
+#progressBar{width:100%;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;display:none;margin-top:10px;}
+#progressBar .fill{height:100%;background:linear-gradient(90deg,var(--green),#22c55e);width:0;transition:width .15s;}
+#logArea{font-family:monospace;font-size:11px;color:var(--text2);max-height:110px;overflow-y:auto;background:var(--bg3);padding:8px;border-radius:var(--rs);margin-top:8px;display:none;}
+.log-ok{color:var(--green);} .log-err{color:var(--red);} .log-info{color:var(--blue);}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎞️ GIF 编辑器</h1>
+    <p class="sub">本地纯处理 · 拆帧编辑 / 调整大小 / 添加文本 / 添加图片 · 无上传 · 双击画布可拖动文本与图片层</p>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- ============ 左列 ============ -->
+  <div>
+    <!-- 1. 导入 -->
+    <div class="card">
+      <h2><span><span class="step-num">1</span>导入素材</span><span class="h2-right">图片 / GIF / ZIP</span></h2>
+      <div class="drop-zone" id="dropZone">
+        <p class="dz-main">拖拽文件到这里，或 <b>点击选择</b></p>
+        <p class="dz-sub">PNG/JPG/WebP · .gif 自动拆帧 · .zip 自动解压排序 · 可多次追加</p>
+      </div>
+      <input type="file" id="fileInput" multiple accept="image/*,.gif,.zip" style="display:none;">
+      <div class="info-bar" id="infoBar">
+        <span class="cnt">未导入</span>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <div class="field"><label>全局延迟(ms)</label><input type="number" id="globalDelay" value="100" min="1" step="10"></div>
+        <button class="sm" id="applyDelay">应用到全部帧</button>
+        <button class="sm" id="applyDelaySel">应用到选中帧</button>
+      </div>
+    </div>
+
+    <!-- 2. 画面大小 -->
+    <div class="card">
+      <h2><span><span class="step-num">2</span>调整大小</span><span class="h2-right">输出尺寸</span></h2>
+      <div class="row">
+        <div class="field"><label>宽</label><input type="number" id="outW" min="1" max="2000"></div>
+        <div class="field"><label>高</label><input type="number" id="outH" min="1" max="2000"></div>
+        <button class="sm" id="lockAspectBtn">🔒 锁定比例</button>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <span style="font-size:11px;color:var(--text2);font-weight:600;">预设:</span>
+        <button class="sm" data-scale="0.25">25%</button>
+        <button class="sm" data-scale="0.5">50%</button>
+        <button class="sm" data-scale="1">100%</button>
+        <button class="sm" data-scale="2">200%</button>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <span style="font-size:11px;color:var(--text2);font-weight:600;">画幅(扩边不裁切):</span>
+        <button class="sm" data-ar="1">1:1</button>
+        <button class="sm" data-ar="1.333333">4:3</button>
+        <button class="sm" data-ar="0.75">3:4</button>
+        <button class="sm" data-ar="1.777777">16:9</button>
+        <button class="sm" data-ar="0.5625">9:16</button>
+      </div>
+      <div class="row" style="margin-top:8px;align-items:center;gap:8px;min-height:30px;">
+        <span style="font-size:11px;color:var(--text2);font-weight:600;">填充:</span>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="bgOpaque"> 不透明</label>
+        <input type="color" id="bgColor" value="#ffffff" style="width:34px;height:26px;padding:0;border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;" title="填充色">
+        <input type="text" id="bgHex" value="#ffffff" maxlength="7" style="width:78px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--rs);font-family:monospace;" title="颜色编号 #RRGGBB">
+      </div>
+    </div>
+
+    <!-- 3. 文本层 -->
+    <div class="card">
+      <h2><span><span class="step-num">3</span>添加文本</span><span class="h2-right">可拖拽</span></h2>
+      <div class="ov-list" id="textList"></div>
+      <button class="sm pri" id="addText" style="margin-top:8px;">＋ 添加文本</button>
+      <p class="hint">文本可直接在预览画布上拖动；字号/颜色/位置也可在此修改。</p>
+    </div>
+
+    <!-- 4. 图片层 -->
+    <div class="card">
+      <h2><span><span class="step-num">4</span>添加图片</span><span class="h2-right">可拖拽</span></h2>
+      <div class="ov-list" id="imgOvList"></div>
+      <button class="sm pri" id="addImgOv">＋ 叠加图片(PNG)</button>
+      <input type="file" id="imgOvInput" accept="image/*,.gif" style="display:none;">
+      <p class="hint">建议用带透明通道的 PNG；叠加层位于所有帧之上。</p>
+    </div>
+
+    <!-- 5. 导出 -->
+    <div class="card">
+      <h2><span><span class="step-num">5</span>导出 GIF</span></h2>
+      <div class="row">
+        <div class="field" style="flex:1;"><label>文件名</label><input type="text" id="outName" value="output" style="width:100%;"></div>
+        <div class="field"><label>循环</label>
+          <select id="loopCount" style="padding:5px 6px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;background:#fff;">
+            <option value="0">无限循环</option>
+            <option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option>
+          </select>
+        </div>
+      </div>
+      <button class="ok" id="exportBtn" style="margin-top:10px;width:100%;padding:10px;font-size:13px;">导出 GIF</button>
+      <div id="progressBar"><div class="fill"></div></div>
+      <div id="logArea"></div>
+    </div>
+  </div>
+
+  <!-- ============ 右列 ============ -->
+  <div class="right-col">
+    <div class="right-top">
+      <div class="layer-sidebar">
+        <div class="layer-title">图层</div>
+        <div id="layerList"></div>
+      </div>
+      <div class="card preview-card" style="flex:1;">
+      <h2><span><span class="step-num">▶</span>实时预览</span><span class="h2-right">所见即所得</span></h2>
+      <div class="preview-wrap" id="previewWrap">
+        <canvas id="previewCanvas" width="160" height="120"></canvas>
+      </div>
+      <div class="playbar">
+        <button class="sm" id="prevBtn">⏮</button>
+        <button class="sm pri" id="playBtn">⏸ 暂停</button>
+        <button class="sm" id="nextBtn">⏭</button>
+        <span class="frame-info" id="frameInfo">0 / 0</span>
+        <span class="sep" style="width:1px;height:18px;background:var(--border);"></span>
+        <button class="sm" id="undoBtn">↶ 撤销</button>
+        <button class="sm" id="redoBtn">↷ 重做</button>
+        <button class="sm pri" id="followBtn" title="开启后，拖动当前帧会同时平移后续所有帧">🔗 后续跟随 ON</button>
+      </div>
+      <div class="row" style="margin-top:8px;align-items:center;gap:8px;">
+        <span style="font-size:11px;color:var(--text2);font-weight:600;">底图(当前帧)</span>
+        <label style="font-size:12px;">X<input type="number" id="fTx" style="width:56px;margin-left:3px;"></label>
+        <label style="font-size:12px;">Y<input type="number" id="fTy" style="width:56px;margin-left:3px;"></label>
+        <label style="font-size:12px;">缩放%<input type="number" id="fTs" style="width:60px;margin-left:3px;"></label>
+        <button class="sm" id="frameToSel">变换→选中帧</button>
+        <button class="sm" id="clearSelOffset" title="清除选中层在当前帧的位移">清除选中位移</button>
+        <button class="sm dan" id="clearAllOffset" title="清除所有层在所有帧的位移">清除全部位移</button>
+      </div>
+    </div>
+
+
+    </div>
+
+    <div class="card tl-card-wrap">
+      <div class="tl-toolbar">
+        <b style="font-size:13px;">帧时间线</b>
+        <span>拖拽排序 · 点选（Shift 多选）· 每帧延迟可单独改</span>
+        <span style="margin-left:auto;display:flex;gap:6px;">
+          <button class="sm" id="dupSelected">复制选中</button>
+          <button class="sm" id="dupTwice" title="把整个序列再排一遍">序列×2</button>
+          <input type="number" id="dupN" value="2" min="2" max="20" style="width:48px;padding:3px 5px;font-size:12px;border:1px solid var(--border);border-radius:var(--rs);" title="每帧复制次数">
+          <button class="sm" id="dupTimes" title="选中帧停留 N 帧">停留N帧</button>
+          <button class="sm dan" id="delSelected">删除选中</button>
+          <button class="sm" id="clearAll">清空全部</button>
+        </span>
+      </div>
+      <div class="tl-strip" id="tlStrip">
+        <div class="tl-empty" style="flex:1;">导入素材后，帧会出现在这里</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== gifenc GIF 编码库（内联，IIFE 挂到 window.gifenc） ===== -->
+<script>
+(function(){
+  var exports = {};
+var __defProp = Object.defineProperty;
+var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {get: all[name], enumerable: true});
+};
+
+// src/index.js
+__markAsModule(exports);
+__export(exports, {
+  GIFEncoder: () => GIFEncoder,
+  applyPalette: () => applyPalette,
+  default: () => src_default,
+  nearestColor: () => nearestColor,
+  nearestColorIndex: () => nearestColorIndex,
+  nearestColorIndexWithDistance: () => nearestColorIndexWithDistance,
+  prequantize: () => prequantize,
+  quantize: () => quantize,
+  snapColorsToPalette: () => snapColorsToPalette
+});
+
+// src/constants.js
+var constants_default = {
+  signature: "GIF",
+  version: "89a",
+  trailer: 59,
+  extensionIntroducer: 33,
+  applicationExtensionLabel: 255,
+  graphicControlExtensionLabel: 249,
+  imageSeparator: 44,
+  signatureSize: 3,
+  versionSize: 3,
+  globalColorTableFlagMask: 128,
+  colorResolutionMask: 112,
+  sortFlagMask: 8,
+  globalColorTableSizeMask: 7,
+  applicationIdentifierSize: 8,
+  applicationAuthCodeSize: 3,
+  disposalMethodMask: 28,
+  userInputFlagMask: 2,
+  transparentColorFlagMask: 1,
+  localColorTableFlagMask: 128,
+  interlaceFlagMask: 64,
+  idSortFlagMask: 32,
+  localColorTableSizeMask: 7
+};
+
+// src/stream.js
+function createStream(initialCapacity = 256) {
+  let cursor = 0;
+  let contents = new Uint8Array(initialCapacity);
+  return {
+    get buffer() {
+      return contents.buffer;
+    },
+    reset() {
+      cursor = 0;
+    },
+    bytesView() {
+      return contents.subarray(0, cursor);
+    },
+    bytes() {
+      return contents.slice(0, cursor);
+    },
+    writeByte(byte) {
+      expand(cursor + 1);
+      contents[cursor] = byte;
+      cursor++;
+    },
+    writeBytes(data, offset = 0, byteLength = data.length) {
+      expand(cursor + byteLength);
+      for (let i = 0; i < byteLength; i++) {
+        contents[cursor++] = data[i + offset];
+      }
+    },
+    writeBytesView(data, offset = 0, byteLength = data.byteLength) {
+      expand(cursor + byteLength);
+      contents.set(data.subarray(offset, offset + byteLength), cursor);
+      cursor += byteLength;
+    }
+  };
+  function expand(newCapacity) {
+    var prevCapacity = contents.length;
+    if (prevCapacity >= newCapacity)
+      return;
+    var CAPACITY_DOUBLING_MAX = 1024 * 1024;
+    newCapacity = Math.max(newCapacity, prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2 : 1.125) >>> 0);
+    if (prevCapacity != 0)
+      newCapacity = Math.max(newCapacity, 256);
+    const oldContents = contents;
+    contents = new Uint8Array(newCapacity);
+    if (cursor > 0)
+      contents.set(oldContents.subarray(0, cursor), 0);
+  }
+}
+
+// src/lzwEncode.js
+var BITS = 12;
+var DEFAULT_HSIZE = 5003;
+var MASKS = [
+  0,
+  1,
+  3,
+  7,
+  15,
+  31,
+  63,
+  127,
+  255,
+  511,
+  1023,
+  2047,
+  4095,
+  8191,
+  16383,
+  32767,
+  65535
+];
+function lzwEncode(width, height, pixels, colorDepth, outStream = createStream(512), accum = new Uint8Array(256), htab = new Int32Array(DEFAULT_HSIZE), codetab = new Int32Array(DEFAULT_HSIZE)) {
+  const hsize = htab.length;
+  const initCodeSize = Math.max(2, colorDepth);
+  accum.fill(0);
+  codetab.fill(0);
+  htab.fill(-1);
+  let cur_accum = 0;
+  let cur_bits = 0;
+  const init_bits = initCodeSize + 1;
+  const g_init_bits = init_bits;
+  let clear_flg = false;
+  let n_bits = g_init_bits;
+  let maxcode = (1 << n_bits) - 1;
+  const ClearCode = 1 << init_bits - 1;
+  const EOFCode = ClearCode + 1;
+  let free_ent = ClearCode + 2;
+  let a_count = 0;
+  let ent = pixels[0];
+  let hshift = 0;
+  for (let fcode = hsize; fcode < 65536; fcode *= 2) {
+    ++hshift;
+  }
+  hshift = 8 - hshift;
+  outStream.writeByte(initCodeSize);
+  output(ClearCode);
+  const length = pixels.length;
+  for (let idx = 1; idx < length; idx++) {
+    next_block: {
+      const c = pixels[idx];
+      const fcode = (c << BITS) + ent;
+      let i = c << hshift ^ ent;
+      if (htab[i] === fcode) {
+        ent = codetab[i];
+        break next_block;
+      }
+      const disp = i === 0 ? 1 : hsize - i;
+      while (htab[i] >= 0) {
+        i -= disp;
+        if (i < 0)
+          i += hsize;
+        if (htab[i] === fcode) {
+          ent = codetab[i];
+          break next_block;
+        }
+      }
+      output(ent);
+      ent = c;
+      if (free_ent < 1 << BITS) {
+        codetab[i] = free_ent++;
+        htab[i] = fcode;
+      } else {
+        htab.fill(-1);
+        free_ent = ClearCode + 2;
+        clear_flg = true;
+        output(ClearCode);
+      }
+    }
+  }
+  output(ent);
+  output(EOFCode);
+  outStream.writeByte(0);
+  return outStream.bytesView();
+  function output(code) {
+    cur_accum &= MASKS[cur_bits];
+    if (cur_bits > 0)
+      cur_accum |= code << cur_bits;
+    else
+      cur_accum = code;
+    cur_bits += n_bits;
+    while (cur_bits >= 8) {
+      accum[a_count++] = cur_accum & 255;
+      if (a_count >= 254) {
+        outStream.writeByte(a_count);
+        outStream.writeBytesView(accum, 0, a_count);
+        a_count = 0;
+      }
+      cur_accum >>= 8;
+      cur_bits -= 8;
+    }
+    if (free_ent > maxcode || clear_flg) {
+      if (clear_flg) {
+        n_bits = g_init_bits;
+        maxcode = (1 << n_bits) - 1;
+        clear_flg = false;
+      } else {
+        ++n_bits;
+        maxcode = n_bits === BITS ? 1 << n_bits : (1 << n_bits) - 1;
+      }
+    }
+    if (code == EOFCode) {
+      while (cur_bits > 0) {
+        accum[a_count++] = cur_accum & 255;
+        if (a_count >= 254) {
+          outStream.writeByte(a_count);
+          outStream.writeBytesView(accum, 0, a_count);
+          a_count = 0;
+        }
+        cur_accum >>= 8;
+        cur_bits -= 8;
+      }
+      if (a_count > 0) {
+        outStream.writeByte(a_count);
+        outStream.writeBytesView(accum, 0, a_count);
+        a_count = 0;
+      }
+    }
+  }
+}
+var lzwEncode_default = lzwEncode;
+
+// src/rgb-packing.js
+function rgb888_to_rgb565(r, g, b) {
+  return r << 8 & 63488 | g << 2 & 992 | b >> 3;
+}
+function rgba8888_to_rgba4444(r, g, b, a) {
+  return r >> 4 | g & 240 | (b & 240) << 4 | (a & 240) << 8;
+}
+function rgb888_to_rgb444(r, g, b) {
+  return r >> 4 << 8 | g & 240 | b >> 4;
+}
+
+// src/pnnquant2.js
+function clamp(value, min, max) {
+  return value < min ? min : value > max ? max : value;
+}
+function sqr(value) {
+  return value * value;
+}
+function find_nn(bins, idx, hasAlpha) {
+  var nn = 0;
+  var err = 1e100;
+  const bin1 = bins[idx];
+  const n1 = bin1.cnt;
+  const wa = bin1.ac;
+  const wr = bin1.rc;
+  const wg = bin1.gc;
+  const wb = bin1.bc;
+  for (var i = bin1.fw; i != 0; i = bins[i].fw) {
+    const bin = bins[i];
+    const n2 = bin.cnt;
+    const nerr2 = n1 * n2 / (n1 + n2);
+    if (nerr2 >= err)
+      continue;
+    var nerr = 0;
+    if (hasAlpha) {
+      nerr += nerr2 * sqr(bin.ac - wa);
+      if (nerr >= err)
+        continue;
+    }
+    nerr += nerr2 * sqr(bin.rc - wr);
+    if (nerr >= err)
+      continue;
+    nerr += nerr2 * sqr(bin.gc - wg);
+    if (nerr >= err)
+      continue;
+    nerr += nerr2 * sqr(bin.bc - wb);
+    if (nerr >= err)
+      continue;
+    err = nerr;
+    nn = i;
+  }
+  bin1.err = err;
+  bin1.nn = nn;
+}
+function create_bin() {
+  return {
+    ac: 0,
+    rc: 0,
+    gc: 0,
+    bc: 0,
+    cnt: 0,
+    nn: 0,
+    fw: 0,
+    bk: 0,
+    tm: 0,
+    mtm: 0,
+    err: 0
+  };
+}
+function create_bin_list(data, format) {
+  const bincount = format === "rgb444" ? 4096 : 65536;
+  const bins = new Array(bincount);
+  const size = data.length;
+  if (format === "rgba4444") {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const a = color >> 24 & 255;
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgba8888_to_rgba4444(r, g, b, a);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.ac += a;
+      bin.cnt++;
+    }
+  } else if (format === "rgb444") {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgb888_to_rgb444(r, g, b);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.cnt++;
+    }
+  } else {
+    for (let i = 0; i < size; ++i) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const index = rgb888_to_rgb565(r, g, b);
+      let bin = index in bins ? bins[index] : bins[index] = create_bin();
+      bin.rc += r;
+      bin.gc += g;
+      bin.bc += b;
+      bin.cnt++;
+    }
+  }
+  return bins;
+}
+function quantize(rgba, maxColors, opts = {}) {
+  const {
+    format = "rgb565",
+    clearAlpha = true,
+    clearAlphaColor = 0,
+    clearAlphaThreshold = 0,
+    oneBitAlpha = false
+  } = opts;
+  if (!rgba || !rgba.buffer) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (!(rgba instanceof Uint8Array) && !(rgba instanceof Uint8ClampedArray)) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  const data = new Uint32Array(rgba.buffer);
+  let useSqrt = opts.useSqrt !== false;
+  const hasAlpha = format === "rgba4444";
+  const bins = create_bin_list(data, format);
+  const bincount = bins.length;
+  const bincountMinusOne = bincount - 1;
+  const heap = new Uint32Array(bincount + 1);
+  var maxbins = 0;
+  for (var i = 0; i < bincount; ++i) {
+    const bin = bins[i];
+    if (bin != null) {
+      var d = 1 / bin.cnt;
+      if (hasAlpha)
+        bin.ac *= d;
+      bin.rc *= d;
+      bin.gc *= d;
+      bin.bc *= d;
+      bins[maxbins++] = bin;
+    }
+  }
+  if (sqr(maxColors) / maxbins < 0.022) {
+    useSqrt = false;
+  }
+  var i = 0;
+  for (; i < maxbins - 1; ++i) {
+    bins[i].fw = i + 1;
+    bins[i + 1].bk = i;
+    if (useSqrt)
+      bins[i].cnt = Math.sqrt(bins[i].cnt);
+  }
+  if (useSqrt)
+    bins[i].cnt = Math.sqrt(bins[i].cnt);
+  var h, l, l2;
+  for (i = 0; i < maxbins; ++i) {
+    find_nn(bins, i, false);
+    var err = bins[i].err;
+    for (l = ++heap[0]; l > 1; l = l2) {
+      l2 = l >> 1;
+      if (bins[h = heap[l2]].err <= err)
+        break;
+      heap[l] = h;
+    }
+    heap[l] = i;
+  }
+  var extbins = maxbins - maxColors;
+  for (i = 0; i < extbins; ) {
+    var tb;
+    for (; ; ) {
+      var b1 = heap[1];
+      tb = bins[b1];
+      if (tb.tm >= tb.mtm && bins[tb.nn].mtm <= tb.tm)
+        break;
+      if (tb.mtm == bincountMinusOne)
+        b1 = heap[1] = heap[heap[0]--];
+      else {
+        find_nn(bins, b1, false);
+        tb.tm = i;
+      }
+      var err = bins[b1].err;
+      for (l = 1; (l2 = l + l) <= heap[0]; l = l2) {
+        if (l2 < heap[0] && bins[heap[l2]].err > bins[heap[l2 + 1]].err)
+          l2++;
+        if (err <= bins[h = heap[l2]].err)
+          break;
+        heap[l] = h;
+      }
+      heap[l] = b1;
+    }
+    var nb = bins[tb.nn];
+    var n1 = tb.cnt;
+    var n2 = nb.cnt;
+    var d = 1 / (n1 + n2);
+    if (hasAlpha)
+      tb.ac = d * (n1 * tb.ac + n2 * nb.ac);
+    tb.rc = d * (n1 * tb.rc + n2 * nb.rc);
+    tb.gc = d * (n1 * tb.gc + n2 * nb.gc);
+    tb.bc = d * (n1 * tb.bc + n2 * nb.bc);
+    tb.cnt += nb.cnt;
+    tb.mtm = ++i;
+    bins[nb.bk].fw = nb.fw;
+    bins[nb.fw].bk = nb.bk;
+    nb.mtm = bincountMinusOne;
+  }
+  let palette = [];
+  var k = 0;
+  for (i = 0; ; ++k) {
+    let r = clamp(Math.round(bins[i].rc), 0, 255);
+    let g = clamp(Math.round(bins[i].gc), 0, 255);
+    let b = clamp(Math.round(bins[i].bc), 0, 255);
+    let a = 255;
+    if (hasAlpha) {
+      a = clamp(Math.round(bins[i].ac), 0, 255);
+      if (oneBitAlpha) {
+        const threshold = typeof oneBitAlpha === "number" ? oneBitAlpha : 127;
+        a = a <= threshold ? 0 : 255;
+      }
+      if (clearAlpha && a <= clearAlphaThreshold) {
+        r = g = b = clearAlphaColor;
+        a = 0;
+      }
+    }
+    const color = hasAlpha ? [r, g, b, a] : [r, g, b];
+    const exists = existsInPalette(palette, color);
+    if (!exists)
+      palette.push(color);
+    if ((i = bins[i].fw) == 0)
+      break;
+  }
+  return palette;
+}
+function existsInPalette(palette, color) {
+  for (let i = 0; i < palette.length; i++) {
+    const p = palette[i];
+    let matchesRGB = p[0] === color[0] && p[1] === color[1] && p[2] === color[2];
+    let matchesAlpha = p.length >= 4 && color.length >= 4 ? p[3] === color[3] : true;
+    if (matchesRGB && matchesAlpha)
+      return true;
+  }
+  return false;
+}
+
+// src/color.js
+function euclideanDistanceSquared(a, b) {
+  var sum = 0;
+  var n;
+  for (n = 0; n < a.length; n++) {
+    const dx = a[n] - b[n];
+    sum += dx * dx;
+  }
+  return sum;
+}
+
+// src/palettize.js
+function roundStep(byte, step) {
+  return step > 1 ? Math.round(byte / step) * step : byte;
+}
+function prequantize(rgba, {roundRGB = 5, roundAlpha = 10, oneBitAlpha = null} = {}) {
+  const data = new Uint32Array(rgba.buffer);
+  for (let i = 0; i < data.length; i++) {
+    const color = data[i];
+    let a = color >> 24 & 255;
+    let b = color >> 16 & 255;
+    let g = color >> 8 & 255;
+    let r = color & 255;
+    a = roundStep(a, roundAlpha);
+    if (oneBitAlpha) {
+      const threshold = typeof oneBitAlpha === "number" ? oneBitAlpha : 127;
+      a = a <= threshold ? 0 : 255;
+    }
+    r = roundStep(r, roundRGB);
+    g = roundStep(g, roundRGB);
+    b = roundStep(b, roundRGB);
+    data[i] = a << 24 | b << 16 | g << 8 | r << 0;
+  }
+}
+function applyPalette(rgba, palette, format = "rgb565") {
+  if (!rgba || !rgba.buffer) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (!(rgba instanceof Uint8Array) && !(rgba instanceof Uint8ClampedArray)) {
+    throw new Error("quantize() expected RGBA Uint8Array data");
+  }
+  if (palette.length > 256) {
+    throw new Error("applyPalette() only works with 256 colors or less");
+  }
+  const data = new Uint32Array(rgba.buffer);
+  const length = data.length;
+  const bincount = format === "rgb444" ? 4096 : 65536;
+  const index = new Uint8Array(length);
+  const cache = new Array(bincount);
+  const hasAlpha = format === "rgba4444";
+  if (format === "rgba4444") {
+    for (let i = 0; i < length; i++) {
+      const color = data[i];
+      const a = color >> 24 & 255;
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const key = rgba8888_to_rgba4444(r, g, b, a);
+      const idx = key in cache ? cache[key] : cache[key] = nearestColorIndexRGBA(r, g, b, a, palette);
+      index[i] = idx;
+    }
+  } else {
+    const rgb888_to_key = format === "rgb444" ? rgb888_to_rgb444 : rgb888_to_rgb565;
+    for (let i = 0; i < length; i++) {
+      const color = data[i];
+      const b = color >> 16 & 255;
+      const g = color >> 8 & 255;
+      const r = color & 255;
+      const key = rgb888_to_key(r, g, b);
+      const idx = key in cache ? cache[key] : cache[key] = nearestColorIndexRGB(r, g, b, palette);
+      index[i] = idx;
+    }
+  }
+  return index;
+}
+function nearestColorIndexRGBA(r, g, b, a, palette) {
+  let k = 0;
+  let mindist = 1e100;
+  for (let i = 0; i < palette.length; i++) {
+    const px2 = palette[i];
+    const a2 = px2[3];
+    let curdist = sqr2(a2 - a);
+    if (curdist > mindist)
+      continue;
+    const r2 = px2[0];
+    curdist += sqr2(r2 - r);
+    if (curdist > mindist)
+      continue;
+    const g2 = px2[1];
+    curdist += sqr2(g2 - g);
+    if (curdist > mindist)
+      continue;
+    const b2 = px2[2];
+    curdist += sqr2(b2 - b);
+    if (curdist > mindist)
+      continue;
+    mindist = curdist;
+    k = i;
+  }
+  return k;
+}
+function nearestColorIndexRGB(r, g, b, palette) {
+  let k = 0;
+  let mindist = 1e100;
+  for (let i = 0; i < palette.length; i++) {
+    const px2 = palette[i];
+    const r2 = px2[0];
+    let curdist = sqr2(r2 - r);
+    if (curdist > mindist)
+      continue;
+    const g2 = px2[1];
+    curdist += sqr2(g2 - g);
+    if (curdist > mindist)
+      continue;
+    const b2 = px2[2];
+    curdist += sqr2(b2 - b);
+    if (curdist > mindist)
+      continue;
+    mindist = curdist;
+    k = i;
+  }
+  return k;
+}
+function snapColorsToPalette(palette, knownColors, threshold = 5) {
+  if (!palette.length || !knownColors.length)
+    return;
+  const paletteRGB = palette.map((p) => p.slice(0, 3));
+  const thresholdSq = threshold * threshold;
+  const dim = palette[0].length;
+  for (let i = 0; i < knownColors.length; i++) {
+    let color = knownColors[i];
+    if (color.length < dim) {
+      color = [color[0], color[1], color[2], 255];
+    } else if (color.length > dim) {
+      color = color.slice(0, 3);
+    } else {
+      color = color.slice();
+    }
+    const r = nearestColorIndexWithDistance(paletteRGB, color.slice(0, 3), euclideanDistanceSquared);
+    const idx = r[0];
+    const distanceSq = r[1];
+    if (distanceSq > 0 && distanceSq <= thresholdSq) {
+      palette[idx] = color;
+    }
+  }
+}
+function sqr2(a) {
+  return a * a;
+}
+function nearestColorIndex(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  let minDist = Infinity;
+  let minDistIndex = -1;
+  for (let j = 0; j < colors.length; j++) {
+    const paletteColor = colors[j];
+    const dist = distanceFn(pixel, paletteColor);
+    if (dist < minDist) {
+      minDist = dist;
+      minDistIndex = j;
+    }
+  }
+  return minDistIndex;
+}
+function nearestColorIndexWithDistance(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  let minDist = Infinity;
+  let minDistIndex = -1;
+  for (let j = 0; j < colors.length; j++) {
+    const paletteColor = colors[j];
+    const dist = distanceFn(pixel, paletteColor);
+    if (dist < minDist) {
+      minDist = dist;
+      minDistIndex = j;
+    }
+  }
+  return [minDistIndex, minDist];
+}
+function nearestColor(colors, pixel, distanceFn = euclideanDistanceSquared) {
+  return colors[nearestColorIndex(colors, pixel, distanceFn)];
+}
+
+// src/index.js
+function GIFEncoder(opt = {}) {
+  const {initialCapacity = 4096, auto = true} = opt;
+  const stream = createStream(initialCapacity);
+  const HSIZE = 5003;
+  const accum = new Uint8Array(256);
+  const htab = new Int32Array(HSIZE);
+  const codetab = new Int32Array(HSIZE);
+  let hasInit = false;
+  return {
+    reset() {
+      stream.reset();
+      hasInit = false;
+    },
+    finish() {
+      stream.writeByte(constants_default.trailer);
+    },
+    bytes() {
+      return stream.bytes();
+    },
+    bytesView() {
+      return stream.bytesView();
+    },
+    get buffer() {
+      return stream.buffer;
+    },
+    get stream() {
+      return stream;
+    },
+    writeHeader,
+    writeFrame(index, width, height, opts = {}) {
+      const {
+        transparent = false,
+        transparentIndex = 0,
+        delay = 0,
+        palette = null,
+        repeat = 0,
+        colorDepth = 8,
+        dispose = -1
+      } = opts;
+      let first = false;
+      if (auto) {
+        if (!hasInit) {
+          first = true;
+          writeHeader();
+          hasInit = true;
+        }
+      } else {
+        first = Boolean(opts.first);
+      }
+      width = Math.max(0, Math.floor(width));
+      height = Math.max(0, Math.floor(height));
+      if (first) {
+        if (!palette) {
+          throw new Error("First frame must include a { palette } option");
+        }
+        encodeLogicalScreenDescriptor(stream, width, height, palette, colorDepth);
+        encodeColorTable(stream, palette);
+        if (repeat >= 0) {
+          encodeNetscapeExt(stream, repeat);
+        }
+      }
+      const delayTime = Math.round(delay / 10);
+      encodeGraphicControlExt(stream, dispose, delayTime, transparent, transparentIndex);
+      const useLocalColorTable = Boolean(palette) && !first;
+      encodeImageDescriptor(stream, width, height, useLocalColorTable ? palette : null);
+      if (useLocalColorTable)
+        encodeColorTable(stream, palette);
+      encodePixels(stream, index, width, height, colorDepth, accum, htab, codetab);
+    }
+  };
+  function writeHeader() {
+    writeUTFBytes(stream, "GIF89a");
+  }
+}
+function encodeGraphicControlExt(stream, dispose, delay, transparent, transparentIndex) {
+  stream.writeByte(33);
+  stream.writeByte(249);
+  stream.writeByte(4);
+  if (transparentIndex < 0) {
+    transparentIndex = 0;
+    transparent = false;
+  }
+  var transp, disp;
+  if (!transparent) {
+    transp = 0;
+    disp = 0;
+  } else {
+    transp = 1;
+    disp = 2;
+  }
+  if (dispose >= 0) {
+    disp = dispose & 7;
+  }
+  disp <<= 2;
+  const userInput = 0;
+  stream.writeByte(0 | disp | userInput | transp);
+  writeUInt16(stream, delay);
+  stream.writeByte(transparentIndex || 0);
+  stream.writeByte(0);
+}
+function encodeLogicalScreenDescriptor(stream, width, height, palette, colorDepth = 8) {
+  const globalColorTableFlag = 1;
+  const sortFlag = 0;
+  const globalColorTableSize = colorTableSize(palette.length) - 1;
+  const fields = globalColorTableFlag << 7 | colorDepth - 1 << 4 | sortFlag << 3 | globalColorTableSize;
+  const backgroundColorIndex = 0;
+  const pixelAspectRatio = 0;
+  writeUInt16(stream, width);
+  writeUInt16(stream, height);
+  stream.writeBytes([fields, backgroundColorIndex, pixelAspectRatio]);
+}
+function encodeNetscapeExt(stream, repeat) {
+  stream.writeByte(33);
+  stream.writeByte(255);
+  stream.writeByte(11);
+  writeUTFBytes(stream, "NETSCAPE2.0");
+  stream.writeByte(3);
+  stream.writeByte(1);
+  writeUInt16(stream, repeat);
+  stream.writeByte(0);
+}
+function encodeColorTable(stream, palette) {
+  const colorTableLength = 1 << colorTableSize(palette.length);
+  for (let i = 0; i < colorTableLength; i++) {
+    let color = [0, 0, 0];
+    if (i < palette.length) {
+      color = palette[i];
+    }
+    stream.writeByte(color[0]);
+    stream.writeByte(color[1]);
+    stream.writeByte(color[2]);
+  }
+}
+function encodeImageDescriptor(stream, width, height, localPalette) {
+  stream.writeByte(44);
+  writeUInt16(stream, 0);
+  writeUInt16(stream, 0);
+  writeUInt16(stream, width);
+  writeUInt16(stream, height);
+  if (localPalette) {
+    const interlace = 0;
+    const sorted = 0;
+    const palSize = colorTableSize(localPalette.length) - 1;
+    stream.writeByte(128 | interlace | sorted | 0 | palSize);
+  } else {
+    stream.writeByte(0);
+  }
+}
+function encodePixels(stream, index, width, height, colorDepth = 8, accum, htab, codetab) {
+  lzwEncode_default(width, height, index, colorDepth, stream, accum, htab, codetab);
+}
+function writeUInt16(stream, short) {
+  stream.writeByte(short & 255);
+  stream.writeByte(short >> 8 & 255);
+}
+function writeUTFBytes(stream, text) {
+  for (var i = 0; i < text.length; i++) {
+    stream.writeByte(text.charCodeAt(i));
+  }
+}
+function colorTableSize(length) {
+  return Math.max(Math.ceil(Math.log2(length)), 1);
+}
+var src_default = GIFEncoder;
+//# sourceMappingURL=gifenc.js.map
+
+  window.gifenc = exports;
+})();
+</script>
+
+<!-- ===== 自研 GIF 解码器（无依赖，拆帧+保留延迟+处理 disposal） ===== -->
+<script>
+window.GifDecoder = (function(){
+  function lzwDecode(minCodeSize, data, pixelCount) {
+    var MAX_STACK_SIZE = 4096, nullCode = -1, npix = pixelCount;
+    var available, clear, code_mask, code_size, end_of_information, in_code, old_code, bits, code, i, datum, data_size, first, top, bi, pi;
+    var dstPixels = new Array(pixelCount), prefix = new Array(MAX_STACK_SIZE), suffix = new Array(MAX_STACK_SIZE), pixelStack = new Array(MAX_STACK_SIZE + 1);
+    data_size = minCodeSize;
+    clear = 1 << data_size;
+    end_of_information = clear + 1;
+    available = clear + 2;
+    old_code = nullCode;
+    code_size = data_size + 1;
+    code_mask = (1 << code_size) - 1;
+    for(code = 0; code < clear; code++){ prefix[code] = 0; suffix[code] = code; }
+    datum = bits = top = pi = bi = 0;
+    for(i = 0; i < npix;){
+      if(top === 0){
+        if(bits < code_size){ datum += data[bi] << bits; bits += 8; bi++; continue; }
+        code = datum & code_mask;
+        datum >>= code_size;
+        bits -= code_size;
+        if(code > available || code === end_of_information) break;
+        if(code === clear){
+          code_size = data_size + 1;
+          code_mask = (1 << code_size) - 1;
+          available = clear + 2;
+          old_code = nullCode;
+          continue;
+        }
+        if(old_code === nullCode){ pixelStack[top++] = suffix[code]; old_code = code; first = code; continue; }
+        in_code = code;
+        if(code === available){ pixelStack[top++] = first; code = old_code; }
+        while(code > clear){ pixelStack[top++] = suffix[code]; code = prefix[code]; }
+        first = suffix[code] & 0xff;
+        pixelStack[top++] = first;
+        if(available < MAX_STACK_SIZE){
+          prefix[available] = old_code;
+          suffix[available] = first;
+          available++;
+          if((available & code_mask) === 0 && available < MAX_STACK_SIZE){ code_size++; code_mask += available; }
+        }
+        old_code = in_code;
+      }
+      top--;
+      dstPixels[pi++] = pixelStack[top];
+      i++;
+    }
+    for(i = pi; i < npix; i++) dstPixels[i] = 0;
+    return dstPixels;
+  }
+  function deinterlace(pixels, width){
+    var newPixels = new Array(pixels.length), rows = pixels.length / width;
+    var offsets = [0, 4, 2, 1], steps = [8, 8, 4, 2], fromRow = 0, pass, toRow;
+    function cpRow(toRow, fromRow){
+      var fromPixels = pixels.slice(fromRow * width, (fromRow + 1) * width);
+      for(var k = 0; k < width; k++) newPixels[toRow * width + k] = fromPixels[k];
+    }
+    for(pass = 0; pass < 4; pass++){
+      for(toRow = offsets[pass]; toRow < rows; toRow += steps[pass]){ cpRow(toRow, fromRow); fromRow++; }
+    }
+    return newPixels;
+  }
+  function parse(bytes){
+    var p = 0;
+    function u16(){ var v = bytes[p] | (bytes[p+1] << 8); p += 2; return v; }
+    p = 6;
+    var w = u16(), h = u16();
+    var packed = bytes[p++]; p++; p++;
+    var gct = null;
+    if(packed & 0x80){
+      var gsize = 2 ** ((packed & 7) + 1);
+      gct = new Array(gsize);
+      for(var gi = 0; gi < gsize; gi++){ gct[gi] = [bytes[p], bytes[p+1], bytes[p+2]]; p += 3; }
+    }
+    var frames = [], gce = null;
+    while(p < bytes.length){
+      var b = bytes[p++];
+      if(b === 0x3b) break;
+      if(b === 0x21){
+        var label = bytes[p++];
+        if(label === 0xf9){
+          bytes[p++];
+          var fields = bytes[p++];
+          var delay = u16();
+          var tIdx = bytes[p++];
+          p++;
+          gce = { delay: Math.max(2, (delay || 10) * 10),
+                  disposal: (fields >> 2) & 0x7,
+                  transparent: (fields & 1) ? tIdx : null };
+        } else {
+          var sz = bytes[p++];
+          while(sz){ p += sz; sz = bytes[p++]; }
+        }
+      } else if(b === 0x2c){
+        var left = u16(), top = u16(), iw = u16(), ih = u16();
+        var ip = bytes[p++];
+        var lct = null, interlaced = false;
+        if(ip & 0x80){
+          var lsize = 2 ** ((ip & 7) + 1);
+          lct = new Array(lsize);
+          for(var li = 0; li < lsize; li++){ lct[li] = [bytes[p], bytes[p+1], bytes[p+2]]; p += 3; }
+        }
+        if(ip & 0x40) interlaced = true;
+        var minCode = bytes[p++];
+        var blocks = [], bsz = bytes[p++], totalLen = 0;
+        while(bsz){ blocks.push(bytes.subarray(p, p + bsz)); totalLen += bsz; p += bsz; bsz = bytes[p++]; }
+        var flat = new Uint8Array(totalLen), off = 0;
+        for(var bi = 0; bi < blocks.length; bi++){ flat.set(blocks[bi], off); off += blocks[bi].length; }
+        var pixels = lzwDecode(minCode, flat, iw * ih);
+        if(interlaced) pixels = deinterlace(pixels, iw);
+        var ct = lct || gct;
+        var transIdx = gce && gce.transparent !== null ? gce.transparent : null;
+        var patch = new Uint8ClampedArray(iw * ih * 4);
+        for(var i = 0; i < pixels.length; i++){
+          var ci = pixels[i];
+          var c = (ct && ct[ci]) || [0, 0, 0];
+          var o = i * 4;
+          patch[o] = c[0]; patch[o+1] = c[1]; patch[o+2] = c[2];
+          patch[o+3] = (transIdx !== null && ci === transIdx) ? 0 : 255;
+        }
+        frames.push({ patch: patch, dims: {top: top, left: left, width: iw, height: ih},
+                      delay: gce ? gce.delay : 100, disposal: gce ? gce.disposal : 0 });
+        gce = null;
+      }
+    }
+    return { w: w, h: h, frames: frames };
+  }
+  function toCanvases(bytes){
+    var parsed = parse(bytes);
+    var w = parsed.w, h = parsed.h, frames = parsed.frames;
+    var work = document.createElement("canvas");
+    work.width = w; work.height = h;
+    var wctx = work.getContext("2d", {willReadFrequently: true});
+    var stateBefore = null;
+    var out = [];
+    for(var i = 0; i < frames.length; i++){
+      var f = frames[i];
+      if(i > 0){
+        var prev = frames[i-1];
+        if(prev.disposal === 2){
+          wctx.clearRect(prev.dims.left, prev.dims.top, prev.dims.width, prev.dims.height);
+        } else if(prev.disposal === 3 && stateBefore){
+          wctx.putImageData(stateBefore, 0, 0);
+        }
+      }
+      var snapBefore = wctx.getImageData(0, 0, w, h);
+      var imgData = new ImageData(f.patch, f.dims.width, f.dims.height);
+      wctx.putImageData(imgData, f.dims.left, f.dims.top);
+      var c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(work, 0, 0);
+      out.push({ canvas: c, delay: f.delay });
+      stateBefore = snapBefore;
+    }
+    return out;
+  }
+  return { toCanvases: toCanvases };
+})();
+</script>
+
+<script>
+(function(){
+"use strict";
+/* ================= 状态 ================= */
+var frames = [];        // {id, img, delay, name, thumb}
+var texts = [];         // {id, scope:'all'|'frames', frames:[], props:{...}, frameProps:{}}
+var imgOvs = [];        // {id, img, scope, frames:[], props:{...}, frameProps:{}}
+function layerApplies(layer, frameId){ return true; }
+function effProps(layer, frameId){
+  var p = {};
+  for(var k in layer.props) p[k] = layer.props[k];
+  var ov = layer.frameProps[frameId];
+  if(ov) for(var k2 in ov) p[k2] = ov[k2];
+  return p;
+}
+function curFrameId(){ return frames.length ? frames[cur].id : null; }
+function ovSource(o, outFrameIdx){
+  if(o.gifFrames && o.gifFrames.length){
+    var n = o.gifFrames.length;
+    var plays = Math.max(1, o.loopTimes || 1);
+    return o.gifFrames[Math.floor((outFrameIdx * n * plays) / Math.max(1, frames.length)) % n];
+  }
+  return o.img;
+}
+function ovSize(o, src){ return {w: src.naturalWidth || src.width || 1, h: src.naturalHeight || src.height || 1}; }
+function layerTargetAt(obj, fid){
+  if(obj.editMode === "all") return obj.props;
+  if(obj.frameProps && obj.frameProps[fid]) return obj.frameProps[fid];
+  return obj.props;
+}
+function layerTarget(layer){
+  var fid = curFrameId();
+  var em = layer.editMode || "all";
+  if(em === "cur" && fid !== null){
+    layer.frameProps[fid] = layer.frameProps[fid] || Object.assign({}, layer.props);
+    return layer.frameProps[fid];
+  }
+  if(em === "sel" && selected.size){
+    var sels = frames.filter(function(f){ return selected.has(f.id); }).map(function(f){ return f.id; });
+    if(sels.length){
+      sels.forEach(function(id){ layer.frameProps[id] = layer.frameProps[id] || Object.assign({}, layer.props); });
+      return new Proxy({}, {
+        set: function(t, k, v){ sels.forEach(function(id){ layer.frameProps[id][k] = v; }); return true; },
+        get: function(t, k){ return layer.frameProps[sels[0]][k]; }
+      });
+    }
+  }
+  return layer.props;
+}
+function scopeHtml(layer){
+  var em = layer.editMode || "all";
+  function cls(s){ return "sm" + (em === s ? " on" : ""); }
+  var overrideCount = Object.keys(layer.frameProps || {}).length;
+  var whom = overrideCount ? (overrideCount + " 帧有覆写") : "全局";
+  return '<div class="scope-row">' +
+    '<button class="' + cls("all") + '" data-sc="all">全部</button>' +
+    '<button class="' + cls("cur") + '" data-sc="cur">仅本帧</button>' +
+    '<button class="' + cls("sel") + '" data-sc="sel">选中帧</button>' +
+    '<span class="scope-tag">' + whom + '</span>' +
+  '</div>';
+}
+function refreshLayerValues(){ refreshTextValues(); refreshImgOvValues(); }
+var outW = 320, outH = 240;
+var ratio = outW / outH;
+var lockAspect = true;
+var bgOpaque = false, bgColor = "#ffffff";
+var playing = false;
+var cur = 0;            // 当前帧下标
+var selected = new Set(); // 选中帧 id
+var uid = 1;
+var timer = null;
+var hist = [], future = [];
+var dragState = null;   // 画布上拖叠加层
+var lastShiftSelected = null;
+
+var $ = function(id){ return document.getElementById(id); };
+var canvas = $("previewCanvas"), ctx = canvas.getContext("2d");
+var selectedLayers = new Set();
+var propagateFollow = true;
+var rubber = null;
+var viewZoom = 1;
+ctx.imageSmoothingEnabled = false;
+
+/* ================= 日志 ================= */
+function log(msg, cls){
+  var el = $("logArea");
+  el.style.display = "block";
+  var d = document.createElement("div");
+  d.className = cls || "log-info";
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ================= 历史 ================= */
+function snap(){
+  return {
+    order: frames.map(function(f){ return f.id; }),
+    delays: frames.map(function(f){ return f.delay; }),
+    frameXfs: frames.map(function(f){ return {fx:f.fx||0, fy:f.fy||0, fscale:f.fscale||1}; }),
+    texts: JSON.parse(JSON.stringify(texts)),
+    ov: imgOvs.map(function(o){ return {
+      props: JSON.parse(JSON.stringify(o.props)),
+      frameProps: JSON.parse(JSON.stringify(o.frameProps)),
+      loopTimes: o.loopTimes||1,
+      editMode: o.editMode||"all"
+    }; })
+  };
+}
+function pushHist(){
+  hist.push(snap());
+  if(hist.length > 60) hist.shift();
+  future = [];
+}
+function restore(s){
+  var byId = {}; frames.forEach(function(f){ byId[f.id] = f; });
+  frames = s.order.map(function(id){ return byId[id]; }).filter(function(x){ return x !== undefined; });
+  frames.forEach(function(f,i){
+    f.delay = s.delays[i];
+    if(s.frameXfs && s.frameXfs[i]){
+      f.fx = s.frameXfs[i].fx; f.fy = s.frameXfs[i].fy; f.fscale = s.frameXfs[i].fscale;
+    }
+  });
+  texts = s.texts;
+  imgOvs.forEach(function(o,i){
+    var s2 = s.ov[i];
+    if(!s2) return;
+    o.props = s2.props;
+    o.frameProps = s2.frameProps;
+    o.loopTimes = s2.loopTimes;
+    o.editMode = s2.editMode;
+  });
+  if(cur >= frames.length) cur = 0;
+  selected.clear();
+  renderTimeline(); renderPreview(); renderTextList(); renderImgOvList(); renderLayerPanel();
+}
+function undo(){ if(!hist.length) return; future.push(snap()); restore(hist.pop()); }
+function redo(){ if(!future.length) return; hist.push(snap()); restore(future.pop()); }
+
+/* ================= 导入 ================= */
+$("dropZone").addEventListener("click", function(){ $("fileInput").click(); });
+var dz = $("dropZone");
+["dragover","dragenter"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add("act"); }); });
+["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove("act"); }); });
+dz.addEventListener("drop", function(e){
+  if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+});
+$("fileInput").addEventListener("change", function(e){
+  if(e.target.files.length) handleFiles(e.target.files);
+  e.target.value = "";
+});
+
+function handleFiles(fileList){
+  var files = Array.prototype.slice.call(fileList);
+  var gifs = [], zips = [], imgs = [];
+  files.forEach(function(f){
+    var ext = (f.name.split(".").pop()||"").toLowerCase();
+    if(ext === "gif") gifs.push(f);
+    else if(ext === "zip") zips.push(f);
+    else imgs.push(f);
+  });
+  var chain = Promise.resolve();
+  if(imgs.length) chain = chain.then(function(){ return addImagesDirect(imgs); });
+  gifs.forEach(function(f){ chain = chain.then(function(){ return addGif(f); }); });
+  zips.forEach(function(f){ chain = chain.then(function(){ return addZip(f); }); });
+  chain.then(function(){
+    log("导入完成：共 " + frames.length + " 帧", "log-ok");
+  }).catch(function(e){
+    log("导入失败：" + (e.message || e), "log-err");
+  });
+}
+
+function loadImageFromFile(file){
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){
+      var img = new Image();
+      img.onload = function(){ res(img); };
+      img.onerror = function(){ rej(new Error("图片读取失败: " + file.name)); };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+function loadImageFromDataUrl(dataUrl){
+  return new Promise(function(res, rej){
+    var img = new Image();
+    img.onload = function(){ res(img); };
+    img.onerror = function(){ rej(new Error("图片解析失败")); };
+    img.src = dataUrl;
+  });
+}
+function loadImageFromBlob(blob){
+  return new Promise(function(res, rej){
+    var img = new Image();
+    img.onload = function(){ res(img); };
+    img.onerror = function(){ rej(new Error("图片读取失败")); };
+    img.src = URL.createObjectURL(blob);
+  });
+}
+function ensureCanvasSize(img){
+  if(!frames.length){
+    outW = img.naturalWidth || img.width || outW;
+    outH = img.naturalHeight || img.height || outH;
+    ratio = outW / outH;
+    syncSizeInputs();
+  }
+}
+function pushFrame(img, delay, name){
+  ensureCanvasSize(img);
+  var f = {id: uid++, img: img, delay: delay, name: name || ("frame_" + frames.length),
+           natW: img.naturalWidth || img.width || outW,
+           natH: img.naturalHeight || img.height || outH,
+           fx: 0, fy: 0, fscale: 1};
+  frames.push(f);
+  selected.add(f.id);
+  return f;
+}
+function addImagesDirect(files){
+  pushHist();
+  return files.reduce(function(p, f){
+    return p.then(function(){
+      return loadImageFromFile(f).then(function(img){
+        var d = parseInt($("globalDelay").value, 10) || 100;
+        pushFrame(img, d, f.name);
+      });
+    });
+  }, Promise.resolve()).then(function(){ renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel(); });
+}
+function postBinary(url, file){
+  return fetch(url, {method:"POST", headers:{"Content-Type":"application/octet-stream"}, body: file})
+    .then(function(r){ return r.json(); });
+}
+function addGif(file){
+  /* 浏览器内拆 GIF（自研解码器，见文件顶部 <script>） */
+  return file.arrayBuffer().then(function(buf){
+    var dec = window.GifDecoder.toCanvases(new Uint8Array(buf));
+    if(!dec.length) throw new Error("GIF 里没有可读帧");
+    pushHist();
+    dec.forEach(function(fr, i){
+      pushFrame(fr.canvas, fr.delay, "frame_" + i);
+    });
+    renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+  });
+}
+function addZip(file){
+  /* 浏览器内解 ZIP（deflate-raw 用 DecompressionStream） */
+  return file.arrayBuffer().then(function(buf){
+    return (async function(){
+    var dv = new DataView(buf);
+    var eocd = -1;
+    for(var i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65557); i--){
+      if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+    }
+    if(eocd < 0) throw new Error("不是 ZIP 文件");
+    var count = dv.getUint16(eocd + 10, true);
+    var cdOff = dv.getUint32(eocd + 16, true);
+    var entries = [];
+    var p = cdOff;
+    for(var n = 0; n < count; n++){
+      if(dv.getUint32(p, true) !== 0x02014b50) break;
+      entries.push({
+        method: dv.getUint16(p + 10, true),
+        compSize: dv.getUint32(p + 20, true),
+        nameLen: dv.getUint16(p + 28, true),
+        extraLen: dv.getUint16(p + 30, true),
+        commentLen: dv.getUint16(p + 32, true),
+        localOff: dv.getUint32(p + 42, true),
+        name: new TextDecoder().decode(new Uint8Array(buf, p + 46, dv.getUint16(p + 28, true)))
+      });
+      p += 46 + dv.getUint16(p + 28, true) + dv.getUint16(p + 30, true) + dv.getUint16(p + 32, true);
+    }
+    var exts = /\.(png|jpg|jpeg|webp|bmp|gif|tif|tiff)$/i;
+    var imgs = [];
+    for(var k = 0; k < entries.length; k++){
+      var e = entries[k];
+      if(!exts.test(e.name)) continue;
+      var lh = e.localOff;
+      if(dv.getUint32(lh, true) !== 0x04034b50) continue;
+      var lNameLen = dv.getUint16(lh + 26, true);
+      var lExtraLen = dv.getUint16(lh + 28, true);
+      var dataStart = lh + 30 + lNameLen + lExtraLen;
+      var comp = new Uint8Array(buf.slice(dataStart, dataStart + e.compSize));
+      var bytes = null;
+      if(e.method === 0) bytes = comp;
+      else if(e.method === 8){
+        var ds = new DecompressionStream("deflate-raw");
+        var resp = await new Response(new Blob([comp]).stream().pipeThrough(ds)).arrayBuffer();
+        bytes = new Uint8Array(resp);
+      } else continue;
+      var img = await loadImageFromBlob(new Blob([bytes], {type:"image/png"}));
+      imgs.push({name: e.name, img: img});
+    }
+    imgs.sort(function(a,b){ return a.name.localeCompare(b.name, undefined, {sensitivity:"base"}); });
+    pushHist();
+    var d = parseInt($("globalDelay").value, 10) || 100;
+    imgs.forEach(function(x){ pushFrame(x.img, d, x.name); });
+    renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+    })();
+  });
+}
+
+/* ================= 信息栏 ================= */
+function updateInfo(){
+  var bar = $("infoBar");
+  if(!frames.length){ bar.innerHTML = '<span class="cnt">未导入</span>'; return; }
+  bar.innerHTML =
+    '<span class="cnt">' + frames.length + ' 帧</span>' +
+    '<span>' + outW + ' × ' + outH + '</span>' +
+    '<span>选中 ' + selected.size + ' 帧</span>' +
+    '<span class="sep"></span><span>第 ' + (cur+1) + '/' + frames.length + ' 帧: ' + (frames[cur].name||'frame') + '</span>';
+}
+
+/* ================= 预览渲染 ================= */
+function renderFrameOnto(c, f){
+  c.getContext("2d").imageSmoothingEnabled = false;
+  c.getContext("2d").drawImage(f.img, 0, 0, outW, outH);
+  imgOvs.forEach(function(o){
+    var w = o.img.naturalWidth * o.scale, h = o.img.naturalHeight * o.scale;
+    c.getContext("2d").drawImage(o.img, o.x, o.y, w, h);
+  });
+  texts.forEach(function(t){
+    c.getContext("2d").font = t.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+    c.getContext("2d").fillStyle = t.color;
+    c.getContext("2d").textBaseline = "top";
+    c.getContext("2d").fillText(t.text, t.x, t.y);
+  });
+}
+function layerBBox(layer, fid, isText){
+  var p = effProps(layer, fid);
+  if(isText){
+    ctx.font = p.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+    var w = ctx.measureText(p.text).width;
+    return {x: p.x, y: p.y, w: w, h: p.size};
+  }
+  var src = ovSource(layer, cur);
+  var sz = ovSize(layer, src);
+  return {x: p.x, y: p.y, w: sz.w * p.scale, h: sz.h * p.scale};
+}
+function drawSelection(){
+  var fid = curFrameId();
+  if(rubber){
+    ctx.save();
+    ctx.strokeStyle = "#2563eb"; ctx.fillStyle = "rgba(37,99,235,.12)";
+    var rx = Math.min(rubber.x0, rubber.x1), ry = Math.min(rubber.y0, rubber.y1);
+    var rw = Math.abs(rubber.x1 - rubber.x0), rh = Math.abs(rubber.y1 - rubber.y0);
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.strokeRect(rx + .5, ry + .5, rw, rh);
+    ctx.restore();
+    return;
+  }
+  if(!selectedLayers.size || !fid) return;
+  ctx.save();
+  ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+  texts.forEach(function(t){
+    if(!selectedLayers.has(t.id) || !layerApplies(t, fid)) return;
+    var b = layerBBox(t, fid, true);
+    ctx.strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
+  });
+  imgOvs.forEach(function(o){
+    if(!selectedLayers.has(o.id) || !layerApplies(o, fid)) return;
+    var b = layerBBox(o, fid, false);
+    ctx.strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
+  });
+  ctx.restore();
+}
+function paintBg(c){
+  if(bgOpaque){ c.fillStyle = bgColor; c.fillRect(0,0,outW,outH); }
+  else { c.clearRect(0,0,outW,outH); }
+}
+function containDraw(c, f){
+  var sc0 = Math.min(outW / (f.natW || 1), outH / (f.natH || 1));
+  var sc = sc0 * (f.fscale || 1);
+  var dw = Math.round((f.natW || outW) * sc), dh = Math.round((f.natH || outH) * sc);
+  c.drawImage(f.img, Math.round((outW - dw) / 2 + (f.fx || 0)), Math.round((outH - dh) / 2 + (f.fy || 0)), dw, dh);
+}
+function dupFrame(f, name){
+  return {id: uid++, img: f.img, delay: f.delay, name: name, natW: f.natW, natH: f.natH,
+          fx: f.fx || 0, fy: f.fy || 0, fscale: f.fscale || 1};
+}
+function refreshFrameXf(){
+  var f = frames[cur]; if(!f) return;
+  $("fTx").value = f.fx || 0;
+  $("fTy").value = f.fy || 0;
+  $("fTs").value = Math.round((f.fscale || 1) * 100);
+}
+function renderPreview(){
+  updateCurCard();
+  canvas.width = outW; canvas.height = outH;
+  if(!frames.length){
+    ctx.clearRect(0,0,outW,outH);
+    $("frameInfo").textContent = "0 / 0";
+    return;
+  }
+  if(cur >= frames.length) cur = 0;
+  ctx.imageSmoothingEnabled = false;
+  paintBg(ctx);
+  containDraw(ctx, frames[cur]);
+  var fid = frames[cur].id;
+  imgOvs.forEach(function(o){
+    if(!layerApplies(o, fid)) return;
+    var p = effProps(o, fid);
+    var src = ovSource(o, cur);
+    var sz = ovSize(o, src);
+    ctx.drawImage(src, p.x, p.y, sz.w * p.scale, sz.h * p.scale);
+  });
+  texts.forEach(function(t){
+    if(!layerApplies(t, fid)) return;
+    var p = effProps(t, fid);
+    ctx.font = p.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+    ctx.fillStyle = p.color;
+    ctx.textBaseline = "top";
+    ctx.fillText(p.text, p.x, p.y);
+  });
+  $("frameInfo").textContent = (cur + 1) + " / " + frames.length;
+  refreshLayerValues();
+  refreshFrameXf();
+  drawSelection();
+  applyViewZoom();
+}
+/* 播放 */
+function stopPlay(){ if(timer){ clearTimeout(timer); timer = null; } }
+function playTick(){
+  renderPreview();
+  updateCurCard();
+  var delay = (frames[cur] && frames[cur].delay) || 100;
+  cur = (cur + 1) % frames.length;
+  timer = setTimeout(playTick, delay);
+}
+function updateCurCard(){
+  document.querySelectorAll(".tl-card.cur-playing").forEach(function(c){ c.classList.remove("cur-playing"); });
+  if(frames[cur]){
+    var el = document.querySelector('.tl-card[data-id="' + frames[cur].id + '"]');
+    if(el) el.classList.add("cur-playing");
+  }
+}
+function setPlaying(on){
+  playing = on;
+  $("playBtn").textContent = on ? "⏸ 暂停" : "▶ 播放";
+  stopPlay();
+  if(on && frames.length) timer = setTimeout(playTick, frames[cur] ? frames[cur].delay : 100);
+}
+$("playBtn").onclick = function(){ setPlaying(!playing); };
+$("followBtn").onclick = function(){
+  propagateFollow = !propagateFollow;
+  this.classList.toggle("pri", propagateFollow);
+  this.textContent = propagateFollow ? "🔗 后续跟随 ON" : "🔗 后续跟随";
+};
+$("prevBtn").onclick = function(){ setPlaying(false); cur = (cur - 1 + frames.length) % frames.length; renderPreview(); };
+$("nextBtn").onclick = function(){ setPlaying(false); cur = (cur + 1) % frames.length; renderPreview(); };
+
+/* ================= 时间线 ================= */
+function thumbData(f){
+  var c = document.createElement("canvas");
+  c.width = outW || f.natW;
+  c.height = outH || f.natH;
+  var sc = Math.min(80 / c.width, 80 / c.height, 1);
+  var dw = c.width, dh = c.height;
+  c.width = Math.max(1, Math.round(c.width * sc));
+  c.height = Math.max(1, Math.round(c.height * sc));
+  var ctx = c.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  var fx = (f.fx||0)*sc, fy = (f.fy||0)*sc, fs = (f.fscale||1);
+  ctx.drawImage(f.img, fx, fy, dw*sc*fs, dh*sc*fs);
+  return c.toDataURL();
+}
+function renderTimeline(){
+  var strip = $("tlStrip");
+  strip.innerHTML = "";
+  if(!frames.length){
+    strip.innerHTML = '<div class="tl-empty" style="flex:1;">导入素材后，帧会出现在这里</div>';
+    return;
+  }
+  frames.forEach(function(f, i){
+    var card = document.createElement("div");
+    card.className = "tl-card" + (selected.has(f.id) ? " on" : "");
+    card.draggable = false;
+    card.dataset.id = f.id;
+    var hasLayer = texts.some(function(t){ return t.scope === "frames" && t.frames.indexOf(f.id) >= 0; })
+                || imgOvs.some(function(o){ return o.scope === "frames" && o.frames.indexOf(f.id) >= 0; });
+    card.innerHTML =
+      '<span class="idx">' + (i+1) + '</span>' +
+      '<button class="del" title="删除">×</button>' +
+      (hasLayer ? '<span class="ov-badge" title="该帧有叠加层">✦</span>' : '') +
+      '<img src="' + thumbData(f) + '" alt="">' +
+      '<input type="number" class="tl-delay" value="' + f.delay + '" min="2" step="10" title="帧延迟 ms">' +
+      ((((f.fx||0)!==0 || (f.fy||0)!==0 || (f.fscale||1)!==1)) ?
+        '<div class="xf-label" style="min-height:14px;">x:' + (f.fx||0) + ' y:' + (f.fy||0) + ' ×' + (Math.round((f.fscale||1)*100)/100) + '</div>' : '<div class="xf-label" style="min-height:14px;"></div>');
+    card.querySelector(".del").onclick = function(e){
+      e.stopPropagation();
+      pushHist();
+      frames = frames.filter(function(x){ return x.id !== f.id; });
+      selected.delete(f.id);
+      renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+    };
+    card.querySelector("img").onclick = function(){
+      setPlaying(false); cur = i; renderPreview();
+    };
+    card.addEventListener("click", function(e){
+      if(e.shiftKey && lastShiftSelected !== null){
+        var a = frames.findIndex(function(x){ return x.id === lastShiftSelected; });
+        var b = i;
+        var lo = Math.min(a,b), hi = Math.max(a,b);
+        for(var k = lo; k <= hi; k++) selected.add(frames[k].id);
+      } else if(e.ctrlKey || e.metaKey){
+        if(selected.has(f.id)) selected.delete(f.id); else selected.add(f.id);
+        lastShiftSelected = f.id;
+      } else {
+        selected.clear();
+        selected.add(f.id);
+        lastShiftSelected = f.id;
+        setPlaying(false); cur = i; renderPreview();
+      }
+      renderTimeline(); updateInfo();
+    });
+    card.querySelector(".tl-delay").addEventListener("change", function(){
+      pushHist();
+      f.delay = Math.max(2, parseInt(this.value, 10) || 100);
+      renderPreview();
+    });
+    /* 拖拽排序（自定义鼠标拖拽，避免触发浏览器扩展） */
+    var dragStartX = 0, dragStartY = 0, dragStarted = false;
+    card.addEventListener("mousedown", function(e){
+      if(e.target.closest("input,button,.del")) return;
+      e.preventDefault();
+      dragStartX = e.clientX; dragStartY = e.clientY;
+      dragStarted = false;
+      dragId = f.id;
+      function onMove(ev){
+        if(!dragStarted){
+          if(Math.abs(ev.clientX - dragStartX) < 5 && Math.abs(ev.clientY - dragStartY) < 5) return;
+          dragStarted = true;
+          card.classList.add("dragging");
+        }
+        clearMarkers();
+        var cards = document.querySelectorAll(".tl-card");
+        var target = null;
+        for(var i=0;i<cards.length;i++){
+          var r = cards[i].getBoundingClientRect();
+          if(ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom){
+            target = cards[i];
+            break;
+          }
+        }
+        if(target){
+          var r = target.getBoundingClientRect();
+          if(ev.clientX - r.left < r.width/2) target.classList.add("drag-before");
+          else target.classList.add("drag-after");
+        }
+      }
+      function onUp(ev){
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        if(dragStarted){
+          card.classList.remove("dragging");
+          clearMarkers();
+          var from = dragId;
+          dragId = null;
+          /* 找到拖到哪个卡片 */
+          var targetCard = null;
+          var cards = document.querySelectorAll(".tl-card");
+          for(var i=0;i<cards.length;i++){
+            var r = cards[i].getBoundingClientRect();
+            if(ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom){
+              targetCard = cards[i];
+              break;
+            }
+          }
+          if(targetCard && from !== null){
+            var tid = parseInt(targetCard.dataset.id, 10);
+            var rect = targetCard.getBoundingClientRect();
+            var before = ev.clientX - rect.left < rect.width/2;
+            var ids;
+            if(selected.size > 1 && selected.has(from)){
+              ids = frames.filter(function(x){ return selected.has(x.id); }).map(function(x){ return x.id; });
+            } else {
+              if(from === tid) return;
+              ids = [from];
+            }
+            pushHist();
+            var idSet = {};
+            ids.forEach(function(id){ idSet[id] = true; });
+            var moving = frames.filter(function(x){ return idSet[x.id]; });
+            var rest = frames.filter(function(x){ return !idSet[x.id]; });
+            var ti = rest.findIndex(function(x){ return x.id === tid; });
+            if(ti < 0) ti = rest.length;
+            if(!before) ti++;
+            frames = rest.slice(0, ti).concat(moving).concat(rest.slice(ti));
+            renderTimeline(); renderPreview();
+          }
+        }
+      }
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    });
+    strip.appendChild(card);
+  });
+}
+var dragId = null;
+function findDragId(){ return dragId; }
+/* 时间线空白处框选 */
+(function(){
+  var strip = $("tlStrip");
+  var rubber = null, sx=0, sy=0, dragging=false;
+  strip.addEventListener("mousedown", function(e){
+    if(e.target.closest(".tl-card")) return;
+    if(e.button !== 0) return;
+    e.preventDefault();
+    dragging = true; sx = e.clientX; sy = e.clientY;
+    rubber = document.createElement("div");
+    rubber.className = "tl-rubber";
+    rubber.style.left = sx + "px";
+    rubber.style.top = sy + "px";
+    rubber.style.width = "0px";
+    rubber.style.height = "0px";
+    document.body.appendChild(rubber);
+    function onMove(ev){
+      if(!dragging) return;
+      var x1 = Math.min(sx, ev.clientX), y1 = Math.min(sy, ev.clientY);
+      var x2 = Math.max(sx, ev.clientX), y2 = Math.max(sy, ev.clientY);
+      rubber.style.left = x1 + "px";
+      rubber.style.top = y1 + "px";
+      rubber.style.width = (x2 - x1) + "px";
+      rubber.style.height = (y2 - y1) + "px";
+    }
+    function onUp(ev){
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      if(rubber){ rubber.remove(); rubber = null; }
+      if(!dragging) return;
+      dragging = false;
+      var dx = Math.abs(ev.clientX - sx), dy = Math.abs(ev.clientY - sy);
+      /* 没拖动 = 点击空白，选中当前帧 */
+      if(dx < 5 && dy < 5){
+        selected.clear();
+        if(frames[cur]) selected.add(frames[cur].id);
+        renderTimeline(); updateInfo();
+        return;
+      }
+      var x1 = Math.min(sx, ev.clientX), y1 = Math.min(sy, ev.clientY);
+      var x2 = Math.max(sx, ev.clientX), y2 = Math.max(sy, ev.clientY);
+      var boxes = document.querySelectorAll(".tl-card");
+      var newSel = new Set();
+      boxes.forEach(function(c){
+        var r = c.getBoundingClientRect();
+        if(r.right < x1 || r.left > x2 || r.bottom < y1 || r.top > y2) return;
+        newSel.add(parseInt(c.dataset.id, 10));
+      });
+      if(!e.shiftKey && !e.ctrlKey && !e.metaKey){
+        selected = newSel;
+      } else {
+        newSel.forEach(function(id){ selected.add(id); });
+      }
+      renderTimeline(); updateInfo();
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  });
+})();
+/* 拖文件到时间线插入 */
+(function(){
+  var strip = $("tlStrip");
+  var insertIdx = null;
+  function clearInMarkers(){
+    strip.querySelectorAll(".drag-before,.drag-after").forEach(function(el){
+      el.classList.remove("drag-before","drag-after");
+    });
+  }
+  function getInsertIdx(x, y){
+    var cards = strip.querySelectorAll(".tl-card");
+    if(!cards.length) return 0;
+    /* 先找鼠标所在行（y 最接近的卡片），再在该行找水平最近的 */
+    var rowCards = [];
+    for(var i=0;i<cards.length;i++){
+      var r = cards[i].getBoundingClientRect();
+      if(y >= r.top - 10 && y <= r.bottom + 10) rowCards.push({el: cards[i], rect: r, idx: i});
+    }
+    if(!rowCards.length){
+      /* 没匹配到行，用全局最近 */
+      var best = 0, bestDist = Infinity;
+      for(var i=0;i<cards.length;i++){
+        var r2 = cards[i].getBoundingClientRect();
+        var d = Math.abs(r2.top + r2.height/2 - y);
+        if(d < bestDist){ bestDist = d; best = i; }
+      }
+      var r3 = cards[best].getBoundingClientRect();
+      if(x < r3.left + r3.width/2) return best;
+      else return best + 1;
+    }
+    /* 在该行找水平最近 */
+    var best2 = rowCards[0], bestDist2 = Infinity;
+    for(var j=0;j<rowCards.length;j++){
+      var r4 = rowCards[j].rect;
+      var d2 = Math.abs((r4.left + r4.width/2) - x);
+      if(d2 < bestDist2){ bestDist2 = d2; best2 = rowCards[j]; }
+    }
+    if(x < best2.rect.left + best2.rect.width/2) return best2.idx;
+    else return best2.idx + 1;
+  }
+  strip.addEventListener("dragover", function(e){
+    e.preventDefault();
+    if(e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    clearInMarkers();
+    var idx = getInsertIdx(e.clientX, e.clientY);
+    var cards = strip.querySelectorAll(".tl-card");
+    if(cards.length){
+      if(idx >= cards.length) cards[cards.length-1].classList.add("drag-after");
+      else cards[idx].classList.add("drag-before");
+    }
+    insertIdx = idx;
+  });
+  strip.addEventListener("dragleave", function(){ clearInMarkers(); insertIdx = null; });
+  /* 阻止浏览器默认打开文件 */
+  document.addEventListener("dragover", function(e){ e.preventDefault(); });
+  document.addEventListener("drop", function(e){ e.preventDefault(); });
+  strip.addEventListener("drop", function(e){
+    if(!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+    e.preventDefault();
+    clearInMarkers();
+    var files = Array.prototype.slice.call(e.dataTransfer.files);
+    var idx = frames.length;
+    insertIdx = null;
+    pushHist();
+    var chain = Promise.resolve();
+    files.forEach(function(f){
+      var ext = (f.name.split(".").pop()||"").toLowerCase();
+      if(ext === "gif"){
+        chain = chain.then(function(){
+          return f.arrayBuffer().then(function(buf){
+            var dec = window.GifDecoder.toCanvases(new Uint8Array(buf));
+            dec.forEach(function(fr){
+              var f2 = {id: uid++, img: fr.canvas, delay: fr.delay, name: "frame",
+                natW: fr.canvas.naturalWidth || fr.canvas.width,
+                natH: fr.canvas.naturalHeight || fr.canvas.height,
+                fx: 0, fy: 0, fscale: 1};
+              frames.splice(idx, 0, f2);
+              idx++;
+            });
+          });
+        });
+      } else {
+        chain = chain.then(function(){
+          return loadImageFromFile(f).then(function(img){
+            var d = parseInt($("globalDelay").value, 10) || 100;
+            var f2 = {id: uid++, img: img, delay: d, name: f.name,
+              natW: img.naturalWidth, natH: img.naturalHeight,
+              fx: 0, fy: 0, fscale: 1};
+            frames.splice(idx, 0, f2);
+            idx++;
+          });
+        });
+      }
+    });
+    chain.then(function(){
+      if(!outW || !outH){
+        if(frames.length){ outW = frames[0].natW; outH = frames[0].natH; syncSizeInputs(); }
+      }
+      renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+      log("已插入 " + files.length + " 个文件", "log-ok");
+    }).catch(function(e){
+      log("插入失败：" + (e.message || e), "log-err");
+    });
+  });
+})();
+function clearMarkers(){
+  document.querySelectorAll(".drag-before,.drag-after").forEach(function(el){
+    el.classList.remove("drag-before","drag-after");
+  });
+}
+/* 批量操作 */
+$("delSelected").onclick = function(){
+  if(!selected.size) return;
+  pushHist();
+  frames = frames.filter(function(f){ return !selected.has(f.id); });
+  selected.clear();
+  renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+};
+$("dupSelected").onclick = function(){
+  if(!selected.size) return;
+  pushHist();
+  var copy = [];
+  frames.forEach(function(f){
+    if(selected.has(f.id)) copy.push(dupFrame(f, f.name));
+  });
+  frames = frames.concat(copy);
+  selected.clear();
+  renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+};
+$("clearAll").onclick = function(){
+  if(!frames.length) return;
+  pushHist();
+  frames = []; selected.clear(); cur = 0;
+  renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+};
+$("dupTwice").onclick = function(){
+  if(!frames.length) return;
+  pushHist();
+  frames = frames.concat(frames.map(function(f){ return dupFrame(f, f.name); }));
+  renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+};
+$("dupTimes").onclick = function(){
+  if(!selected.size){ log("先选中要停留的帧", "log-info"); return; }
+  var n = (parseInt($("dupN").value, 10) || 2) - 1;
+  if(n <= 0) return;
+  pushHist();
+  var out = [];
+  frames.forEach(function(f){
+    out.push(f);
+    if(selected.has(f.id)){ for(var k = 0; k < n; k++) out.push(dupFrame(f, f.name)); }
+  });
+  frames = out;
+  renderTimeline(); renderPreview(); updateInfo(); renderLayerPanel();
+};
+$("frameToSel").onclick = function(){
+  if(!frames[cur]) return;
+  if(!selected.size){ log("先选中要复制到的帧", "log-info"); return; }
+$("clearSelOffset").onclick = function(){
+  pushHist();
+  if(selectedLayers.size === 0){
+    /* 默认清底图 */
+    if(frames[cur]){ frames[cur].fx = 0; frames[cur].fy = 0; }
+  } else {
+    selectedLayers.forEach(function(lid){
+      var t = texts.find(function(x){return x.id === lid});
+      var o = imgOvs.find(function(x){return x.id === lid});
+      var target = t || o;
+      if(target){
+        var d = layerTarget(target);
+        d.x = 0; d.y = 0;
+      }
+    });
+  }
+  renderTimeline(); renderPreview(); renderLayerPanel();
+};
+$("clearAllOffset").onclick = function(){
+  pushHist();
+  /* 清所有层所有帧 */
+  frames.forEach(function(f){ f.fx = 0; f.fy = 0; });
+  texts.forEach(function(t){
+    t.props.x = 0; t.props.y = 0;
+    t.frameProps = {};
+  });
+  imgOvs.forEach(function(o){
+    o.props.x = 0; o.props.y = 0;
+    o.frameProps = {};
+  });
+  renderTimeline(); renderPreview(); renderLayerPanel();
+};
+  pushHist();
+  var src = frames[cur];
+  frames.forEach(function(f){ if(selected.has(f.id)){ f.fx = src.fx || 0; f.fy = src.fy || 0; f.fscale = src.fscale || 1; } });
+  renderTimeline(); renderPreview();
+};
+$("fTx").onchange = function(){ if(!frames[cur]) return; pushHist(); frames[cur].fx = parseInt(this.value,10)||0; renderPreview(); renderTimeline(); };
+$("fTy").onchange = function(){ if(!frames[cur]) return; pushHist(); frames[cur].fy = parseInt(this.value,10)||0; renderPreview(); renderTimeline(); };
+$("fTs").onchange = function(){ if(!frames[cur]) return; pushHist(); frames[cur].fscale = Math.max(0.05, (parseInt(this.value,10)||100)/100); renderPreview(); renderTimeline(); };
+$("applyDelay").onclick = function(){
+  var d = Math.max(2, parseInt($("globalDelay").value, 10) || 100);
+  pushHist();
+  frames.forEach(function(f){ f.delay = d; });
+  renderTimeline(); renderPreview();
+};
+$("applyDelaySel").onclick = function(){ var d = parseInt($("globalDelay").value,10)||100; frames.forEach(function(f){ if(selected.has(f.id)) f.delay = Math.max(2,d); }); renderTimeline(); renderPreview(); };
+
+/* ================= 大小 ================= */
+function syncSizeInputs(){
+  $("outW").value = outW;
+  $("outH").value = outH;
+}
+function setOutSize(w, h){
+  outW = Math.max(1, Math.round(w));
+  outH = Math.max(1, Math.round(h));
+  ratio = outW / outH;
+  syncSizeInputs(); renderPreview(); updateInfo();
+}
+/* 画幅比例：保持长边，扩展短边（不裁切） */
+document.querySelectorAll("[data-ar]").forEach(function(btn){
+  btn.onclick = function(){
+    var r = parseFloat(btn.dataset.ar);
+    var side = Math.max(outW, outH);
+    if(r >= 1){ setOutSize(side, Math.round(side / r)); }
+    else { setOutSize(Math.round(side * r), side); }
+  };
+});
+$("bgOpaque").onchange = function(){ bgOpaque = this.checked; renderPreview(); persist(); };
+$("bgColor").oninput = function(){ bgColor = this.value; $("bgHex").value = bgColor; renderPreview(); persist(); };
+$("bgHex").onchange = function(){
+  var v = this.value.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(v)){ bgColor = v; $("bgColor").value = bgColor; renderPreview(); persist(); }
+  else { this.value = bgColor; }
+};
+$("outW").addEventListener("change", function(){
+  var w = parseInt(this.value, 10) || outW;
+  if(lockAspect) setOutSize(w, w / ratio);
+  else { outW = w; syncSizeInputs(); renderPreview(); }
+});
+$("outH").addEventListener("change", function(){
+  var h = parseInt(this.value, 10) || outH;
+  if(lockAspect) setOutSize(h * ratio, h);
+  else { outH = h; syncSizeInputs(); renderPreview(); }
+});
+$("lockAspectBtn").onclick = function(){
+  lockAspect = !lockAspect;
+  this.textContent = lockAspect ? "🔒 锁定比例" : "🔓 解锁比例";
+};
+document.querySelectorAll("[data-scale]").forEach(function(btn){
+  btn.onclick = function(){
+    var s = parseFloat(btn.dataset.scale);
+    if(frames.length){
+      var iw = frames[0].img.naturalWidth, ih = frames[0].img.naturalHeight;
+      setOutSize(iw * s, ih * s);
+    } else {
+      setOutSize(320 * s, 240 * s);
+    }
+  };
+});
+
+/* ================= 文本层 ================= */
+function renderLayerPanel(){
+  var list = $("layerList");
+  if(!list) return;
+  list.innerHTML = "";
+  var curFid = frames[cur] ? frames[cur].id : null;
+  var layers = [];
+  for(var i = imgOvs.length-1; i >= 0; i--){
+    var op = layerTargetAt(imgOvs[i], curFid);
+    layers.push({type: "image", obj: imgOvs[i], label: "🖼 " + (imgOvs[i].name || "图片"+(i+1)),
+      dx: Math.round(op.x||0), dy: Math.round(op.y||0)});
+  }
+  for(var j = texts.length-1; j >= 0; j--){
+    var tp = layerTargetAt(texts[j], curFid);
+    layers.push({type: "text", obj: texts[j], label: "T " + (texts[j].props.text || "文本"),
+      dx: Math.round(tp.x||0), dy: Math.round(tp.y||0)});
+  }
+  var f = frames[cur];
+  layers.push({type: "base", obj: null, label: "🎬 底图",
+    dx: f ? Math.round(f.fx||0) : 0, dy: f ? Math.round(f.fy||0) : 0});
+
+  layers.forEach(function(L, idx){
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:11px;" +
+      ((L.obj && selectedLayers.has(L.obj.id)) ? "background:#eff6ff;border:1px solid var(--blue);" : "border:1px solid transparent;");
+    row.draggable = true;
+    row.dataset.idx = idx;
+    /* 拖拽排序 */
+    row.addEventListener("dragstart", function(e){
+      e.dataTransfer.setData("text/plain", idx);
+      e.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragover", function(e){ e.preventDefault(); e.dataTransfer.dropEffect = "move"; });
+    row.addEventListener("drop", function(e){
+      e.preventDefault();
+      var from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+      var to = idx;
+      if(from === to) return;
+      /* 交换 imgOvs / texts */
+      var fromLayer = layers[from], toLayer = layers[to];
+      if(fromLayer.type === "image" && toLayer.type === "image"){
+        var fi = imgOvs.indexOf(fromLayer.obj), ti = imgOvs.indexOf(toLayer.obj);
+        if(fi >= 0 && ti >= 0){ var tmp = imgOvs[fi]; imgOvs[fi] = imgOvs[ti]; imgOvs[ti] = tmp; }
+      } else if(fromLayer.type === "text" && toLayer.type === "text"){
+        var fi2 = texts.indexOf(fromLayer.obj), ti2 = texts.indexOf(toLayer.obj);
+        if(fi2 >= 0 && ti2 >= 0){ var tmp2 = texts[fi2]; texts[fi2] = texts[ti2]; texts[ti2] = tmp2; }
+      }
+      renderLayerPanel(); renderPreview();
+    });
+    /* 眼睛 */
+    var eye = document.createElement("span");
+    eye.textContent = (L.obj && L.obj.hidden) ? "🙈" : "👁";
+    eye.style.cursor = "pointer"; eye.style.fontSize = "12px";
+    eye.onclick = function(e){ e.stopPropagation(); if(L.obj){ L.obj.hidden = !L.obj.hidden; renderLayerPanel(); renderPreview(); } };
+    row.appendChild(eye);
+    /* 名称 */
+    var lbl = document.createElement("span");
+    lbl.textContent = L.label;
+    lbl.style.flex = "1"; lbl.style.overflow = "hidden"; lbl.style.textOverflow = "ellipsis"; lbl.style.whiteSpace = "nowrap";
+    row.appendChild(lbl);
+    /* 偏移值 */
+    var off = document.createElement("span");
+    off.textContent = "x:" + L.dx + " y:" + L.dy;
+    off.style.cssText = "color:var(--text3);font-family:monospace;font-size:10px;white-space:nowrap;";
+    row.appendChild(off);
+    /* 点击选中 */
+    row.onclick = function(){
+      if(L.obj){ selectedLayers.clear(); selectedLayers.add(L.obj.id); }
+      else { selectedLayers.clear(); }
+      renderLayerPanel(); renderPreview();
+    };
+    list.appendChild(row);
+  });
+}
+function renderTextList(){
+  var list = $("textList");
+  list.innerHTML = "";
+  texts.forEach(function(t, i){
+    var row = document.createElement("div");
+    row.className = "ov-row ov-col";
+    row.innerHTML =
+      scopeHtml(t) +
+      '<div class="ov-line">' +
+        '<span style="font-size:10px;color:var(--text3);">文字</span><input type="text" class="t-text" title="文字">' +
+        '<span style="font-size:10px;color:var(--text3);">字号</span><input type="number" class="t-size" min="8" max="300" style="width:56px;" title="字号">' +
+        '<span style="font-size:10px;color:var(--text3);">颜色</span><input type="color" class="t-color" title="颜色">' +
+        '<span style="font-size:10px;color:var(--text3);">X</span><input type="number" class="t-x" title="X">' +
+        '<span style="font-size:10px;color:var(--text3);">Y</span><input type="number" class="t-y" title="Y">' +
+        '<button class="sm dan t-del">删</button>' +
+      '</div>';
+    row.querySelector(".t-text").oninput = function(){ layerTarget(t).text = this.value; renderPreview(); persist(); };
+    row.querySelector(".t-size").onchange = function(){ layerTarget(t).size = parseInt(this.value,10)||24; renderPreview(); persist(); };
+    row.querySelector(".t-color").onchange = function(){ layerTarget(t).color = this.value; renderPreview(); persist(); };
+    row.querySelector(".t-x").onchange = function(){ layerTarget(t).x = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".t-y").onchange = function(){ layerTarget(t).y = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".t-del").onclick = function(){ pushHist(); texts.splice(i,1); renderTextList(); renderPreview(); };
+    row.querySelector('[data-sc="all"]').onclick = function(){
+      pushHist(); t.editMode = "all"; t.frameProps = {};
+      renderTextList(); renderTimeline(); renderPreview();
+    };
+    row.querySelector('[data-sc="cur"]').onclick = function(){
+      var fid = curFrameId(); if(fid === null){ log("先导入一帧", "log-err"); return; }
+      pushHist(); t.editMode = "cur";
+      renderTextList(); renderTimeline(); renderPreview();
+    };
+    row.querySelector('[data-sc="sel"]').onclick = function(){
+      if(!selected.size){ log("先在时间线点选几帧", "log-info"); return; }
+      pushHist(); t.editMode = "sel";
+      renderTextList(); renderTimeline(); renderPreview();
+    };
+    list.appendChild(row);
+  });
+  refreshTextValues();
+}
+function refreshTextValues(){
+  var fid = curFrameId();
+  var rows = $("textList").children;
+  texts.forEach(function(t,i){
+    if(!rows[i]) return;
+    var p = fid === null ? t.props : effProps(t, fid);
+    rows[i].querySelector(".t-text").value = p.text;
+    rows[i].querySelector(".t-size").value = p.size;
+    rows[i].querySelector(".t-color").value = p.color;
+    rows[i].querySelector(".t-x").value = p.x;
+    rows[i].querySelector(".t-y").value = p.y;
+  });
+}
+$("addText").onclick = function(){
+  pushHist();
+  var defaultSize = Math.max(10, Math.round(outH / 6));
+  ctx.font = defaultSize + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+  var tw = ctx.measureText("新文字").width;
+  texts.push({id: uid++, editMode: "all", frames: [], props:{text:"新文字", x: Math.round((outW - tw) / 2), y: outH - defaultSize - 2, size: defaultSize, color:"#1a1a2e"}, frameProps:{}});
+  renderTextList(); renderPreview(); persist();
+};
+
+/* ================= 图片叠加层 ================= */
+function renderImgOvList(){
+  var list = $("imgOvList");
+  list.innerHTML = "";
+  imgOvs.forEach(function(o, i){
+    var row = document.createElement("div");
+    row.className = "ov-row ov-col";
+    row.innerHTML = scopeHtml(o);
+    var c = document.createElement("canvas");
+    var sc = Math.min(44 / o.img.naturalWidth, 32 / o.img.naturalHeight, 1);
+    c.width = Math.max(1, o.img.naturalWidth*sc);
+    c.height = Math.max(1, o.img.naturalHeight*sc);
+    c.getContext("2d").imageSmoothingEnabled = false;
+    c.getContext("2d").drawImage(o.img, 0, 0, c.width, c.height);
+    var line = document.createElement("div");
+    line.className = "ov-line";
+    line.appendChild(c);
+    line.insertAdjacentHTML("beforeend",
+      '<input type="number" class="o-x" title="X">' +
+      '<input type="number" class="o-y" title="Y">' +
+      '<input type="number" class="o-sc" style="width:58px;" title="缩放%">' +
+      (o.gifFrames ? '<input type="number" class="o-loop" min="1" max="10" style="width:52px;" value="' + (o.loopTimes||1) + '" title="贴图循环次数">循环' : '') +
+      '<button class="sm dan o-del">删</button>');
+    row.appendChild(line);
+    row.querySelector(".o-x").onchange = function(){ layerTarget(o).x = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".o-y").onchange = function(){ layerTarget(o).y = parseInt(this.value,10)||0; renderPreview(); persist(); };
+    row.querySelector(".o-sc").onchange = function(){ layerTarget(o).scale = (parseInt(this.value,10)||100)/100; renderPreview(); persist(); };
+    var loopEl = row.querySelector(".o-loop");
+    if(loopEl) loopEl.onchange = function(){ o.loopTimes = Math.max(1, parseInt(this.value,10)||1); renderPreview(); };
+    row.querySelector(".o-del").onclick = function(){ pushHist(); imgOvs.splice(i,1); renderImgOvList(); renderPreview(); };
+    row.querySelector('[data-sc="all"]').onclick = function(){
+      pushHist(); o.editMode = "all"; o.frameProps = {};
+      renderTextList(); renderImgOvList(); renderTimeline(); renderPreview();
+    };
+    row.querySelector('[data-sc="cur"]').onclick = function(){
+      var fid = curFrameId(); if(fid === null){ log("先导入一帧", "log-err"); return; }
+      pushHist(); o.editMode = "cur";
+      renderTextList(); renderImgOvList(); renderTimeline(); renderPreview();
+    };
+    row.querySelector('[data-sc="sel"]').onclick = function(){
+      if(!selected.size){ log("先在时间线点选几帧", "log-info"); return; }
+      pushHist(); o.editMode = "sel";
+      renderTextList(); renderImgOvList(); renderTimeline(); renderPreview();
+    };
+    list.appendChild(row);
+  });
+  refreshImgOvValues();
+}
+function refreshImgOvValues(){
+  var fid = curFrameId();
+  var rows = $("imgOvList").children;
+  imgOvs.forEach(function(o,i){
+    if(!rows[i]) return;
+    var p = fid === null ? o.props : effProps(o, fid);
+    rows[i].querySelector(".o-x").value = p.x;
+    rows[i].querySelector(".o-y").value = p.y;
+    rows[i].querySelector(".o-sc").value = Math.round(p.scale*100);
+  });
+}
+$("addImgOv").onclick = function(){ $("imgOvInput").click(); };
+$("imgOvInput").addEventListener("change", function(e){
+  if(!e.target.files.length) return;
+  var file = e.target.files[0];
+  var isGif = /\.gif$/i.test(file.name) || file.type === "image/gif";
+  if(isGif && window.GifDecoder){
+    file.arrayBuffer().then(function(buf){
+      var dec = window.GifDecoder.toCanvases(new Uint8Array(buf));
+      if(!dec.length) throw new Error("GIF 里没有可读帧");
+      pushHist();
+      imgOvs.push({id: uid++, img: dec[0].canvas, gifFrames: dec.map(function(d){ return d.canvas; }), loopTimes: 1,
+        scope:"all", frames:[], props:{x:0, y:0, scale:1}, frameProps:{}});
+      renderImgOvList(); renderPreview();
+      log("已叠加 GIF 贴图：" + dec.length + " 帧", "log-ok");
+    }).catch(function(err){ log(err.message, "log-err"); });
+  } else {
+    loadImageFromFile(file).then(function(img){
+      pushHist();
+      imgOvs.push({id: uid++, img:img, scope:"all", frames:[], props:{x:0, y:0, scale:1}, frameProps:{}});
+      renderImgOvList(); renderPreview();
+    }).catch(function(err){ log(err.message, "log-err"); });
+  }
+  e.target.value = "";
+});
+
+/* 画布上拖动叠加层 */
+function canvasCoords(e){
+  var rect = canvas.getBoundingClientRect();
+  var sx = outW / rect.width, sy = outH / rect.height;
+  return {x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy};
+}
+function applyViewZoom(){
+  var baseW = canvas.width, baseH = canvas.height;
+  var wrap = $("previewWrap");
+  var maxW = Math.max(10, wrap.clientWidth - 4), maxH = Math.max(10, wrap.clientHeight - 4);
+  var fit = Math.min(maxW / baseW, maxH / baseH);
+  var s = fit * viewZoom;
+  canvas.style.transform = "scale(" + s + ")";
+  canvas.style.transformOrigin = "center center";
+  canvas.style.width = baseW + "px";
+  canvas.style.height = baseH + "px";
+}
+canvas.addEventListener("wheel", function(e){
+  e.preventDefault();
+  var factor = e.deltaY < 0 ? 1.12 : 0.89;
+  viewZoom = Math.min(8, Math.max(0.2, viewZoom * factor));
+  applyViewZoom();
+}, {passive: false});
+canvas.addEventListener("mousedown", function(e){
+  var p = canvasCoords(e);
+  var fid = curFrameId();
+  if(e.shiftKey){ rubber = {x0: p.x, y0: p.y, x1: p.x, y1: p.y}; return; }
+  /* 从上到下命中：后加的在上层；仅命中当前帧生效的层 */
+  for(var i = imgOvs.length - 1; i >= 0; i--){
+    var o = imgOvs[i];
+    if(fid !== null && !layerApplies(o, fid)) continue;
+    var pr = effProps(o, fid);
+    var src = ovSource(o, cur);
+    var sz = ovSize(o, src);
+    var w = sz.w * pr.scale, h = sz.h * pr.scale;
+    if(p.x >= pr.x && p.x <= pr.x + w && p.y >= pr.y && p.y <= pr.y + h){
+      if(selectedLayers.has(o.id) && selectedLayers.size > 1){
+        dragState = {type:"group", gx: p.x, gy: p.y, members: collectGroupMembers(fid)};
+      } else {
+        selectedLayers = new Set([o.id]);
+        renderLayerPanel();
+        dragState = {type:"img", idx:i, dx:p.x - pr.x, dy:p.y - pr.y, origX: layerTarget(o).x, origY: layerTarget(o).y, startX: layerTarget(o).x, startY: layerTarget(o).y};
+      }
+      pushHist();
+      renderPreview();
+      return;
+    }
+  }
+  for(var j = texts.length - 1; j >= 0; j--){
+    var t = texts[j];
+    if(fid !== null && !layerApplies(t, fid)) continue;
+    var pr = effProps(t, fid);
+    ctx.font = pr.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+    var w = ctx.measureText(pr.text).width, h = pr.size;
+      if(p.x >= pr.x && p.x <= pr.x + w && p.y >= pr.y && p.y <= pr.y + h){
+      if(selectedLayers.has(t.id) && selectedLayers.size > 1){
+        dragState = {type:"group", gx: p.x, gy: p.y, members: collectGroupMembers(fid)};
+      } else {
+        selectedLayers = new Set([t.id]);
+        renderLayerPanel();
+        dragState = {type:"text", idx:j, dx:p.x - pr.x, dy:p.y - pr.y, origX: layerTarget(t).x, origY: layerTarget(t).y, startX: layerTarget(t).x, startY: layerTarget(t).y};
+      }
+      pushHist();
+      renderPreview();
+      return;
+    }
+  }
+  /* 没命中任何叠加层 → 清空层选择，拖动底图 */
+  selectedLayers.clear();
+  renderLayerPanel();
+  pushHist();
+  dragState = {type:"base", gx: p.x, gy: p.y, lastDx: 0, lastDy: 0, origFX: (frames[cur]?frames[cur].fx||0:0), origFY: (frames[cur]?frames[cur].fy||0:0)};
+  renderPreview();
+});
+function collectGroupMembers(fid){
+  var members = [];
+  imgOvs.forEach(function(o){
+    if(selectedLayers.has(o.id)){
+      var p = effProps(o, fid);
+      members.push({layer: o, ox: p.x, oy: p.y});
+    }
+  });
+  texts.forEach(function(t){
+    if(selectedLayers.has(t.id)){
+      var p = effProps(t, fid);
+      members.push({layer: t, ox: p.x, oy: p.y});
+    }
+  });
+  return members;
+}
+window.addEventListener("mousemove", function(e){
+  var p = canvasCoords(e);
+  if(rubber){
+    rubber.x1 = p.x; rubber.y1 = p.y;
+    renderPreview();
+    return;
+  }
+  if(!dragState) return;
+  if(dragState.type === "group"){
+    var dx = p.x - dragState.gx, dy = p.y - dragState.gy;
+    dragState.members.forEach(function(m){
+      var d = layerTarget(m.layer);
+      d.x = Math.round(m.ox + dx);
+      d.y = Math.round(m.oy + dy);
+    });
+    renderPreview();
+    return;
+  }
+  if(dragState.type === "img"){
+    var o = imgOvs[dragState.idx];
+    var d = layerTarget(o);
+    d.x = Math.round(p.x - dragState.dx);
+    d.y = Math.round(p.y - dragState.dy);
+  } else if(dragState.type === "text"){
+    var t = texts[dragState.idx];
+    var d = layerTarget(t);
+    d.x = Math.round(p.x - dragState.dx);
+    d.y = Math.round(p.y - dragState.dy);
+  } else if(dragState.type === "base" && frames[cur]){
+    var f = frames[cur];
+    f.fx = Math.round((f.fx || 0) + (p.x - dragState.gx));
+    f.fy = Math.round((f.fy || 0) + (p.y - dragState.gy));
+    dragState.gx = p.x; dragState.gy = p.y;
+    renderTimeline();
+  }
+  renderPreview();
+  renderTimeline();
+});
+window.addEventListener("mouseup", function(){
+  if(rubber){
+    var rx = Math.min(rubber.x0, rubber.x1), ry = Math.min(rubber.y0, rubber.y1);
+    var rw = Math.abs(rubber.x1 - rubber.x0), rh = Math.abs(rubber.y1 - rubber.y0);
+    var fid = curFrameId();
+    selectedLayers = new Set();
+    if(rw > 3 && rh > 3){
+      texts.forEach(function(t){
+        if(!layerApplies(t, fid)) return;
+        var b = layerBBox(t, fid, true);
+        if(rx < b.x + b.w && rx + rw > b.x && ry < b.y + b.h && ry + rh > b.y) selectedLayers.add(t.id);
+      });
+      imgOvs.forEach(function(o){
+        if(!layerApplies(o, fid)) return;
+        var b = layerBBox(o, fid, false);
+        if(rx < b.x + b.w && rx + rw > b.x && ry < b.y + b.h && ry + rh > b.y) selectedLayers.add(o.id);
+      });
+    }
+    rubber = null;
+    renderPreview();
+    return;
+  }
+  if(dragState){ /* 后续跟随：把这次位移应用到后续所有帧 */
+    if(propagateFollow && dragState){
+      var moveDx = 0, moveDy = 0;
+      var layerObj = null;
+      if(dragState.type === "img"){
+        layerObj = imgOvs[dragState.idx];
+        var cp = layerTarget(layerObj);
+        moveDx = cp.x - (dragState.origX !== undefined ? dragState.origX : cp.x);
+        moveDy = cp.y - (dragState.origY !== undefined ? dragState.origY : cp.y);
+      } else if(dragState.type === "text"){
+        layerObj = texts[dragState.idx];
+        var cp2 = layerTarget(layerObj);
+        moveDx = cp2.x - (dragState.origX !== undefined ? dragState.origX : cp2.x);
+        moveDy = cp2.y - (dragState.origY !== undefined ? dragState.origY : cp2.y);
+      } else if(dragState.type === "base" && frames[cur]){
+        var f = frames[cur];
+        moveDx = Math.round(f.fx || 0) - (dragState.origFX || 0);
+        moveDy = Math.round(f.fy || 0) - (dragState.origFY || 0);
+      }
+      /* follow: 后续帧位置设成和当前帧一样 */
+      var finalX = (layerObj ? layerTarget(layerObj).x : (frames[cur]?Math.round(frames[cur].fx||0):0));
+      var finalY = (layerObj ? layerTarget(layerObj).y : (frames[cur]?Math.round(frames[cur].fy||0):0));
+      for(var fi = cur + 1; fi < frames.length; fi++){
+        if(dragState.type === "img"){
+          var op = layerTargetAt(layerObj, frames[fi].id);
+          op.x = finalX; op.y = finalY;
+        } else if(dragState.type === "text"){
+          var tp = layerTargetAt(layerObj, frames[fi].id);
+          tp.x = finalX; tp.y = finalY;
+        } else if(dragState.type === "base"){
+          frames[fi].fx = finalX;
+          frames[fi].fy = finalY;
+        }
+      }
+      renderTimeline();
+    }
+    dragState = null; persist(); }
+});
+
+/* ================= 撤销/重做按钮 & 快捷键 ================= */
+$("undoBtn").onclick = undo;
+$("redoBtn").onclick = redo;
+window.addEventListener("keydown", function(e){
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey){ e.preventDefault(); undo(); }
+  else if((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))){ e.preventDefault(); redo(); }
+  else if(e.key === "Delete"){
+    if(selected.size && ["INPUT","TEXTAREA"].indexOf(document.activeElement.tagName) < 0){
+      $("delSelected").click();
+    }
+  }
+});
+
+/* ================= 会话设置持久化 ================= */
+function persist(){
+  try{
+    localStorage.setItem("gifEditor.settings", JSON.stringify({
+      delay: $("globalDelay").value,
+      outW: outW, outH: outH, loop: $("loopCount").value, bgOpaque: bgOpaque, bgColor: bgColor,
+      texts: texts, ovMeta: imgOvs.map(function(o){ return {x:o.props.x,y:o.props.y,scale:o.props.scale}; })
+    }));
+  }catch(e){}
+}
+function restoreSettings(){
+  try{
+    var s = JSON.parse(localStorage.getItem("gifEditor.settings") || "null");
+    if(!s) return;
+    $("globalDelay").value = s.delay || 100;
+    outW = s.outW || 320; outH = s.outH || 240; ratio = outW/outH;
+    syncSizeInputs();
+    $("loopCount").value = s.loop || 0;
+    if(s.bgOpaque){ bgOpaque = true; $("bgOpaque").checked = true; }
+    if(s.bgColor){ bgColor = s.bgColor; $("bgColor").value = bgColor; $("bgHex").value = bgColor; }
+  }catch(e){}
+}
+
+/* ================= 导出（gifenc 本地编码） ================= */
+$("exportBtn").onclick = function(){
+  if(!frames.length){ log("没有帧可导出", "log-err"); return; }
+  setPlaying(false);
+  var bar = $("progressBar"); bar.style.display = "block";
+  var fill = bar.querySelector(".fill");
+  var cvs = document.createElement("canvas");
+  cvs.width = outW; cvs.height = outH;
+  var cctx = cvs.getContext("2d", {willReadFrequently: true});
+  cctx.imageSmoothingEnabled = false;
+  var ge = window.gifenc;
+  var gif = ge.GIFEncoder();
+  var loop = parseInt($("loopCount").value, 10) || 0;
+  var i = 0;
+  (function step(){
+    if(i >= frames.length){
+      gif.finish();
+      var bytes = gif.bytes();
+      var blob = new Blob([bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)], {type:"image/gif"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = ($("outName").value || "output") + ".gif";
+      document.body.appendChild(a); a.click(); a.remove();
+      log("导出完成：" + a.download + "（" + (blob.size/1024).toFixed(1) + " KB，" + frames.length + " 帧）", "log-ok");
+      return;
+    }
+    paintBg(cctx);
+    containDraw(cctx, frames[i]);
+    var efid = frames[i].id;
+    imgOvs.forEach(function(o){
+      if(!layerApplies(o, efid)) return;
+      var p = effProps(o, efid);
+      var src = ovSource(o, i);
+      var sz = ovSize(o, src);
+      cctx.drawImage(src, p.x, p.y, sz.w*p.scale, sz.h*p.scale);
+    });
+    texts.forEach(function(t){
+      if(!layerApplies(t, efid)) return;
+      var p = effProps(t, efid);
+      cctx.font = p.size + "px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif";
+      cctx.fillStyle = p.color; cctx.textBaseline = "top";
+      cctx.fillText(p.text, p.x, p.y);
+    });
+    var imgData = cctx.getImageData(0,0,outW,outH);
+    var palette = ge.quantize(imgData.data, 256);
+    var index = ge.applyPalette(imgData.data, palette);
+    gif.writeFrame(index, outW, outH, {
+      palette: palette,
+      delay: Math.max(2, frames[i].delay),
+      repeat: i === 0 ? loop : -1,
+      transparent: true,
+      dispose: 2
+    });
+    i++;
+    fill.style.width = Math.round(i / frames.length * 100) + "%";
+    step();
+  })();
+};
+
+/* ================= 启动 ================= */
+restoreSettings();
+renderTimeline();
+renderPreview();
+renderTextList();
+renderImgOvList();
+setPlaying(false);
+})();
+</script>
+</body>
+</html>
