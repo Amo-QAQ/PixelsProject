@@ -1,11 +1,138 @@
 {
-    "activeFile": "pre06.tmx",
+    "activeFile": "",
     "automapping.whileDrawing": true,
     "expandedProjectPaths": [
         "."
     ],
+    "file.lastUsedOpenFilter": "Tiled 地图文件 (*.tmx *.xml)",
     "fileStates": {
         "": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AbandonedJojaMart.tmx": {
+            "scale": 3,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 247.66666666666666,
+                "y": 203.33333333333331
+            }
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AbandonedJojaMart.tmx#indoor": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AbandonedJojaMart.tmx#paths": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AbandonedJojaMart.tmx#untitled tile sheet": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AdventureGuild.tmx": {
+            "scale": 2.7965625,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 111.92311990166499,
+                "y": 160.01787909263606
+            }
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AdventureGuild.tmx#1": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AdventureGuild.tmx#2": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Barn.tmx": {
+            "scale": 3.120486111111111,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 143.8878379882052,
+                "y": 119.8531211750306
+            }
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Barn.tmx#barn": {
+            "scaleInDock": 3,
+            "scaleInEditor": 5.5
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Barn.tmx#p": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 640,
+                "y": 520.5
+            }
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm.tmx#Paths": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm.tmx#extra_tiles": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm.tmx#untitled tile sheet": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm.tmx#v16_Outdoors2": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_DiningRoom_Remove.tmx": {
+            "scale": 5.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 560,
+                "y": 367.8181818181818
+            }
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_DiningRoom_Remove.tmx#indoor": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_DiningRoom_Remove.tmx#sewer": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_DiningRoom_Remove.tmx#untitled tile sheet": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_DiningRoom_Remove.tmx#walls_and_floors": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_ExtendedCornerRoom_Add.tmx": {
+            "scale": 0.4529464285714286,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 560.7727183126356,
+                "y": 366.4892568499903
+            }
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_ExtendedCornerRoom_Add.tmx#indoor": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_ExtendedCornerRoom_Add.tmx#sewer": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_ExtendedCornerRoom_Add.tmx#untitled tile sheet": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_ExtendedCornerRoom_Add.tmx#walls_and_floors": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm_Combat.tmx": {
+            "scale": 5.5,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 640,
+                "y": 520.1818181818182
+            }
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm_Combat.tmx#Paths": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm_Combat.tmx#extra": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm_Combat.tmx#untitled tile sheet": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm_Combat.tmx#v16_Outdoors2": {
             "scaleInDock": 1
         },
         "Crops.tsj": {
@@ -142,7 +269,7 @@
             "selectedLayer": 13,
             "viewCenter": {
                 "x": 640,
-                "y": 639.8333333333333
+                "y": 639.6666666666666
             }
         },
         "map01_pre.tmx": {
@@ -186,8 +313,8 @@
             "scale": 2.347596153846154,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 103.93610485357362,
-                "y": 104.1490886749949
+                "x": 103.93610485357364,
+                "y": 104.36207249641612
             }
         },
         "pre03.tmx": {
@@ -195,7 +322,7 @@
             "selectedLayer": 3,
             "viewCenter": {
                 "x": 128,
-                "y": 47.75
+                "y": 47.5
             }
         },
         "pre04.tmx": {
@@ -221,8 +348,8 @@
             "scale": 3,
             "selectedLayer": 9,
             "viewCenter": {
-                "x": 119,
-                "y": 67.5
+                "x": 132.66666666666666,
+                "y": 46.16666666666666
             }
         },
         "seed.tsj": {
@@ -322,32 +449,22 @@
     "map.tileWidth": 16,
     "map.width": 16,
     "openFiles": [
-        "map01.tmx",
-        "pre02.tmx",
-        "girl_idle.tsj",
-        "pre03.tmx",
-        "girl_water.tsj",
-        "pre04.tmx",
-        "pre05.tmx",
-        "stone_01.tsj",
-        "pre06.tmx",
-        "girl_mine.tsj",
-        "pre01.tmx"
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Barn.tmx"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Barn.tmx",
         "map01.tmx",
         "pre02.tmx",
         "girl_idle.tsj",
         "pre03.tmx",
-        "girl_water.tsj",
-        "pre04.tmx",
-        "pre05.tmx",
-        "stone_01.tsj",
-        "pre01.tmx",
-        "girl_mine.tsj",
-        "pre06.tmx",
-        "girl_chop.tsj"
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm_Combat.tmx",
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Farm.tmx",
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/AdventureGuild.tmx",
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_ExtendedCornerRoom_Add.tmx",
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/FarmHouse_DiningRoom_Remove.tmx",
+        "box.tsj",
+        "girl_water.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {

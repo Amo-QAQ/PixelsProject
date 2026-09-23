@@ -1,0 +1,123 @@
+<html style="margin:0;padding:0;">
+<title>星露谷系统全景（学习用架构图）</title>
+<div style="width:100%;box-sizing:border-box;font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#f6f4ee;padding:24px 20px;color:#3a3326;">
+
+  <!-- 头部 -->
+  <div style="text-align:center;margin-bottom:18px;">
+    <div style="font-size:26px;font-weight:bold;color:#5b4a2f;">星露谷系统全景 · 学习用架构图</div>
+    <div style="font-size:13px;color:#8a7f66;margin-top:6px;">示意 · 基于 1.6 安装目录解构 · 配套《星露谷系统解构分析.md》阅读</div>
+  </div>
+
+  <!-- 第0层：五层设计法（呼应框架蓝图） -->
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+    <div style="flex:1;min-width:150px;background:#5b4a2f;color:#fff;border-radius:8px;padding:10px 12px;">
+      <div style="font-size:12px;opacity:.8;">① 支柱</div>
+      <div style="font-size:14px;font-weight:bold;margin-top:2px;">经营成长 · 田园治愈 · 自由节奏</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#7a6740;color:#fff;border-radius:8px;padding:10px 12px;">
+      <div style="font-size:12px;opacity:.8;">② 核心循环</div>
+      <div style="font-size:14px;font-weight:bold;margin-top:2px;">种 → 收 → 卖 → 升级 → 解锁 → 种更多</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#8f7c52;color:#fff;border-radius:8px;padding:10px 12px;">
+      <div style="font-size:12px;opacity:.8;">③ 系统清单</div>
+      <div style="font-size:14px;font-weight:bold;margin-top:2px;">15 个系统组 · 70+ 数据表（下图）</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#a69163;color:#fff;border-radius:8px;padding:10px 12px;">
+      <div style="font-size:12px;opacity:.8;">④ 系统依赖</div>
+      <div style="font-size:14px;font-weight:bold;margin-top:2px;">经济 ↔ 升级 ↔ 解锁 ↔ 社交 ↔ 剧情</div>
+    </div>
+    <div style="flex:1;min-width:150px;background:#c0ab7c;color:#4a3f28;border-radius:8px;padding:10px 12px;">
+      <div style="font-size:12px;opacity:.8;">⑤ 数据层</div>
+      <div style="font-size:14px;font-weight:bold;margin-top:2px;">Data 目录 · 18 表已解包为 JSON</div>
+    </div>
+  </div>
+
+  <!-- 核心循环 -->
+  <div style="background:#fff;border:1px solid #ddd2b8;border-radius:10px;padding:14px 16px;margin-bottom:20px;">
+    <div style="font-weight:bold;color:#5b4a2f;font-size:15px;margin-bottom:10px;">核心循环（1~5 分钟闭环）</div>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+      <div style="background:#e9e2d2;border-radius:20px;padding:6px 14px;font-size:13px;">耕种作物</div><span style="color:#8a7f66;">→</span>
+      <div style="background:#e9e2d2;border-radius:20px;padding:6px 14px;font-size:13px;">收获</div><span style="color:#8a7f66;">→</span>
+      <div style="background:#e9e2d2;border-radius:20px;padding:6px 14px;font-size:13px;">出售赚钱</div><span style="color:#8a7f66;">→</span>
+      <div style="background:#e9e2d2;border-radius:20px;padding:6px 14px;font-size:13px;">购买/制作升级</div><span style="color:#8a7f66;">→</span>
+      <div style="background:#e9e2d2;border-radius:20px;padding:6px 14px;font-size:13px;">解锁新内容</div><span style="color:#8a7f66;">→</span>
+      <div style="background:#5b4a2f;color:#fff;border-radius:20px;padding:6px 14px;font-size:13px;">回到耕种（成长）</div>
+    </div>
+    <div style="font-size:12px;color:#8a7f66;margin-top:8px;">旁支循环：钓鱼 / 战斗 / 社交好感 / 收集博物馆，各自独立闭环并反哺主循环（赚钱、解锁、新作物）。</div>
+  </div>
+
+  <!-- 系统分组 -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;">
+
+    <!-- 玩法系统 -->
+    <div style="background:#fff;border:1px solid #ddd2b8;border-radius:10px;padding:12px 14px;">
+      <div style="font-weight:bold;color:#5b4a2f;margin-bottom:8px;">🌱 玩法系统（玩家直接操作）</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div><span style="font-weight:bold;font-size:13px;">农业种植</span><span style="color:#8a7f66;font-size:12px;">　Crops / FruitTrees / GiantCrops / WildTrees / TerrainFeatures</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">养殖</span><span style="color:#8a7f66;font-size:12px;">　FarmAnimals / Buildings(畜舍)</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">战斗冒险</span><span style="color:#8a7f66;font-size:12px;">　Monsters / Weapons / Trinkets / Buffs / MonsterSlayerQuests</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">钓鱼</span><span style="color:#8a7f66;font-size:12px;">　Fish / AquariumFish / FishPondData</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">觅食采集</span><span style="color:#8a7f66;font-size:12px;">　Objects(Forage类) / WildTrees / GiantCrops</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">制作/烹饪/缝纫</span><span style="color:#8a7f66;font-size:12px;">　CraftingRecipes / CookingRecipes / TailoringRecipes / Machines</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">建造家园</span><span style="color:#8a7f66;font-size:12px;">　Buildings / Furniture / FloorsAndPaths / Fences / HomeRenovations</span></div>
+      </div>
+    </div>
+
+    <!-- 内容系统 -->
+    <div style="background:#fff;border:1px solid #ddd2b8;border-radius:10px;padding:12px 14px;">
+      <div style="font-weight:bold;color:#5b4a2f;margin-bottom:8px;">💬 内容系统（叙事与目标）</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div><span style="font-weight:bold;font-size:13px;">NPC 社交</span><span style="color:#8a7f66;font-size:12px;">　Characters / NPCGiftTastes / 360 份日程表</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">任务系统</span><span style="color:#8a7f66;font-size:12px;">　Quests / SpecialOrders / SecretNotes</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">收集与成就</span><span style="color:#8a7f66;font-size:12px;">　Bundles(社区中心) / MuseumRewards / Achievements</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">节日与电影</span><span style="color:#8a7f66;font-size:12px;">　PassiveFestivals / Movies / Weddings</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">邮件</span><span style="color:#8a7f66;font-size:12px;">　mail（剧情入口）</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">能力成长</span><span style="color:#8a7f66;font-size:12px;">　Powers / Buffs（1.6 新架构）</span></div>
+      </div>
+    </div>
+
+    <!-- 支撑系统 -->
+    <div style="background:#fff;border:1px solid #ddd2b8;border-radius:10px;padding:12px 14px;">
+      <div style="font-weight:bold;color:#5b4a2f;margin-bottom:8px;">⚙️ 支撑系统（横切全局）</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div><span style="font-weight:bold;font-size:13px;">地图与地点</span><span style="color:#8a7f66;font-size:12px;">　Maps(325+) / Locations / LocationContexts / WorldMap</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">时间与季节</span><span style="color:#8a7f66;font-size:12px;">　引擎驱动，数据表按季节组织（资产命名约定）</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">经济系统</span><span style="color:#8a7f66;font-size:12px;">　Shops / Objects.Price / Concessions</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">本地化</span><span style="color:#8a7f66;font-size:12px;">　Strings 372×12 语言 / Fonts</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">音频</span><span style="color:#8a7f66;font-size:12px;">　XACT / AudioChanges / JukeboxTracks</span></div>
+        <div><span style="font-weight:bold;font-size:13px;">存档与设置</span><span style="color:#8a7f66;font-size:12px;">　代码层（无数据表）</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据层 -->
+  <div style="background:#5b4a2f;color:#fff;border-radius:10px;padding:14px 16px;margin-top:20px;">
+    <div style="font-weight:bold;font-size:15px;margin-bottom:10px;">数据层 · 已解包 18 张核心表（Game_learn\解包数据\*.json）</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Objects（807 物品）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Crops（作物）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Fish（鱼类）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">NPCGiftTastes（送礼）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Monsters（怪物）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Quests（任务）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Bundles（收集包）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Machines（机器规则）</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Weapons / Tools / Boots / Trinkets</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">CraftingRecipes / CookingRecipes</span>
+      <span style="background:rgba(255,255,255,.15);border-radius:16px;padding:4px 12px;font-size:12px;">Shops / Buildings / FruitTrees / FarmAnimals / Buffs / mail</span>
+    </div>
+  </div>
+
+  <!-- 学习路径 -->
+  <div style="background:#fff;border:1px dashed #c9b98f;border-radius:10px;padding:14px 16px;margin-top:20px;">
+    <div style="font-weight:bold;color:#5b4a2f;font-size:15px;margin-bottom:8px;">怎么用这张图（美术视角）</div>
+    <ol style="margin:0;padding-left:20px;font-size:13px;color:#3a3326;line-height:1.9;">
+      <li>先看顶部五层：确认"星露谷的支柱/循环"是什么——这是你设计自己游戏时最先要定的。</li>
+      <li>再挑一个系统组（如钓鱼），打开对应 JSON，看"这个系统需要记录哪些字段"。</li>
+      <li>把字段翻译成 Godot 语言：一张表 = 一个 Resource；一个系统 = 一个 Scene + 若干节点；资产命名约定 = 你的文件夹/文件名规范。</li>
+      <li>最后对照蓝图模板，为自己的游戏画出同样的全景图（先定支柱，再列系统，再排依赖）。</li>
+    </ol>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:#a89a7c;margin-top:16px;">仅供个人学习分析使用 · 不用于商用或分发</div>
+</div>
