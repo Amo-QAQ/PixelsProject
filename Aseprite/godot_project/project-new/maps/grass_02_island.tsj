@@ -1,0 +1,14 @@
+{ "columns":5,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Terrain\/Tilesets\/Grass\/grass_02_island.png",
+ "imageheight":80,
+ "imagewidth":80,
+ "margin":0,
+ "name":"grass_02_island",
+ "spacing":0,
+ "tilecount":25,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

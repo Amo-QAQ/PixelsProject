@@ -1,0 +1,14 @@
+{ "columns":2,
+ "image":"..\/project_end\/Cozy Lands - Asset Pack\/Objects\/Object\/bridge.png",
+ "imageheight":64,
+ "imagewidth":32,
+ "margin":0,
+ "name":"bridge",
+ "spacing":0,
+ "tilecount":8,
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

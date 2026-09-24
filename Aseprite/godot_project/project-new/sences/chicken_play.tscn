@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://duhtwxbs84j3x"]
+
+[ext_resource type="SpriteFrames" uid="uid://dddxkdwdqnoag" path="res://assets/chicken/chicken_frames.tres" id="1_jnaik"]
+[ext_resource type="Texture2D" uid="uid://baji68u2rltik" path="res://sences/chicken.png" id="1_tljkg"]
+[ext_resource type="SpriteFrames" uid="uid://13hkqu70lea5" path="res://assets/chicken/chick_frames.tres" id="2_wq314"]
+
+[sub_resource type="Animation" id="Animation_tljkg"]
+length = 3.0666666
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("chicken_AnimatedSprite2D:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.8),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [&"walk_l", &"walk_l"]
+}
+
+[sub_resource type="Animation" id="Animation_4dan5"]
+resource_name = "new_animation"
+length = 2.1666667
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("chicken_AnimatedSprite2D:animation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.93333334),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [&"idle_f", &"like_f"]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ac8wt"]
+_data = {
+&"RESET": SubResource("Animation_tljkg"),
+&"new_animation": SubResource("Animation_4dan5")
+}
+
+[node name="ChickenPlay" type="Node2D" unique_id=931027164]
+
+[node name="Chicken" type="Sprite2D" parent="." unique_id=337100035]
+position = Vector2(90, 80)
+texture = ExtResource("1_tljkg")
+
+[node name="chicken_AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1217734401]
+position = Vector2(89, 83)
+sprite_frames = ExtResource("1_jnaik")
+animation = &"walk_l"
+autoplay = "idle_f"
+
+[node name="chick_AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=821517311]
+visible = false
+position = Vector2(0, -16)
+sprite_frames = ExtResource("2_wq314")
+animation = &"idle_f"
+autoplay = "idle_f"
+frame_progress = 0.6299245
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=917578656]
+libraries/ = SubResource("AnimationLibrary_ac8wt")

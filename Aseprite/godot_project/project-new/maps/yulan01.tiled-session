@@ -1,5 +1,5 @@
 {
-    "activeFile": "chicken.tmx",
+    "activeFile": "box.tsj",
     "automapping.whileDrawing": true,
     "expandedProjectPaths": [
         "."
@@ -156,18 +156,17 @@
         },
         "chick_eat.tsj": {
             "dynamicWrapping": false,
-            "scaleInDock": 1,
             "scaleInEditor": 1
         },
         "chicken.tmx": {
             "expandedObjectLayers": [
                 7
             ],
-            "scale": 2,
-            "selectedLayer": 6,
+            "scale": 1.5,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 137,
-                "y": 44.5
+                "x": 70.33333333333331,
+                "y": 66.33333333333333
             }
         },
         "chicken_idle02.tsj": {
@@ -176,14 +175,10 @@
             "scaleInEditor": 1
         },
         "chicken_squat_idle.tsj": {
-            "dynamicWrapping": false,
-            "scaleInDock": 1,
-            "scaleInEditor": 1
+            "dynamicWrapping": false
         },
         "egg_born.tsj": {
-            "dynamicWrapping": false,
-            "scaleInDock": 1,
-            "scaleInEditor": 1
+            "dynamicWrapping": false
         },
         "fence.tsj": {
             "dynamicWrapping": false,
@@ -495,31 +490,22 @@
     "map.width": 20,
     "openFiles": [
         "map01.tmx",
-        "pre06.tmx",
-        "pre02.tmx",
-        "pre01.tmx",
-        "pre03.tmx",
-        "chicken.tmx",
-        "chicken_idle02.tsj",
-        "chicken_squat_idle.tsj",
-        "egg_born.tsj",
-        "object.tsj",
-        "water.tsj"
+        "box.tsj"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
-        "map01.tmx",
-        "pre06.tmx",
-        "pre02.tmx",
-        "pre01.tmx",
-        "pre03.tmx",
-        "water.tsj",
+        "box.tsj",
+        "map01_pre.tmx",
         "object.tsj",
-        "egg_born.tsj",
-        "chicken_squat_idle.tsj",
+        "other.tsj",
+        "chick_eat.tsj",
         "chicken_idle02.tsj",
-        "chicken.tmx",
-        "box.tsj"
+        "Crops.tsj",
+        "box_object.tsj",
+        "map01.tmx",
+        "C:/Users/admin/Desktop/Game_learn/素材解包/Maps/Barn.tmx",
+        "pre02.tmx",
+        "girl_idle.tsj"
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {
