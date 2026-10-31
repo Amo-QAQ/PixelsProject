@@ -9,10 +9,11 @@ GIF 导出工具（本地网页版）
     - 页面直接预览结果
 
 启动方式：
-    双击「启动GIF工具.bat」，或命令行运行 python GIF导出工具.py
-    会自动打开浏览器 http://127.0.0.1:8765
+    双击「启动GIF工具.bat」（推荐）：它会挑一个装了 Pillow 的 Python，
+    等服务真正就绪后再打开浏览器 http://127.0.0.1:8765，起不来会显示日志。
+    也可命令行运行 python GIF导出工具.py，然后自行访问上面的地址。
 
-依赖：Python + Pillow（本机已有）
+依赖：Python 3 + Pillow（缺依赖时会弹窗提示，不会再静默失败）
 """
 import json
 import math
@@ -21,15 +22,62 @@ import io
 import subprocess
 import sys
 import tempfile
-import webbrowser
+import time
 import xml.etree.ElementTree as ET
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
-from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))      # 导出工具文件夹
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")        # 记录上次选择的工作目录
+LOG_PATH = os.path.join(BASE_DIR, "启动日志.txt")           # pythonw 没有控制台，日志只能落文件
 DEFAULT_TILED_DIR = os.path.dirname(BASE_DIR)              # 默认 tiled 文件夹
+
+
+def _log(text):
+    """追加一行日志；写不进去也不影响主流程"""
+    try:
+        with io.open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), text))
+    except Exception:
+        pass
+
+
+def _reset_log():
+    """每次启动重写日志头，避免旧日志干扰排障"""
+    try:
+        with io.open(LOG_PATH, "w", encoding="utf-8") as f:
+            f.write("[%s] 启动 GIF导出工具.py\n" % time.strftime("%Y-%m-%d %H:%M:%S"))
+            f.write("解释器: %s\n" % sys.executable)
+            f.write("脚本: %s\n" % os.path.abspath(__file__))
+    except Exception:
+        pass
+
+
+def _fatal(title, message):
+    """pythonw 启动时没有控制台，出错必须弹窗 + 落日志，否则看起来就是「网页打不开」"""
+    msg = "%s\n\n%s" % (message, "当前解释器：" + sys.executable)
+    _log("致命错误: " + msg.replace("\n", " | "))
+    try:
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(None, msg, title, 0x10)
+    except Exception:
+        pass
+    try:
+        print(msg, file=sys.stderr)
+    except Exception:
+        pass
+    raise SystemExit(1)
+
+
+try:
+    from PIL import Image
+except ImportError:
+    _fatal("GIF 导出工具无法启动",
+           "当前 Python 解释器没有安装 Pillow（PIL），工具无法渲染图片。\n\n"
+           "解决办法（任选其一）：\n"
+           "1. 双击「启动GIF工具.bat」，它会自动挑选装了 Pillow 的 Python；\n"
+           "2. 给当前解释器装上依赖：\n"
+           "   \"%s\" -m pip install pillow" % sys.executable)
 
 
 def _load_work_dir():
@@ -559,12 +607,22 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    _reset_log()
+    _log("工作目录: %s" % TILED_DIR)
     os.makedirs(get_gif_dir(), exist_ok=True)
     os.makedirs(get_temp_dir(), exist_ok=True)
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    except OSError as e:
+        _fatal("GIF 导出工具无法启动",
+               "本地端口 %d 已被占用，服务起不来。\n\n"
+               "通常是已经开过一个工具进程（或别的程序占着这个端口）。\n"
+               "先关掉旧的启动窗口再试；仍不行就重启电脑。\n\n"
+               "系统提示：%s" % (PORT, e))
+    _log("服务已就绪: http://127.0.0.1:%d" % PORT)
     print("GIF 导出工具已启动：http://127.0.0.1:%d" % PORT)
     print("按 Ctrl+C 停止")
-    webbrowser.open("http://127.0.0.1:%d" % PORT)
+    print("（浏览器由「启动GIF工具.bat」在服务就绪后打开；手动运行请自行访问上面的地址）")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -572,4 +630,17 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except BaseException:
+        import traceback
+        tb = traceback.format_exc()
+        try:
+            with io.open(LOG_PATH, "a", encoding="utf-8") as f:
+                f.write("[%s] 异常退出:\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), tb))
+        except Exception:
+            pass
+        _fatal("GIF 导出工具异常退出",
+               "服务启动/运行出错，详情见同目录「启动日志.txt」。\n\n" + tb.strip()[-1200:])

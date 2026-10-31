@@ -1,6 +1,6 @@
 # 像素资产预览图导出・需求与排障手册
 
-> 最后更新：2026-09-17（目录规范：产物 → GIF\，临时文件 → _临时 \）
+> 最后更新：2026-11-01（启动器修复：缺 Pillow 导致双击后网页打不开 → 见 4.8）
 > 适用范围：
 >
 > `E:\My_work\PixelsProject\Aseprite`
@@ -389,6 +389,24 @@ px = col \* TILE\_W                        # 水平仍是左上
 - `GIF导出工具.py` —— 后端（自动解析地图 + 渲染 + 本地服务）
 - `GIF导出工具.html` —— 界面
 - `启动GIF工具.bat` —— **双击它启动**（自动开浏览器 http://127.0.0.1:8765）
+- `启动日志.txt` —— **运行时自动生成**（每次启动重写，UTF-8；排障先看它，可随时删）
+
+**启动器行为（v4.4，2026-11-01 重写）**：
+1. 已经有实例在跑（`netstat` 看到 8765 在 LISTENING）→ 直接开浏览器，不再起第二个进程
+2. 按顺序找解释器，**每个候选都实际执行 `import PIL` 验证**，不通过就跳过（并记下来，最后一起提示）：
+   `GIFTOOL_PYTHON` 环境变量 → 同目录 `python_path.txt` → `py` 启动器（`py -3`）→ **注册表** `HKCU/HKLM\Software\Python\PythonCore`（`ExecutablePath`）→ PATH 里的 `python`（跳过 Microsoft Store 占位 exe）→ `%LOCALAPPDATA%\Programs\Python\Python3*` / `Program Files\Python3*` / `C:\Python3*` → DoubaoWork 沙盒运行时（兜底，通常没 Pillow）
+3. 用 `pythonw` 静默启动服务，**用 `netstat` 探测到端口真正监听（最多 30 秒）之后才打开浏览器**，不会再打开一个打不开的死页面；全程不依赖 PowerShell
+4. 起不来 → 控制台直接打印原因 + `启动日志.txt` 内容，并 `pause` 等你看
+5. 脚本自身缺 Pillow / 端口被占用 / 未捕获异常 → **弹窗提示**并写日志（pythonw 没有控制台，旧版就是在这里静默死掉）
+6. 找不到可用解释器 → 列出「找到但缺 Pillow」的路径 + 三种解决办法（pip 补齐 / 手写 `python_path.txt` / 重装 Python）
+
+**换电脑 / 换安装位置（可移植性）**：
+- 直接整体拷 `tiled\` 文件夹即可；`config.json` 里存的是绝对路径，失效时**自动回退**到「工具文件夹的上一级」，不用手改
+- Python 装在任意盘符 / 自定义目录都能找到（注册表 `ExecutablePath` + `py` 启动器不依赖 PATH）
+- 实在找不到时手动指定（不改脚本）：同目录建 `python_path.txt`，**只写一行** `python.exe` 完整路径；或设环境变量 `GIFTOOL_PYTHON=完整路径`
+- 新机器完全没装 Python / 只装了无 Pillow 的 Python：启动器会明说缺什么、怎么补，不会再静默失败
+- **编码前提**：bat 是 GBK 编码 + 开头 `chcp 936`。中文 Windows 正常；英文系统（无 936）提示文字可能乱码，但脚本/日志靠 `*.py` / `*.txt` 通配符定位，功能仍可用
+- 反向验证过：把同一份 bat 改成 UTF-8 + `chcp 65001`，中文多字节会让 cmd 读批处理错位卡死（实测挂起不返回）——**不要改回 UTF-8**
 
 **功能**：
 - 下拉选择地图 → 自动读取全部动画信息（瓦片/帧数/时长）并**自动计算循环帧数**（各动画帧数 LCM，预览02=24 帧，预览01/map01=56 帧）
@@ -411,8 +429,9 @@ px = col \* TILE\_W                        # 水平仍是左上
 - 改参数导出（如帧数/帧间隔）不验证官方第 0 帧——本工具直接自研渲染；渲染引擎与 export_preview.py 同一套（已验证 0 差异）
 - **渲染性能优化（v3，2026-09-17）**：render_frame 改为**局部混合**（只对瓦片覆盖区域做 alpha_composite），结果与原全图 alpha_composite 逐像素一致；预览02 单帧 0.02s，map01（80×80 大地图）从 2 分钟+ 降到 0.12s
 - **混合舍入 ±1 差异（正常，勿当 bug）**：半透明边缘像素（如装饰层 alpha<255 叠在草上）混合时，PIL 四舍五入向上、Tiled 官方向下，结果差 ±1/255；结构、位置、整体颜色均一致，肉眼不可见
-- 停用：关掉黑色命令行窗口或按 Ctrl+C
-- 端口 8765 被占用时启动会报错，先关掉旧窗口
+- 停用：没有控制台窗口；用任务管理器结束 `pythonw.exe`，或执行 `taskkill /im pythonw.exe`
+- 端口 8765 被占用时启动会弹窗 + 写日志，先结束旧的 `pythonw.exe` 再双击
+- 浏览器只在服务就绪后打开；若页面报「无法访问」，先看 `启动日志.txt`
 
 ---
 
@@ -459,3 +478,27 @@ px = col \* TILE\_W                        # 水平仍是左上
 2. **tmx 必须 UTF-8 BOM 写入**（utf-8-sig），否则渲染器读乱码
 3. **所有瓦片层 visible=0（只留对象层）会触发渲染器崩溃**（rc=1 无输出）——无法用官方直接出"纯对象层"参考图，隔离对比改用"全图对比 + 逐像素分类"定位
 4. 对比结论判读：半透明边缘 ±1/255 舍入差正常；纯瓦片层预览01 与官方仅 314 点差异、预览02 386 点——这两个数就是各自的"舍入基线"
+
+### 4.8 双击启动器后网页打不开（2026-11-01 根因，已修）
+
+**现象**：双击 `启动GIF工具.bat`，浏览器打开了 `http://127.0.0.1:8765`，但页面连不上（`ERR_CONNECTION_REFUSED`），也没有任何报错窗口。
+
+**排查路径**（照此顺序，5 分钟定位）：
+1. `netstat -ano | findstr :8765` 是否有 LISTENING → 没有服务在跑，问题在启动阶段
+2. 手动 `python 导出工具\GIF导出工具.py` → 报 `ModuleNotFoundError: No module named 'PIL'`
+3. `where pythonw` → 找不到（本机 Python 3.12 装在 `%LOCALAPPDATA%\Programs\Python\Python312`，该目录**不在 PATH**）
+4. 检查沙盒运行时 `%LOCALAPPDATA%\DoubaoWork\User Data\sandbox_runtime\bases\*\python\` → `python -c "import PIL"` 失败
+
+**根因**：旧 bat 的查找顺序是「`where pythonw` → 沙盒 bases」。`where pythonw` 找不到（用户安装版不在 PATH），于是回退到 **DoubaoWork 沙盒自带的 Python 3.13**——那个运行时**没装 Pillow**。`import PIL` 直接失败，`pythonw` 无控制台 → 静默退出 → 8765 没有服务 → 浏览器打开的是死页面。日志、弹窗、错误提示全都没有，所以表现为「网页失效」。
+
+**修复（v4.3 / v4.4）**：
+- 启动器改成**候选解释器必须通过 `import PIL` 才采用**，并把用户安装目录 / `py` 启动器 / 注册表排在沙盒之前（v4.4 追加注册表、PATH、`GIFTOOL_PYTHON`、`python_path.txt`，换电脑换安装位置也能找到）
+- 脚本加兜底：缺 Pillow、端口被占用、未捕获异常 → `MessageBox` 弹窗 + 写 `启动日志.txt`（含 traceback），不再静默失败
+- 启动器**探测端口就绪后才开浏览器**（最多 30 秒），失败时打印日志并 `pause`
+
+**同类坑（务必记住）**：
+- 任何「双击就能用」的 `.bat` 都要**验证依赖再启动**，不能只验证 exe 存在；`pythonw` 必死场景没有控制台，必须自带日志或弹窗
+- 沙盒/内嵌运行时（DoubaoWork、编辑器自带 Python 等）经常缺第三方包，**不能当作主解释器兜底**
+- `.bat` 里写中文要谨慎：文件存 GBK，且在开头 `chcp 936 >nul`，否则控制台代码页是 UTF-8 时中文路径/提示会全部乱码、`if exist` 直接失败（本次实测踩到）
+- **不要**改成「UTF-8 文件 + `chcp 65001`」：实测中文多字节会让 cmd 读批处理错位，整只 bat 直接挂起不返回（2026-11-01 试过，卡死 2 分钟无输出）
+- 启动/就绪检测尽量别依赖 PowerShell 起进程（每次多 1 秒且可能被安全策略拦），`netstat` + `findstr` 足够
