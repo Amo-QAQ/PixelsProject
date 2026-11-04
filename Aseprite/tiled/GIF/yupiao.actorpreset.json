@@ -1,0 +1,138 @@
+{
+  "format": "sprite-showcase-actor-preset",
+  "version": 1,
+  "id": "preset_mw27yarq_11789",
+  "name": "yupiao",
+  "savedAt": 1793802934790,
+  "images": [
+    {
+      "name": "fishing_float_splash",
+      "cell": [
+        16,
+        16
+      ],
+      "pivot": [
+        0.5,
+        1
+      ],
+      "data": "data:application/octet-stream;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAgCAYAAABU1PscAAAB90lEQVR4AeyXQUoDURBEZ9x5BlcewEVAEASP4CbgDbyIeA1P4CIb7xAQhCyydKtncCPEvEVJTednkoH0MAMjFL9/dXX/rhlJfs6qxL/14/0GJB5RpRnwwRc3s02WiTQDGvhz/aUwZU0zcPXyVmv4+fuqTpl+2zTNwLZ3xeCAOAupBrKG9r6TAX8ap475JANtfQf5BlbfP43vDz6G4UpGBmlgsfyofp9e/3G5WFZwozHw/HBXM7ADbjQGGNQH9picY5D/QhqQwYH2pXXQBkoDR24yEJ9I3/vpDfT9xON50xuIT6Tv/WjeAHchEB9QBwOxdP+eg4Ar2APnusSzi/MaUON9dgyQBAi5ygJiOEC8D8pzEKAWoGcPiKUjBnEPB6gFxA71gWsYoBFJ4IVcZ+EAGgoj4MmLj/XiWV1X2sO11ZMXGgbUmGEk0A9zcdIor9V5acnFejiHa8U7d6i+YUCFXGN1H+cuDuB0wKEV7bH1blx94WI9nPK+NgwgwgQ3QIZwwFFInjXCebT0Uj0xnNe43nnF1Hi9eF/p0TBAkkIS89vrikMFOEAeXQQ8eedV65w06J0vxaV66ehDjx0DCEgAYoE90L60Kk9zIeqkiTz6yJX20qlP0UCpsAtHc+HYOvQMB9pq0Hk+xYAf0CVmONClZlAGugwu7R8AAAD//8QSi9EAAAAGSURBVAMASrVSUGK4ge4AAAAASUVORK5CYII="
+    },
+    {
+      "name": "fishing_float_bob",
+      "cell": [
+        16,
+        16
+      ],
+      "pivot": [
+        0.5,
+        1
+      ],
+      "data": "data:application/octet-stream;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAACNklEQVR4AezYP0qkQRAF8NnN9gwb7RGMNtojbLg32GsYiLdRmEsIRoKBoamewUQY+Q0UFEX390cZZ/D7hGdXv36vurpsZHq+bxb+szZg4Rdgs96ApdyA++eXHdTznuQNUCjkYs0hc3Pis58/vgFPzjPYgIf/f3fANBWSAz0viHEg7iHWFQq8QG8O4tCJoc5xwAvijMiD6zYgG7e/z3bEY1CI5FD9OKBp5cFbj7XqD96Yda05bshvPdBsgGJC8PjwtA8ztycav6KwrK3+0FR75of81Ze1sZa5un9oYmw2QDGvF1cb+LW93QAuTL0xNt7e3u292Y/r+SpPywv2BlzVmbfqouUFXsDRVzQbQCQxE4hxY6DThMt/f/b/cHgBj+O3bqzIPC1fBi57sj7zYtrsFeOsZcjRbQAhE4inwmElBl7gNQfr5hV468HzZQQfGvrgWmP2iqtGHjkGG1BNU+cSQ9abQ+ZqHOuKC/Q0laevXGseutjrIA1obTyHU1xgqo/e4WDIQ5fXT7IBucA5scPBHM+XasCUg1fN2oDakaXN1xuwtL94Pe96A2pHljYfvAGelPDepvDCsfxT9u02IBc+9fuAvOGx/bmWobjZgPxxcuw93Up+bH+rph7XbIDno7c0eEuDj5jn1zeTvhk6lL93iI/wzQZ4PjpEhk3wxjHQZa/m8eCNY6DjiRziMc9715sNkEwRGbg5+Ig39okcMT/E2G3AITY7xZxrA07xr/KZNX35GzDWzDcAAAD///6KNpQAAAAGSURBVAMAdaHFUO/ffmgAAAAASUVORK5CYII="
+    },
+    {
+      "name": "fishing_float_struggle",
+      "cell": [
+        16,
+        16
+      ],
+      "pivot": [
+        0.5,
+        1
+      ],
+      "data": "data:application/octet-stream;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAQCAYAAACBSfjBAAACh0lEQVR4AezWvWpUURTF8Rs7bey1skgrBgRF8BFsBN/AxoewEB/Cd1CYlxCChRAx5bTG3sY0wpjfwJLt4dx7Z5hABhLxn7P32mufj51JyK3h5t9OE7gZ4E7jG4ZrM8CTs/PVjrPqtu/lAD0WubE4RJtaedv60f3bB9F69dS2XfdmgB4FD/BYiCEOPKBXqsZba208V2/9U/mlD9BD0B5KQ6vL6R4F+RQ80BOfmJZ801UfNvX3fJMDPH39YoVeY09zGQ9BW6eBp1drtbncXjz2SywHDeIgR3KrPoi3JXuNDrAObvHkaKNfwO1l3n76vEK9XOupNbGLQQwxxHPE5wxUvxzx1NpY7O7o1e1F7w6wHrI8/cE3VG0tTHzhrQeLab2WqotdDPGKIVe3VlKj1VjuXIhD64meNWfUvhrHl7U7QIf8efdxwIPF8QBamubWxfHX4eWzx/9B6/XVfWvs0viw/L4Ktd7bq2p6k9c42tjqDP72/rReT3eAjDbyaIhpU+Q7x/P+1fMDfRWaWvXJWzKse4/urks/v/0a8Obw4b8/Q9aFiy9je3ls+q2w70XLRv/dtd5dTKvNOXt0gMyaIJ7DkG0K3tonpoNPfYyndw4HwzK0ePQntkfiulfV+dNvtR/SV701rnV7JBf3fOqTA2TYBg9CehwMOR3iSnsxHpofofh8omhQj26lWemJ5T51EFdOzs5XvDT+xPIQzd1BjyaufZc6QJtvi4u5ENJLg8vDIL78Xg40ntZLg7oafOLgGyFXB48VNa4etSlq35UP0EVdCB4BWpD7sYaYzmsN0eVqEEMM8RQ89sGUr63txQBzKY9Acqu8QmtRp3l8kLekZm1rcvtAHFpvm/8FAAD//zKAjscAAAAGSURBVAMASDsMjxFOwHAAAAAASUVORK5CYII="
+    },
+    {
+      "name": "fishing_float_exit",
+      "cell": [
+        16,
+        16
+      ],
+      "pivot": [
+        0.5,
+        1
+      ],
+      "data": "data:application/octet-stream;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAQCAYAAACBSfjBAAAAAXNSR0IArs4c6QAAANtJREFUWIXtlrEVgyAQQC/pMkOmoHIKm8zgGk7key5hlYqC0lZmoLxUvEfB8UA5JeBvOcD7wJ0AjKihRzX0yLnH1Ty5FnbFzZ2oViKbQMuqNu4t6mXuBNZ8+5pCaoNSmzYO05dsTgGnidzTRalEYwTEJuaTm/KNOXlQA664VW3w+Uoy1iK1QfF+BeOomJi5JeLtwu6J2i4ac8pWAHUD3RhqbirF1jX75FJqT466FYovVhbFOC04Tks2AaHxnKLPXIOFvV00JqG/68RXkFo64EAHv3Fo6mf55gYAAH5KRN4GsngbhQAAAABJRU5ErkJggg=="
+    }
+  ],
+  "clips": [
+    {
+      "name": "up",
+      "imageName": "fishing_float_splash",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "fps": 12,
+      "rootMotion": [
+        0,
+        0
+      ],
+      "loop": true,
+      "reverse": false,
+      "holdFrame": null
+    },
+    {
+      "name": "float",
+      "imageName": "fishing_float_bob",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "fps": 12,
+      "rootMotion": [
+        0,
+        0
+      ],
+      "loop": true,
+      "reverse": false,
+      "holdFrame": null
+    },
+    {
+      "name": "struggle",
+      "imageName": "fishing_float_struggle",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "fps": 12,
+      "rootMotion": [
+        0,
+        0
+      ],
+      "loop": true,
+      "reverse": false,
+      "holdFrame": null
+    },
+    {
+      "name": "down",
+      "imageName": "fishing_float_exit",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "fps": 12,
+      "rootMotion": [
+        0,
+        0
+      ],
+      "loop": true,
+      "reverse": false,
+      "holdFrame": null
+    }
+  ]
+}
