@@ -1,5 +1,5 @@
 {
-    "activeFile": "ceshi01.tmx",
+    "activeFile": "fish.tmx",
     "automapping.whileDrawing": true,
     "expandedProjectPaths": [
         "."
@@ -158,8 +158,8 @@
             "scale": 2,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 116.5,
-                "y": 122.5
+                "x": 114.5,
+                "y": 80.25
             }
         },
         "chick_eat.tsj": {
@@ -174,8 +174,8 @@
             "scale": 2,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 135.75,
-                "y": 113.5
+                "x": 138.5,
+                "y": 80.25
             }
         },
         "chicken_idle02.tsj": {
@@ -197,6 +197,18 @@
             "dynamicWrapping": false,
             "scaleInDock": 3,
             "scaleInEditor": 3
+        },
+        "fish.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 148,
+                "y": 143.66666666666669
+            }
+        },
+        "fish_shadow.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "girl_chop.tsj": {
             "dynamicWrapping": false,
@@ -311,16 +323,16 @@
             "scale": 1.5,
             "selectedLayer": 13,
             "viewCenter": {
-                "x": 687,
-                "y": 627
+                "x": 640,
+                "y": 639.6666666666666
             }
         },
         "map01_pre.tmx": {
             "scale": 1.2871651785714284,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 214.8131448885806,
-                "y": 228.7973640856672
+                "x": 223.74750715338595,
+                "y": 183.73710222838815
             }
         },
         "map01_预览.tmx": {
@@ -356,40 +368,40 @@
             "scale": 1.5,
             "selectedLayer": 11,
             "viewCenter": {
-                "x": 187.66666666666669,
-                "y": 191.33333333333331
+                "x": 184,
+                "y": 61
             }
         },
         "pre02.tmx": {
             "scale": 2.347596153846154,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 96.05570346098709,
-                "y": 102.87118574646735
+                "x": 103.93610485357362,
+                "y": 104.14908867499489
             }
         },
         "pre03.tmx": {
             "scale": 2,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 127.75,
-                "y": 78.5
+                "x": 128,
+                "y": 47.75
             }
         },
         "pre04.tmx": {
             "scale": 3,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 128.16666666666666,
-                "y": 47.666666666666664
+                "x": 128,
+                "y": 1.1666666666666714
             }
         },
         "pre05.tmx": {
             "scale": 2,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 128.25,
-                "y": 95.5
+                "x": 128,
+                "y": -3.25
             }
         },
         "pre06.tmx": {
@@ -399,8 +411,8 @@
             "scale": 3,
             "selectedLayer": 9,
             "viewCenter": {
-                "x": 47.16666666666667,
-                "y": 84.83333333333333
+                "x": 132.66666666666666,
+                "y": 12.5
             }
         },
         "seed.tsj": {
@@ -437,7 +449,7 @@
         },
         "stone_01.tsj": {
             "dynamicWrapping": true,
-            "scaleInDock": 1,
+            "scaleInDock": 0.5,
             "scaleInEditor": 1.5
         },
         "water-ani - 02.tsj": {
@@ -494,7 +506,7 @@
         }
     },
     "last.exportedFilePath": "E:/My_work/PixelsProject/Aseprite/godot_project/project-new/maps",
-    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Objects/Object",
+    "last.imagePath": "E:/My_work/PixelsProject/Aseprite/project_end/Cozy Lands - Asset Pack/Terrain/Tilesets/Water",
     "map.height": 20,
     "map.lastUsedExportFilter": "Godot 4 Scene files (*.tscn)",
     "map.lastUsedFormat": "tmx",
@@ -516,7 +528,8 @@
         "pre05.tmx",
         "map01_pre.tmx",
         "pre04.tmx",
-        "ceshi01.tmx"
+        "ceshi01.tmx",
+        "fish.tmx"
     ],
     "project": "yulan01.tiled-project",
     "recentFiles": [
@@ -535,8 +548,8 @@
     ],
     "tileset.lastUsedFormat": "json",
     "tileset.tileSize": {
-        "height": 32,
-        "width": 32
+        "height": 16,
+        "width": 16
     },
     "tileset.type": 0
 }

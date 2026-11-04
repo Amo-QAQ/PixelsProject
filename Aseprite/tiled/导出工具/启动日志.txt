@@ -1,5 +1,5 @@
-[2026-11-01 01:05:53] 启动 GIF导出工具.py
-解释器: C:\Users\Administrator\AppData\Local\Programs\Python\Python312\pythonw.exe
-脚本: D:\CodeProject\PixelsProject\Aseprite\tiled\导出工具\GIF导出工具.py
-[2026-11-01 01:05:53] 工作目录: D:\CodeProject\PixelsProject\Aseprite\tiled
-[2026-11-01 01:05:53] 服务已就绪: http://127.0.0.1:8765
+[2026-11-04 15:58:33] 启动 GIF导出工具.py
+解释器: C:\Users\admin\AppData\Local\DoubaoWork\User Data\sandbox_runtime\bases\772984f6fd3a8ae0ae7d2422cd7c2bfa\python\pythonw.exe
+脚本: E:\My_work\PixelsProject\Aseprite\tiled\导出工具\GIF导出工具.py
+[2026-11-04 15:58:33] 工作目录: E:\My_work\PixelsProject\Aseprite\tiled
+[2026-11-04 15:58:33] 服务已就绪: http://127.0.0.1:8765
