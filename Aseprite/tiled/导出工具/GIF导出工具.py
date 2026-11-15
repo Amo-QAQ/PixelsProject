@@ -122,45 +122,126 @@ def list_maps():
     return sorted(names)
 
 
+def _open_tile_image(path, warnings, label):
+    """打开瓦片图片；缺失/损坏只记录警告并跳过，不让整张地图解析失败"""
+    if not os.path.isfile(path):
+        warnings.append("图片缺失：%s（%s）" % (path, label))
+        return None
+    try:
+        return Image.open(path).convert("RGBA")
+    except Exception as e:
+        warnings.append("图片读取失败：%s（%s）：%s" % (path, label, e))
+        return None
+
+
+def _new_tileset(firstgid, name, tile_w, tile_h, source):
+    return {
+        "firstgid": firstgid, "name": name, "source": source,
+        "spritesheet": None, "tile_images": {}, "columns": 0, "tilecount": 0,
+        "tile_w": tile_w, "tile_h": tile_h, "animations": {},
+        "warnings": [], "missing": False,
+    }
+
+
+def _fill_tileset_json(ts, path):
+    """读取 .tsj（JSON 瓦片集）"""
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    base = os.path.dirname(path)
+    label = os.path.basename(path)
+    ts["name"] = data.get("name") or ts["name"]
+    ts["columns"] = int(data.get("columns") or 0)
+    ts["tilecount"] = int(data.get("tilecount") or 0)
+    ts["tile_w"] = int(data.get("tilewidth") or ts["tile_w"])
+    ts["tile_h"] = int(data.get("tileheight") or ts["tile_h"])
+    if data.get("image"):
+        ts["spritesheet"] = _open_tile_image(
+            os.path.normpath(os.path.join(base, data["image"])), ts["warnings"], label)
+    for tile in data.get("tiles") or []:
+        tid = int(tile.get("id", 0))
+        if tile.get("image"):
+            im = _open_tile_image(
+                os.path.normpath(os.path.join(base, tile["image"])), ts["warnings"], label)
+            if im is not None:
+                iw = int(tile.get("imagewidth") or im.width)
+                ih = int(tile.get("imageheight") or im.height)
+                ts["tile_images"][tid] = (im, 0, 0, iw, ih)
+        if tile.get("animation"):
+            ts["animations"][tid] = tile["animation"]
+
+
+def _fill_tileset_xml(ts, elem, base_dir):
+    """读取 .tsx / tmx 内嵌瓦片集（XML）"""
+    label = ts.get("source") or ts["name"]
+    ts["name"] = elem.get("name") or ts["name"]
+    ts["columns"] = int(elem.get("columns") or 0)
+    ts["tilecount"] = int(elem.get("tilecount") or 0)
+    ts["tile_w"] = int(elem.get("tilewidth") or ts["tile_w"])
+    ts["tile_h"] = int(elem.get("tileheight") or ts["tile_h"])
+    img = elem.find("image")
+    if img is not None and img.get("source"):
+        ts["spritesheet"] = _open_tile_image(
+            os.path.normpath(os.path.join(base_dir, img.get("source"))), ts["warnings"], label)
+    for tile in elem.findall("tile"):
+        tid = int(tile.get("id", 0))
+        timg = tile.find("image")
+        if timg is not None and timg.get("source"):
+            im = _open_tile_image(
+                os.path.normpath(os.path.join(base_dir, timg.get("source"))), ts["warnings"], label)
+            if im is not None:
+                iw = int(timg.get("width") or im.width)
+                ih = int(timg.get("height") or im.height)
+                ts["tile_images"][tid] = (im, 0, 0, iw, ih)
+        anim = tile.find("animation")
+        if anim is not None:
+            frames = [{"tileid": int(f.get("tileid")),
+                       "duration": int(f.get("duration") or DEFAULT_FRAME_MS)}
+                      for f in anim.findall("frame")]
+            if frames:
+                ts["animations"][tid] = frames
+
+
 def load_tilesets(root, tile_w, tile_h):
+    """读取地图引用的全部瓦片集。
+
+    防御性原则（2026-11-16）：单个瓦片集缺失/损坏时只记录 warning 并留空占位，
+    不能抛异常把整张地图（以及整个网页）一起拖死；gid 区间仍按 firstgid 计算，
+    缺失区间里的瓦片渲染为空，其它瓦片照常显示。
+    """
     tilesets = []
     for ts_elem in root.findall("tileset"):
         firstgid = int(ts_elem.get("firstgid"))
-        tsj_path = os.path.join(TILED_DIR, ts_elem.get("source"))
-        tsj_dir = os.path.dirname(tsj_path)
-        with open(tsj_path, "r", encoding="utf-8") as f:
-            tsj = json.load(f)
-        columns = tsj.get("columns", 0)
-        tilecount = tsj.get("tilecount", 0)
-        ts_w = tsj.get("tilewidth", tile_w)
-        ts_h = tsj.get("tileheight", tile_h)
-        spritesheet = None
-        tile_images = {}
-        if "image" in tsj:
-            img_path = os.path.normpath(os.path.join(tsj_dir, tsj["image"]))
-            if os.path.exists(img_path):
-                spritesheet = Image.open(img_path).convert("RGBA")
-            else:
-                print(f"  [警告] 图片缺失: {img_path}")
+        source = ts_elem.get("source")
+        entry = _new_tileset(firstgid, source or ts_elem.get("name") or "tileset",
+                             tile_w, tile_h, source or "(内嵌瓦片集)")
+        if source is None:                     # tmx 内嵌瓦片集
+            try:
+                _fill_tileset_xml(entry, ts_elem, TILED_DIR)
+            except Exception as e:
+                entry["missing"] = True
+                entry["warnings"].append("内嵌瓦片集解析失败：%s" % e)
+        elif source.startswith(":"):           # Tiled 内置/虚拟瓦片集，如 :/automap-tiles.tsx
+            entry["name"] = os.path.basename(source.replace("\\", "/"))
+            entry["missing"] = True
+            entry["warnings"].append(
+                "已跳过 Tiled 内置瓦片集 %s：它只存在于 Tiled 工程内部，不是磁盘文件" % source)
         else:
-            for tile_info in tsj.get("tiles", []):
-                if "image" in tile_info:
-                    img_path = os.path.normpath(os.path.join(tsj_dir, tile_info["image"]))
-                    if os.path.exists(img_path):
-                        im = Image.open(img_path).convert("RGBA")
-                        iw = tile_info.get("imagewidth", im.width)
-                        ih = tile_info.get("imageheight", im.height)
-                        tile_images[tile_info["id"]] = (im, 0, 0, iw, ih)
-        animations = {}
-        for tile_info in tsj.get("tiles", []):
-            if "animation" in tile_info:
-                animations[tile_info["id"]] = tile_info["animation"]
-        tilesets.append({
-            "firstgid": firstgid, "name": tsj.get("name", ""),
-            "spritesheet": spritesheet, "tile_images": tile_images,
-            "columns": columns, "tilecount": tilecount,
-            "tile_w": ts_w, "tile_h": ts_h, "animations": animations,
-        })
+            path = os.path.normpath(os.path.join(TILED_DIR, source.replace("\\", "/")))
+            if not os.path.isfile(path):
+                entry["name"] = os.path.splitext(os.path.basename(path))[0]
+                entry["missing"] = True
+                entry["warnings"].append(
+                    "瓦片集文件缺失：%s（地图引用了它，但磁盘上不存在）" % source)
+            else:
+                try:
+                    if os.path.splitext(path)[1].lower() == ".tsx":
+                        _fill_tileset_xml(entry, ET.parse(path).getroot(), os.path.dirname(path))
+                    else:
+                        _fill_tileset_json(entry, path)
+                except Exception as e:
+                    entry["missing"] = True
+                    entry["warnings"].append("瓦片集解析失败：%s：%s" % (source, e))
+        tilesets.append(entry)
     for i, ts in enumerate(tilesets):
         start = ts["firstgid"]
         end = tilesets[i + 1]["firstgid"] if i + 1 < len(tilesets) else start + ts["tilecount"]
@@ -174,7 +255,10 @@ def parse_layers(root):
     for child in root:
         if child.tag == "layer":
             visible = child.get("visible", "1") != "0"
-            csv_data = child.find("data").text.strip()
+            data_elem = child.find("data")
+            csv_data = (data_elem.text or "").strip() if data_elem is not None else ""
+            if not csv_data:
+                continue  # 空图层/无数据图层直接跳过
             tiles = []
             for row in csv_data.split("\n"):
                 row = row.strip().rstrip(",")
@@ -421,6 +505,8 @@ def map_info(tmx_name):
         "auto_frames": compute_cycle(tilesets, used_gids=used_gids),
         "map_w": int(root.get("width")), "map_h": int(root.get("height")),
         "tile_w": tile_w, "tile_h": tile_h,
+        "warnings": [w for ts in tilesets for w in ts["warnings"]],
+        "missing_tilesets": [ts["source"] for ts in tilesets if ts["missing"]],
     }
 
 
@@ -442,8 +528,10 @@ def render_preview(tmx_name, frame=0, scale=2, bg=DEFAULT_BG, hidden_layers=()):
     _, map_w, map_h, tile_w, tile_h, tilesets, layers = load_map(tmx_name)
     bg_rgba = BG_MAP.get(bg, BG_MAP[DEFAULT_BG])
     img = render_frame(layers, tilesets, map_w, map_h, tile_w, tile_h, frame, hidden_layers, bg_rgba)
-    if scale > 1:
-        img = img.resize((int(img.width * scale), int(img.height * scale)), Image.NEAREST)
+    if scale != 1:
+        # 大地图预览会传入 <1 的缩放（限到 512px），旧代码只处理 >1，导致大图预览不缩
+        img = img.resize((max(1, int(img.width * scale)), max(1, int(img.height * scale))),
+                         Image.NEAREST)
     return img
 
 
@@ -468,6 +556,16 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
+    def _server_error(self, e, where):
+        """接口兜底：写日志 + 返回 JSON 错误，避免 pythonw 下连接被直接掐断"""
+        import traceback
+        _log("接口异常 %s: %s: %s\n%s" % (where, type(e).__name__, e, traceback.format_exc()))
+        try:
+            self._send(500, json.dumps(
+                {"ok": False, "error": "%s: %s" % (type(e).__name__, e)}, ensure_ascii=False))
+        except Exception:
+            pass
+
     def _send(self, code, body, ctype="application/json; charset=utf-8"):
         if isinstance(body, str):
             body = body.encode("utf-8")
@@ -478,6 +576,14 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        try:
+            self._handle_get()
+        except (BrokenPipeError, ConnectionResetError):
+            pass          # 浏览器主动断开（换地图/关页面）不算错误
+        except Exception as e:
+            self._server_error(e, "GET " + self.path)
+
+    def _handle_get(self):
         u = urlparse(self.path)
         if u.path == "/" or u.path == "/index.html":
             if os.path.exists(HTML_PATH):
@@ -494,7 +600,8 @@ class Handler(BaseHTTPRequestHandler):
             name = (qs.get("map") or [""])[0]
             info = map_info(name)
             if info is None:
-                self._send(404, json.dumps({"error": "地图不存在"}))
+                self._send(404, json.dumps({"ok": False, "error": "地图不存在: " + name},
+                                           ensure_ascii=False))
             else:
                 self._send(200, json.dumps(info, ensure_ascii=False))
             return
@@ -507,6 +614,10 @@ class Handler(BaseHTTPRequestHandler):
             hidden = [int(x) for x in (qs.get("hidden") or [""])[0].split(",") if x]
             try:
                 info = map_info(name)
+                if info is None:
+                    self._send(404, json.dumps({"ok": False, "error": "地图不存在: " + name},
+                                               ensure_ascii=False))
+                    return
                 # 预览自动限尺寸：最大边 512px
                 base_side = max(info["map_w"] * info["tile_w"], info["map_h"] * info["tile_h"])
                 if base_side * scale > 512:
@@ -516,7 +627,7 @@ class Handler(BaseHTTPRequestHandler):
                 img.save(buf, "PNG")
                 self._send(200, buf.getvalue(), "image/png")
             except Exception as e:
-                self._send(500, json.dumps({"ok": False, "error": str(e)}, ensure_ascii=False))
+                self._server_error(e, "GET /api/preview?map=" + name)
             return
         if u.path == "/api/preview-gif":
             qs = parse_qs(u.query)
@@ -526,6 +637,10 @@ class Handler(BaseHTTPRequestHandler):
             hidden = [int(x) for x in (qs.get("hidden") or [""])[0].split(",") if x]
             try:
                 info = map_info(name)
+                if info is None:
+                    self._send(404, json.dumps({"ok": False, "error": "地图不存在: " + name},
+                                               ensure_ascii=False))
+                    return
                 auto = info["auto_frames"]
                 # 预览自动限尺寸：最大边 512px（大地图自动降缩放，加速渲染）
                 base_side = max(info["map_w"] * info["tile_w"], info["map_h"] * info["tile_h"])
@@ -543,7 +658,7 @@ class Handler(BaseHTTPRequestHandler):
                     {"ok": True, "url": "/files/_preview_" + name + ".gif",
                      "frames": auto, "size": prepared[0].size}, ensure_ascii=False))
             except Exception as e:
-                self._send(500, json.dumps({"ok": False, "error": str(e)}, ensure_ascii=False))
+                self._server_error(e, "GET /api/preview-gif?map=" + name)
             return
         if u.path.startswith("/files/"):
             rel = u.path[len("/files/"):]
@@ -560,6 +675,14 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, "Not Found", "text/plain")
 
     def do_POST(self):
+        try:
+            self._handle_post()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except Exception as e:
+            self._server_error(e, "POST " + self.path)
+
+    def _handle_post(self):
         u = urlparse(self.path)
         if u.path not in ("/api/export", "/api/export-batch", "/api/set-dir"):
             self._send(404, "Not Found", "text/plain")
@@ -601,9 +724,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._send(200, json.dumps({"ok": True, **result}, ensure_ascii=False))
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            self._send(500, json.dumps({"ok": False, "error": str(e)}, ensure_ascii=False))
+            self._server_error(e, "POST " + u.path)
 
 
 def main():

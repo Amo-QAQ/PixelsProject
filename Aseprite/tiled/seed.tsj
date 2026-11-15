@@ -14,43 +14,43 @@
  "tiles":[
         {
          "id":0,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Seeds\/cabbage.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Seeds\/cabbage.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":1,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Seeds\/corn_seed.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Seeds\/corn.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":2,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Seeds\/onion.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Seeds\/onion.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":3,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Seeds\/potato.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Seeds\/potato.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":4,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Seeds\/pumpkin.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Seeds\/pumpkin.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":5,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Seeds\/radish.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Seeds\/radish.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":6,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Seeds\/rice.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Seeds\/rice.png",
          "imageheight":16,
          "imagewidth":16
         }],

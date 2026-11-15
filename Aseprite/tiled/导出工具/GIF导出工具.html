@@ -116,6 +116,9 @@
   .preview-btns { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
   #previewStatus { min-height: 16px; font-size: 12px; text-align: center; }
   .loading { color: var(--accent-dark); font-weight: 800; }
+  .warn { font-size: 11px; line-height: 1.6; color: var(--accent-dark); word-break: break-all; }
+  .warn:not(:empty) { margin-top: 6px; padding: 5px 7px; border: 2px dashed #e0a06a; background: #fff3e0; }
+  .err { color: #c0392b; font-size: 12px; font-weight: 700; line-height: 1.6; word-break: break-all; }
 </style>
 </head>
 <body>
@@ -138,6 +141,7 @@
         <button id="dirBtn" type="button">切换</button>
       </div>
       <div id="dirInfo" class="dir-info"></div>
+      <div id="warnBox" class="warn"></div>
       <div id="animCard"><div class="dim">加载中…</div></div>
     </div>
 
@@ -194,7 +198,7 @@ if (location.protocol !== "http:" && location.protocol !== "https:") {
 }
 
 const mapSel = $("mapSel"), animCard = $("animCard"), layerList = $("layerList");
-const dirInput = $("dirInput"), dirBtn = $("dirBtn"), dirInfo = $("dirInfo");
+const dirInput = $("dirInput"), dirBtn = $("dirBtn"), dirInfo = $("dirInfo"), warnBox = $("warnBox");
 const taskList = $("taskList"), editArea = $("editArea");
 const previewImg = $("previewImg"), placeholder = $("placeholder"), previewStatus = $("previewStatus");
 const exportBtn = $("exportBtn"), loading = $("loading"), resultList = $("resultList");
@@ -327,16 +331,31 @@ function renderEdit() {
 }
 
 // ---------- 地图 ----------
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g,
+    c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderWarnings(list) {
+  warnBox.innerHTML = "";
+  if (!list || !list.length) return;
+  warnBox.innerHTML = list.map(w => `<div>⚠ ${esc(w)}</div>`).join("");
+}
+
 fetch("/api/maps").then(r => r.json()).then(d => {
   dirInfo.textContent = "当前目录：" + (d.dir || "");
   dirInput.value = d.dir || "";
-  mapSel.innerHTML = d.maps.map(m => `<option>${m}</option>`).join("");
+  mapSel.innerHTML = d.maps.map(m => `<option>${esc(m)}</option>`).join("");
   if (d.maps.length) {
     loadInfo(d.maps[0]);
     // 三件套默认启用（打开即有三件套任务）
     if (!tasks.length) { tasks.push(newTask("big"), newTask("small"), newTask("png")); }
     renderTasks(); selectTask(tasks[0].id);
   }
+}).catch(e => {
+  dirInfo.textContent = "连接后端失败";
+  animCard.innerHTML = `<div class="err">连不上本地服务，请确认「启动GIF工具.bat」还在运行<br>${esc(e)}</div>`;
+  layerList.innerHTML = "";
 });
 dirBtn.onclick = () => {
   const path = dirInput.value.trim();
@@ -366,30 +385,47 @@ dirBtn.onclick = () => {
 };
 mapSel.addEventListener("change", () => { loadInfo(mapSel.value); refreshAll(); renderTasks(); });
 
-function loadInfo(name) {
+async function loadInfo(name) {
   mapName = name;
+  mapInfo = null;
   animCard.innerHTML = '<div class="dim">加载中…</div>';
   layerList.innerHTML = '<div class="dim">加载中…</div>';
-  fetch("/api/info?map=" + encodeURIComponent(name)).then(r => r.json()).then(info => {
-    mapInfo = info;
-    let html = `<div class="dim">${info.map_w}×${info.map_h} 格 · 瓦片 ${info.tile_w}×${info.tile_h}</div>`;
-    if (info.animations.length) {
-      html += `<div class="big">${info.auto_frames} 帧</div>`;
-      html += `<div class="dim">自动循环 ≈ ${(info.auto_frames * 0.1).toFixed(1)}s（100ms/帧）</div>`;
-      html += `<div class="anim-list">${info.animations.length} 个动画：<br>` +
-        info.animations.slice(0, 12).map(a => `· ${a.tileset} 瓦片${a.tile}：${a.frames}帧×${a.duration}ms`).join("<br>") + `</div>`;
-    } else {
-      html += `<div class="dim">无动画，导出单帧即可</div>`;
+  warnBox.innerHTML = "";
+  let info;
+  try {
+    const r = await fetch("/api/info?map=" + encodeURIComponent(name));
+    info = await r.json().catch(() => null);
+    if (!r.ok || !info || info.ok === false) {
+      throw new Error((info && info.error) || ("HTTP " + r.status));
     }
-    animCard.innerHTML = html;
-    layerList.innerHTML = "";
-    info.layers.forEach(l => {
-      const div = document.createElement("label");
-      const tag = l.type === "object" ? '<span class="tag" style="font-size:9px;padding:0 3px;border:1px solid #3b2f2f;background:#f2e8d8">对象</span>' : "";
-      div.innerHTML = `<input type="checkbox" checked data-idx="${l.index}"><span>${l.name}</span>${tag}`;
-      div.querySelector("input").addEventListener("change", refreshAll);
-      layerList.appendChild(div);
-    });
+  } catch (e) {
+    animCard.innerHTML = `<div class="err">读取地图失败：${esc(e.message)}</div>`;
+    layerList.innerHTML = '<div class="err">图层无法加载</div>';
+    placeholder.style.display = "";
+    placeholder.textContent = "地图读取失败，见左侧提示";
+    previewImg.style.display = "none";
+    previewStatus.textContent = "";
+    return;
+  }
+  mapInfo = info;
+  renderWarnings(info.warnings);
+  let html = `<div class="dim">${info.map_w}×${info.map_h} 格 · 瓦片 ${info.tile_w}×${info.tile_h}</div>`;
+  if (info.animations.length) {
+    html += `<div class="big">${info.auto_frames} 帧</div>`;
+    html += `<div class="dim">自动循环 ≈ ${(info.auto_frames * 0.1).toFixed(1)}s（100ms/帧）</div>`;
+    html += `<div class="anim-list">${info.animations.length} 个动画：<br>` +
+      info.animations.slice(0, 12).map(a => `· ${a.tileset} 瓦片${a.tile}：${a.frames}帧×${a.duration}ms`).join("<br>") + `</div>`;
+  } else {
+    html += `<div class="dim">无动画，导出单帧即可</div>`;
+  }
+  animCard.innerHTML = html;
+  layerList.innerHTML = "";
+  info.layers.forEach(l => {
+    const div = document.createElement("label");
+    const tag = l.type === "object" ? '<span class="tag" style="font-size:9px;padding:0 3px;border:1px solid #3b2f2f;background:#f2e8d8">对象</span>' : "";
+    div.innerHTML = `<input type="checkbox" checked data-idx="${l.index}"><span>${esc(l.name)}</span>${tag}`;
+    div.querySelector("input").addEventListener("change", refreshAll);
+    layerList.appendChild(div);
   });
 }
 
@@ -402,13 +438,26 @@ function refreshAll() {
 
 function refreshStatic() {
   if (!mapName) return;
+  previewStatus.textContent = "渲染中…";
   fetch(`/api/preview?map=${encodeURIComponent(mapName)}&frame=0&scale=2&bg=${selBg()}&hidden=${encodeURIComponent(hiddenLayers().join(","))}`)
-    .then(r => r.blob()).then(b => {
+    .then(async r => {
+      if (!r.ok) {
+        let msg = "HTTP " + r.status;
+        try { const d = await r.json(); if (d && d.error) msg = d.error; } catch (e) {}
+        throw new Error(msg);
+      }
+      return r.blob();
+    }).then(b => {
       placeholder.style.display = "none";
       previewImg.src = URL.createObjectURL(b);
       previewImg.style.display = "block";
       previewStatus.textContent = "第 0 帧预览（自动尺寸，≤512px）";
-    }).catch(() => previewStatus.textContent = "预览失败");
+    }).catch(e => {
+      placeholder.style.display = "";
+      placeholder.textContent = "预览失败";
+      previewImg.style.display = "none";
+      previewStatus.textContent = "预览失败：" + e.message;
+    });
 }
 $("btnStatic").addEventListener("click", refreshStatic);
 

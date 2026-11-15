@@ -1,6 +1,6 @@
 # 像素资产预览图导出・需求与排障手册
 
-> 最后更新：2026-11-01（启动器修复：缺 Pillow 导致双击后网页打不开 → 见 4.8）
+> 最后更新：2026-11-16（地图打不开：box.tsj 缺失 + 前端/接口无错误兜底 → 见 4.9）
 > 适用范围：
 >
 > `E:\My_work\PixelsProject\Aseprite`
@@ -502,3 +502,41 @@ px = col \* TILE\_W                        # 水平仍是左上
 - `.bat` 里写中文要谨慎：文件存 GBK，且在开头 `chcp 936 >nul`，否则控制台代码页是 UTF-8 时中文路径/提示会全部乱码、`if exist` 直接失败（本次实测踩到）
 - **不要**改成「UTF-8 文件 + `chcp 65001`」：实测中文多字节会让 cmd 读批处理错位，整只 bat 直接挂起不返回（2026-11-01 试过，卡死 2 分钟无输出）
 - 启动/就绪检测尽量别依赖 PowerShell 起进程（每次多 1 秒且可能被安全策略拦），`netstat` + `findstr` 足够
+
+### 4.9 选地图后一直「加载中…」/ 导出报 box.tsj 不存在（2026-11-16 根因，已修）
+
+**现象**：下拉选 `pre01 -boy` / `pre01` / `pre03` / `pre04` / `map01` → ① 地图信息和 ② 图层**永远停在「加载中…」**，预览只剩裂图，⑤ 导出列表报：
+
+```
+[Errno 2] No such file or directory: 'D:\...\tiled\box.tsj'
+```
+
+**排查路径**：
+1. 服务在跑（`netstat` 8765 LISTENING），`/api/maps` 正常返回 13 张地图
+2. `curl "http://127.0.0.1:8765/api/info?map=pre01%20-boy"` → **HTTP 000（连接被直接断开，不是 500）**
+3. 对照 tmx：`pre01 -boy.tmx` 第 17 行 `<tileset firstgid="487" source="box.tsj"/>`，但 `tiled\box.tsj` 不存在（git 提交 `3b08fb8`「111」把它删了，而 4 张地图仍在引用）
+4. `map01.tmx` 还引用了 `:/automap-tiles.tsx`——这是 **Tiled 内置瓦片集**，不是磁盘文件，旧代码同样 `open()` 失败
+
+**根因（数据 + 代码两层，缺一不可）**：
+- **数据**：`box.tsj` 被误删；`map01` 引用 Tiled 内置瓦片集
+- **代码**：`load_tilesets()` 对缺失瓦片集没有兜底，异常一路冒到 `do_GET`；`BaseHTTPRequestHandler` 不捕获 → **连接被掐断**，pythonw 下连 traceback 都没有，浏览器只表现为「加载中…」永不结束
+- **前端**：`loadInfo()` 不检查 `r.ok`，`info.map_w` 取到 `undefined` 后 Promise 中断，加载态卡死且无任何报错
+
+**修复（v4.5）**：
+- 从 git 恢复 `box.tsj`（`git show ecad110:Aseprite/tiled/box.tsj`，恢复后与历史 blob **哈希一致**）
+- `load_tilesets()` 防御性改造：瓦片集缺失/损坏/`:/` 内置 → 记 warning + 留空占位，**gid 区间仍按 firstgid 计算**，其余瓦片照常渲染；同时支持 `.tsx` 和 tmx 内嵌瓦片集（JSON `.tsj` 逻辑不变）
+- 所有 GET/POST 统一 try/except：异常写 `启动日志.txt`（含 traceback）并返回 JSON 500，不再掐断连接
+- 前端：`/api/info`、`/api/preview` 检查 `r.ok`，失败在对应面板显示具体错误；① 新增「⚠ 警告区」列出缺失的瓦片集/图片；地图名/图层名做 HTML 转义
+- 顺带修复：`render_preview()` 只处理 `scale > 1`，导致 map01 这类大地图预览**不缩到 512px**（实际输出 1280×1280）；改为 `scale != 1` 都缩放，现在 map01 预览为 512×512
+
+**验证记录（2026-11-16）**：
+- 13 张地图 `/api/info` 全部 HTTP 200（修复前 5 张为 000）
+- `pre01 -boy` 预览 544×512 正常；导出 35 帧 GIF 成功
+- 故障注入：引用不存在的 `nope.tsj` 的地图仍能打开，其余图层正常渲染
+- `map01` 只提示跳过 `:/automap-tiles.tsx`，15 层 / 56 帧与修复前一致
+- `pre01` 预览中 `box.tsj` 的木箱图块正常显示
+
+**遗留数据问题（不阻塞导出）**：
+- `icon.tsj` 瓦片 18 的图片路径拼写错误：`Items/Products/glod_mine.png`（实际文件为 `Items/Drops/Products/gold_mine.png`）→ 该图块显示为空，工具会在警告区提示；需在 Tiled 里改路径或补图
+- `box.tsj` 恢复后仍是**未跟踪文件**（`git status` 显示 `??`）；建议 `git add Aseprite/tiled/box.tsj` 防止再次丢失
+

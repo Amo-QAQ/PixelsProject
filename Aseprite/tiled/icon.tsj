@@ -14,105 +14,103 @@
  "tiles":[
         {
          "id":0,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/berry_a.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/berry_a.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":1,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/berry_b.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/berry_b.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":2,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/cabbage.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/cabbage.png",
          "imageheight":16,
-         "imagewidth":32
+         "imagewidth":16
         }, 
         {
          "id":3,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/corn.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/corn.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":4,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/onion.png",
-         "imageheight":32,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/onion.png",
+         "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":5,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/potato.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/potato.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":6,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/pumpkin.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/pumpkin.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":7,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/radish.png",
-         "imageheight":32,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/radish.png",
+         "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":8,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/rice.png",
-         "imageheight":32,
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/rice.png",
+         "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":9,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/stone.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/stone.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":11,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/branch.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/branch.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":13,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/wood.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/wood.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":14,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/crystal.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/crystal.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":15,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/copper.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/copper.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":16,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/copper_mine.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/copper_mine.png",
          "imageheight":16,
-         "imagewidth":32
+         "imagewidth":16
         }, 
         {
          "id":17,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/gold.png",
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Drops\/Products\/gold.png",
          "imageheight":16,
          "imagewidth":16
         }, 
         {
          "id":18,
-         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/glod_mine.png",
-         "imageheight":16,
-         "imagewidth":32
+         "image":"..\/project_end\/Cozy Lands - Asset Pack\/Items\/Products\/glod_mine.png"
         }],
  "tilewidth":32,
  "type":"tileset",
