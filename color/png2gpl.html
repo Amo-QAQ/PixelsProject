@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PNG → GPL 色板转换</title>
+<style>
+  :root{
+    --bg:#f6f6f3; --panel:#fff; --ink:#1c1c1a; --dim:#6f6f68;
+    --line:#d8d8d0; --accent:#2f6f4f; --accent-soft:#e8f1ec;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+         "Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .wrap{max-width:780px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:18px;margin:0 0 4px;letter-spacing:.02em}
+  .sub{color:var(--dim);font-size:13px;margin:0 0 24px}
+  .panel{background:var(--panel);border:1px solid var(--line);padding:18px;margin-bottom:16px}
+  .drop{
+    border:2px dashed var(--line); padding:36px 20px; text-align:center;
+    cursor:pointer; transition:.15s; color:var(--dim); user-select:none;
+  }
+  .drop:hover{border-color:#b9b9ae;background:#fbfbf9}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .drop b{color:var(--ink);font-weight:600}
+  .drop.over b{color:var(--accent)}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:16px}
+  label{font-size:13px;color:var(--dim);display:flex;gap:6px;align-items:center}
+  input[type=number]{width:64px;padding:4px 6px;border:1px solid var(--line);
+    background:#fff;font:inherit;font-size:13px}
+  input[type=text]{padding:4px 6px;border:1px solid var(--line);background:#fff;
+    font:inherit;font-size:13px;width:180px}
+  .stats{font:12px/1.8 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color:var(--dim);white-space:pre-wrap;margin-top:14px}
+  .stats b{color:var(--ink);font-weight:600}
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,24px);gap:2px;margin-top:14px}
+  .sw{width:24px;height:24px;border:1px solid rgba(0,0,0,.18)}
+  textarea{width:100%;height:150px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,
+    Consolas,monospace;border:1px solid var(--line);padding:10px;background:#fff;
+    resize:vertical;margin-top:14px;color:var(--ink)}
+  .btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  button{
+    font:inherit;font-size:13px;padding:8px 16px;border:1px solid var(--ink);
+    background:var(--ink);color:#fff;cursor:pointer;transition:.12s;
+  }
+  button.ghost{background:#fff;color:var(--ink)}
+  button:hover{opacity:.82}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  .hint{font-size:12px;color:var(--dim);margin-top:18px}
+  .hint code{background:#eceae4;padding:1px 5px;font-size:11px}
+  #result{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PNG → GPL 色板转换</h1>
+  <p class="sub">把色板 PNG 转成 GIMP / Aseprite 能读的 <code>.gpl</code>。颜色按图里的阅读顺序输出，不重排、不量化。</p>
+
+  <div class="panel">
+    <div class="drop" id="drop">
+      <b>把 PNG 拖到这里</b><br>或者点击选择文件
+    </div>
+    <div class="row">
+      <label>最少像素 <input type="number" id="minPx" value="6" min="1" max="9999"></label>
+      <label>色板名字 <input type="text" id="palName" placeholder="自动用文件名"></label>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="panel" id="result">
+    <div class="swatches" id="swatches"></div>
+    <textarea id="out" readonly spellcheck="false"></textarea>
+    <div class="btns">
+      <button id="dl">下载 .gpl</button>
+      <button class="ghost" id="cp">复制文本</button>
+    </div>
+  </div>
+
+  <p class="hint">
+    顺序 = 图里的阅读顺序（左→右，上→下）。摆 PNG 的时候就要按你想要的顺序摆。<br>
+    占画面 30% 以上的颜色会当作背景丢掉；透明像素自动跳过。<br>
+    色板名字建议用英文，某些软件读中文可能乱码。
+  </p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var dropEl = document.getElementById("drop");
+  var statsEl = document.getElementById("stats");
+  var resultEl = document.getElementById("result");
+  var swEl = document.getElementById("swatches");
+  var outEl = document.getElementById("out");
+  var dlEl = document.getElementById("dl");
+  var cpEl = document.getElementById("cp");
+  var minPxEl = document.getElementById("minPx");
+  var nameEl = document.getElementById("palName");
+  var fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/png,image/*";
+
+  var current = null; // {name, text, colors}
+
+  /* ---------- input ---------- */
+  dropEl.addEventListener("click", function () { fileInput.click(); });
+  fileInput.addEventListener("change", function () {
+    if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = "";
+  });
+  ["dragenter", "dragover"].forEach(function (ev) {
+    dropEl.addEventListener(ev, function (e) {
+      e.preventDefault(); e.stopPropagation(); dropEl.classList.add("over");
+    });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    dropEl.addEventListener(ev, function (e) {
+      e.preventDefault(); e.stopPropagation(); dropEl.classList.remove("over");
+    });
+  });
+  dropEl.addEventListener("drop", function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+  minPxEl.addEventListener("change", function () {
+    if (current) convert(current.imageData, current.name);
+  });
+  nameEl.addEventListener("input", function () {
+    if (current) convert(current.imageData, current.name);
+  });
+
+  /* ---------- core ---------- */
+  function handleFile(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var c = document.createElement("canvas");
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        var ctx = c.getContext("2d", { willReadFrequently: true });
+        ctx.clearRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0);
+        var data;
+        try {
+          data = ctx.getImageData(0, 0, c.width, c.height);
+        } catch (err) {
+          statsEl.textContent = "读不到像素：" + err.message;
+          return;
+        }
+        var base = file.name.replace(/\.[^.]+$/, "");
+        current = { name: base, imageData: data };
+        if (!nameEl.value.trim()) nameEl.placeholder = base;
+        convert(data, base);
+      };
+      img.onerror = function () { statsEl.textContent = "图片解码失败。"; };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function convert(imageData, baseName) {
+    var d = imageData.data, W = imageData.width, H = imageData.height;
+    var counts = new Map(), order = [], i, key, a;
+
+    for (i = 0; i < d.length; i += 4) {
+      a = d[i + 3];
+      if (a < 128) continue;                       // transparent = empty
+      key = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+      if (!counts.has(key)) { counts.set(key, 0); order.push(key); }
+      counts.set(key, counts.get(key) + 1);
+    }
+
+    var total = 0;
+    counts.forEach(function (v) { total += v; });
+    if (total === 0) { statsEl.textContent = "这张图没有不透明像素。"; return; }
+
+    // dominant colour covering >30% = background, not a swatch
+    var modal = -1, modalN = 0;
+    counts.forEach(function (v, k) { if (v > modalN) { modalN = v; modal = k; } });
+    var bgDropped = false;
+    if (modalN / total > 0.30) { counts.delete(modal); bgDropped = true; }
+
+    var minPx = Math.max(1, parseInt(minPxEl.value, 10) || 6);
+    var keep = [], noise = 0;
+    for (var j = 0; j < order.length; j++) {
+      key = order[j];
+      if (!counts.has(key)) continue;
+      if (counts.get(key) >= minPx) keep.push(key); else noise++;
+    }
+
+    if (!keep.length) { statsEl.textContent = "没找到色块（把「最少像素」调小试试）。"; return; }
+
+    var palName = (nameEl.value.trim() || baseName || "palette").replace(/[\r\n\t]/g, "");
+
+    /* ---- build gpl ---- */
+    var lines = ["GIMP Palette", "Name: " + palName, "Columns: 7", "#"];
+    for (var n = 0; n < keep.length; n++) {
+      key = keep[n];
+      var r = (key >> 16) & 255, g = (key >> 8) & 255, b = key & 255;
+      var idx = String(n + 1);
+      if (idx.length < 2) idx = "0" + idx;
+      lines.push(
+        pad3(r) + " " + pad3(g) + " " + pad3(b) + "\t" + palName + "_" + idx
+      );
+    }
+    var text = lines.join("\n") + "\n";
+
+    /* ---- report ---- */
+    var dupes = order.length - keep.length - noise;
+    statsEl.innerHTML =
+      "尺寸      " + W + " × " + H + "\n" +
+      "输出      <b>" + keep.length + "</b> 个颜色\n" +
+      "去重      " + (dupes > 0 ? dupes + " 个重复" : "无") + "\n" +
+      "滤噪      " + (noise > 0 ? noise + " 个（少于 " + minPx + " 像素）" : "无") + "\n" +
+      "背景      " + (bgDropped ? "自动去掉 1 个（占比 >30%）" : "未检测到");
+
+    /* ---- swatches ---- */
+    swEl.innerHTML = "";
+    var frag = document.createDocumentFragment();
+    for (var m = 0; m < keep.length; m++) {
+      var k = keep[m];
+      var el = document.createElement("div");
+      el.className = "sw";
+      var hex = "#" + hex2(k >> 16) + hex2((k >> 8) & 255) + hex2(k & 255);
+      el.style.background = hex;
+      el.title = (m + 1) + "  " + hex;
+      frag.appendChild(el);
+    }
+    swEl.appendChild(frag);
+
+    outEl.value = text;
+    resultEl.style.display = "block";
+
+    var fname = (palName || "palette") + ".gpl";
+    dlEl.onclick = function () {
+      var blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var aEl = document.createElement("a");
+      aEl.href = url;
+      aEl.download = fname;
+      document.body.appendChild(aEl);
+      aEl.click();
+      document.body.removeChild(aEl);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    };
+    cpEl.onclick = function () {
+      outEl.select();
+      outEl.setSelectionRange(0, 999999);
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      if (!ok && navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () { flash(cpEl, "已复制"); });
+      } else {
+        flash(cpEl, ok ? "已复制" : "复制失败");
+      }
+    };
+  }
+
+  function pad3(n) {
+    var s = String(n);
+    while (s.length < 3) s = " " + s;
+    return s;
+  }
+  function hex2(n) {
+    var s = n.toString(16).toUpperCase();
+    return s.length < 2 ? "0" + s : s;
+  }
+  function flash(el, msg) {
+    var old = el.textContent;
+    el.textContent = msg;
+    setTimeout(function () { el.textContent = old; }, 900);
+  }
+})();
+</script>
+</body>
+</html>
